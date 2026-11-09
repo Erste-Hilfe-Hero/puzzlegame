@@ -1,4 +1,4 @@
-# Alchemy Isle
+# Amy's Tasty Potions
 
 Merge-2 puzzle game (working title). Merge herbs, crystals and potions, fill orders from islanders, restore a floating island.
 Monetization: in-app purchases only, no ads, no purchase pop-ups (shop only when the player opens it).

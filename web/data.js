@@ -55,7 +55,7 @@ const DATA = {
     { id: 'gems_15000', name: '15.000 Gems', price: '99,99 €', gems: 15000, tag: 'Best value' }
   ],
   starter: { id: 'starter', name: 'Starter Pack', price: '2,99 €', gems: 300, energy: 200, perm: 'golden', desc: '300 Gems + Golden Touch + 200 Energy. Once only.' },
-  pass: { id: 'pass', name: 'Alchemist Pass', price: '9,99 €', days: 30, dailyGems: 60, energyBonus: 50, desc: '30 days: 60 Gems every day + 50 max Energy.' },
+  pass: { id: 'pass', name: "Amy's Pass", price: '9,99 €', days: 30, dailyGems: 60, energyBonus: 50, desc: '30 days: 60 Gems every day + 50 max Energy.' },
 
   // Gem items. perm = permanent, boost = timed, item = board item.
   gemShop: [

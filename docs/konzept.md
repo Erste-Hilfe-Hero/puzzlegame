@@ -1,10 +1,10 @@
-# Alchemy Isle - Konzept (Merge-2, nur Ingame-Kaeufe)
+# Amy's Tasty Potions - Konzept (Merge-2, nur Ingame-Kaeufe)
 
-Stand 09.11.2026. Arbeitstitel "Alchemy Isle" (Hauptsprache Englisch, Deutsch als 2. Sprache).
+Stand 09.11.2026. Name "Amy's Tasty Potions" (Store: "Amy's Tasty Potions: Merge") (Hauptsprache Englisch, Deutsch als 2. Sprache).
 
 ## Idee (eigene Welt, keine Kopie)
 
-Eine junge Alchemistin erbt eine verfallene Trank-Werkstatt auf einer schwebenden Insel. Sie zieht Kraeuter, Kristalle und Traenke zusammen (Merge-2), erfuellt Auftraege von Inselbewohnern und baut mit dem verdienten Gold die Insel Stueck fuer Stueck wieder auf (Werkstatt, Garten, Hafen, Leuchtturm, Markt). Jede Zone bringt neue Bewohner, neue Ketten und neue Erzeuger.
+Die junge Alchemistin Amy erbt eine verfallene Trank-Werkstatt auf einer schwebenden Insel. Sie zieht Kraeuter, Kristalle und Traenke zusammen (Merge-2), erfuellt Auftraege von Inselbewohnern und baut mit dem verdienten Gold die Insel Stueck fuer Stueck wieder auf (Werkstatt, Garten, Hafen, Leuchtturm, Markt). Jede Zone bringt neue Bewohner, neue Ketten und neue Erzeuger.
 
 Gleiches Genre wie Tasty Travels (Merge-2 + Auftraege + Aufbau), aber eigene Welt, eigene Figuren, eigene Ketten, eigener Name.
 
@@ -32,7 +32,7 @@ Regel: **Keine Pop-ups, keine Werbung, keine Kauf-Erinnerungen, kein roter Punkt
 |---|---|---|---|
 | Edelsteine | 80 / 500 / 1.200 / 2.600 / 7.000 / 15.000 | 0,99 / 4,99 / 9,99 / 19,99 / 49,99 / 99,99 EUR | Premium-Waehrung |
 | Starterpaket (einmalig) | 300 Edelsteine + Goldener Kessel + 200 Energie | 2,99 EUR | starker Einstieg |
-| Monatspass | 30 Tage: 60 Edelsteine/Tag + Energie-Max 150 | 9,99 EUR | Dauer-Vorteil |
+| Monatspass (Amy's Pass) | 30 Tage: 60 Edelsteine/Tag + Energie-Max 150 | 9,99 EUR | Dauer-Vorteil |
 | Energie | 100 Energie | 20 Edelsteine | sofort weiter |
 | Pay2win dauerhaft | Goldener Kessel (Erzeuger startet auf Stufe 2) | 400 Edelsteine | doppelter Fortschritt |
 | | Grosses Brett (+1 Reihe) | 250 Edelsteine | mehr Platz |
