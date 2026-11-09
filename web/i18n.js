@@ -30,6 +30,12 @@ const I18N = {
     restored: '{name} restored! +{g} 💎',
     daily: 'Daily bonus: +{g} 💎',
     settings: 'Settings', language: 'Language', sound: 'Sound', on: 'On', off: 'Off', privacy: 'Privacy policy', hiAmy: "Hi, I'm Amy!", hiAmyText: 'Welcome to my little island. Help me cook tasty treats for our guests and turn every old place into a cozy spot again!', letsGo: "Let's go!", support: 'Support',
+    map: 'Island map', locked: 'Locked', restore: 'Restore', newGuest: '{name} now visits you!', talk: 'Thanks!', here: 'Now',
+    dailyH: 'Daily tasks', calH: '7-day calendar', claim: 'Claim', claimed: 'Claimed', dayN: 'Day {n}', allBonus: 'All 3 done: +{g} 💎',
+    d_merge: 'Merge {n} times', d_deliver: 'Deliver {n} orders', d_spawn: 'Make {n} items', d_task: 'Finish {n} island task',
+    chest: 'Treasure chest: tap to open', chestOpen: 'Chest opened!', bubble: 'Bubble: tap to keep it for gems', bubbleH: 'Lucky bubble!', bubbleText: 'Keep this {name} for {g} 💎? It pops in {s} s.', keep: 'Keep',
+    storeH: 'Storage', storeIn: 'Put selected item in', storeOut: 'Take out', storeFull: 'Storage is full', storeEmpty: 'Select an item on the board, then put it here.',
+    albumH: 'Recipe album', albumNote: 'Discover every item of a chain for +{g} 💎.', albumDone: 'Album: {name} complete! +{g} 💎',
     amyLevel: 'Yay, level up!|You are a star chef!|Wonderful!', amyOrder: 'Yummy!|They loved it!|Great job!|Delicious!', amyMax: 'Wow, a masterpiece!|Perfect!',
     tut0: 'Tap the Bakery 🏠 to get wheat.',
     tut1: 'Two equal items? Drag one onto the other to merge them!',
@@ -67,6 +73,12 @@ const I18N = {
     restored: '{name} renoviert! +{g} 💎',
     daily: 'Tagesbonus: +{g} 💎',
     settings: 'Einstellungen', language: 'Sprache', sound: 'Ton', on: 'An', off: 'Aus', privacy: 'Datenschutz', hiAmy: 'Hallo, ich bin Amy!', hiAmyText: 'Willkommen auf meiner kleinen Insel. Hilf mir, leckere Sachen für unsere Gäste zu kochen und jeden alten Ort wieder gemütlich zu machen!', letsGo: 'Los geht\'s!', support: 'Support',
+    map: 'Inselkarte', locked: 'Gesperrt', restore: 'Herrichten', newGuest: '{name} besucht dich jetzt!', talk: 'Danke!', here: 'Jetzt',
+    dailyH: 'Tagesaufgaben', calH: '7-Tage-Kalender', claim: 'Abholen', claimed: 'Abgeholt', dayN: 'Tag {n}', allBonus: 'Alle 3 fertig: +{g} 💎',
+    d_merge: '{n}-mal zusammenziehen', d_deliver: '{n} Bestellungen liefern', d_spawn: '{n} Teile erzeugen', d_task: '{n} Inselaufgabe erledigen',
+    chest: 'Schatztruhe: antippen zum Öffnen', chestOpen: 'Truhe geöffnet!', bubble: 'Blase: antippen, um sie für Edelsteine zu behalten', bubbleH: 'Glücksblase!', bubbleText: 'Diese(n) {name} für {g} 💎 behalten? Platzt in {s} s.', keep: 'Behalten',
+    storeH: 'Lager', storeIn: 'Gewähltes Teil einlagern', storeOut: 'Rausnehmen', storeFull: 'Lager ist voll', storeEmpty: 'Wähle ein Teil auf dem Brett und lagere es hier ein.',
+    albumH: 'Rezeptalbum', albumNote: 'Entdecke alle Teile einer Kette für +{g} 💎.', albumDone: 'Album: {name} komplett! +{g} 💎',
     amyLevel: 'Juhu, Level geschafft!|Du bist ein Sternekoch!|Wunderbar!', amyOrder: 'Lecker!|Das hat geschmeckt!|Super gemacht!|Köstlich!', amyMax: 'Wow, ein Meisterwerk!|Perfekt!',
     tut0: 'Tippe auf die Bäckerei 🏠, um Weizen zu bekommen.',
     tut1: 'Zwei gleiche Teile? Zieh eins auf das andere!',
@@ -104,6 +116,15 @@ const I18N = {
       gems_80: { name: '80 Edelsteine' }, gems_500: { name: '500 Edelsteine' }, gems_1200: { name: '1.200 Edelsteine' },
       gems_2600: { name: '2.600 Edelsteine' }, gems_7000: { name: '7.000 Edelsteine' }, gems_15000: { name: '15.000 Edelsteine' }
     },
-    tags: { 'Best value': 'Bester Preis' }
+    tags: { 'Best value': 'Bester Preis' },
+    zones: ['Strandcafé', 'Kirschblüten-Teehaus', 'Hafen-Diner', 'Pizzeria Sonnenuntergang', 'Kokos-Strandbar', 'Leuchtturm-Restaurant'],
+    residents: [
+      { name: 'Kapitän Finn', hi: 'Ahoi! Dieses alte Café war mein Lieblingsort. Bringst du es wieder zum Leben?', thanks: 'Wie in alten Zeiten! Ich komme jetzt jeden Morgen zum Frühstück.' },
+      { name: 'Hana', hi: 'Willkommen in meinem Teehaus. Der Sturm hat alles zerstört... hilfst du mir?', thanks: 'Es ist schöner als vorher! Komm jederzeit auf einen Tee vorbei.' },
+      { name: 'Rosie', hi: 'Hey! Mein Diner braucht Liebe. Burger schmecken unter Neonlicht am besten!', thanks: 'Die Jukebox spielt wieder! Bester Diner der Insel, dank dir.' },
+      { name: 'Luca', hi: 'Ciao! Ohne Steinofen gibt es keine echte Pizza. Hilfst du mir?', thanks: 'Bellissimo! Die erste Pizza aus dem neuen Ofen ist für dich und Amy.' },
+      { name: 'Kai', hi: 'Yo! Der Strand ist ein Chaos. Machen wir daraus die coolste Bar in der Sonne!', thanks: 'Partyzeit! Heute Abend kommen alle an den Strand.' },
+      { name: 'Oma Rosa', hi: 'Kind, fünfzig Jahre habe ich diesen Leuchtturm leuchten lassen. Lass uns dort oben noch einmal kochen.', thanks: 'Das Leuchtfeuer brennt wieder. Du hast eine alte Dame sehr glücklich gemacht, Schätzchen.' }
+    ]
   }
 };

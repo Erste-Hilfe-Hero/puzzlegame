@@ -10,7 +10,7 @@ const DATA = {
   dailyGems: 2,
   sellCoins: l => 1 + l,
 
-  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker'],
+  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker', 'chest', 'place_0', 'place_1', 'place_2', 'place_3', 'place_4', 'place_5', 'res_0', 'res_1', 'res_2', 'res_3', 'res_4', 'res_5'],
 
   chains: {
     bakery: { img: true, name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
@@ -73,6 +73,30 @@ const DATA = {
       { name: 'Set the candle tables', cost: 12500 },
       { name: 'Light the beacon', cost: 14000 }] }
   ],
+
+  // One resident per place. Arrives when you start the place, thanks you when it is restored, then orders too.
+  residents: [
+    { name: 'Captain Finn', emoji: '👴', hi: 'Ahoy! This old café was my favourite spot. Can you bring it back to life?', thanks: 'Just like the old days! I will drop by for breakfast every morning.' },
+    { name: 'Hana', emoji: '👩', hi: 'Welcome to my tea house. The storm broke everything... will you help me?', thanks: 'It is more beautiful than before! Come and have tea with me any time.' },
+    { name: 'Rosie', emoji: '👩‍🍳', hi: 'Hey! My diner needs some love. Burgers taste best under neon lights!', thanks: 'The jukebox is playing again! Best diner on the island, thanks to you.' },
+    { name: 'Luca', emoji: '👨', hi: 'Ciao! Without the stone oven there is no real pizza. Help me fix it?', thanks: 'Bellissimo! The first pizza from the new oven is for you and Amy.' },
+    { name: 'Kai', emoji: '🏄', hi: 'Yo! The beach is a mess. Let us make it the coolest bar in the sun!', thanks: 'Party time! Everyone is coming to the beach tonight.' },
+    { name: 'Grandma Rosa', emoji: '👵', hi: 'Dear, I kept this lighthouse shining for fifty years. Let us cook up there once more.', thanks: 'The beacon shines again. You made an old lady very happy, sweetheart.' }
+  ],
+  mapPins: [[24, 76], [64, 66], [28, 50], [70, 42], [30, 25], [66, 16]],
+
+  // Daily tasks: 3 per day from this pool. reward: gems | coins | chest
+  dailyPool: [
+    { k: 'merge', n: 15, reward: { gems: 5 } }, { k: 'merge', n: 30, reward: { chest: 1 } },
+    { k: 'deliver', n: 3, reward: { coins: 60 } }, { k: 'deliver', n: 6, reward: { gems: 8 } },
+    { k: 'spawn', n: 40, reward: { coins: 80 } }, { k: 'task', n: 1, reward: { chest: 1 } }
+  ],
+  dailyAllBonus: { gems: 10 },
+  calendar: [{ gems: 3 }, { coins: 80 }, { chest: 1 }, { energy: 50 }, { gems: 8 }, { joker: 1 }, { gems: 20, chest: 1 }],
+  chestItems: 3,
+  bubbleChance: 0.06, bubbleSec: 60, bubbleCost: l => 4 + 3 * l,
+  storeSlots: 4,
+  albumGems: 25,
 
   // Real-money products. In the prototype they are test purchases.
   money: [
