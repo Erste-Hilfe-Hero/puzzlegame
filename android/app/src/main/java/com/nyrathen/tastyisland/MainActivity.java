@@ -42,7 +42,15 @@ public class MainActivity extends Activity {
         s.setJavaScriptEnabled(true);
         s.setDomStorageEnabled(true);
         s.setMediaPlaybackRequiresUserGesture(false);
-        web.setWebViewClient(new WebViewClient());
+        web.setWebViewClient(new WebViewClient() {
+            @Override public boolean shouldOverrideUrlLoading(WebView v, android.webkit.WebResourceRequest r) {
+                String u = r.getUrl().toString();
+                if (u.startsWith("file:")) return false;
+                try { startActivity(new android.content.Intent(android.content.Intent.ACTION_VIEW, r.getUrl())); } catch (Exception ignored) { }
+                return true;
+            }
+        });
+        s.setSupportMultipleWindows(false);
         web.addJavascriptInterface(new Bridge(), "AndroidBilling");
         setContentView(web);
         web.loadUrl("file:///android_asset/www/index.html");

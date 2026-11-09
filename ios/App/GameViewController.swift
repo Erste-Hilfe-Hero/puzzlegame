@@ -4,7 +4,7 @@ import StoreKit
 
 // Hosts the web game and bridges purchases to StoreKit 2. The game calls window.AndroidBilling.buy(id)
 // on both platforms; Apple product ids are the game ids with the bundle id as prefix.
-class GameViewController: UIViewController, WKScriptMessageHandler {
+class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private static let prefix = "com.nyrathen.tastyisland."
     private static let ids = ["gems_80", "gems_500", "gems_1200", "gems_2600", "gems_7000", "gems_15000", "starter", "pass"]
     private var web: WKWebView!
@@ -27,12 +27,25 @@ class GameViewController: UIViewController, WKScriptMessageHandler {
         web.backgroundColor = view.backgroundColor
         web.scrollView.isScrollEnabled = false
         web.scrollView.contentInsetAdjustmentBehavior = .never
+        web.navigationDelegate = self
+        web.uiDelegate = self
         view.addSubview(web)
         if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
         updates = Task { await listenForTransactions() }
         Task { await loadProducts() }
+    }
+
+    // links (privacy policy, mail) open outside the game
+    func webView(_ webView: WKWebView, decidePolicyFor action: WKNavigationAction, decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
+        if let u = action.request.url, u.scheme != "file" { UIApplication.shared.open(u); decisionHandler(.cancel); return }
+        decisionHandler(.allow)
+    }
+
+    func webView(_ webView: WKWebView, createWebViewWith configuration: WKWebViewConfiguration, for action: WKNavigationAction, windowFeatures: WKWindowFeatures) -> WKWebView? {
+        if let u = action.request.url { UIApplication.shared.open(u) }
+        return nil
     }
 
     private func js(_ code: String) {

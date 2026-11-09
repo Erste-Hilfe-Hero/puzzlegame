@@ -5,6 +5,8 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+permissions:
+  contents: write
 jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:ios')
@@ -26,3 +28,9 @@ jobs:
           name: ios-unsigned-${{ github.run_number }}
           path: ${{ runner.temp }}/AmysTastyIsland-unsigned.zip
           retention-days: 30
+      - name: Push unsigned app to branch ios-out/<run> (for the signing host)
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../AmysTastyIsland-unsigned.zip .
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "ios unsigned ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/ios-out/${{ github.run_number }}

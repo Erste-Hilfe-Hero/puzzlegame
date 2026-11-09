@@ -67,3 +67,5 @@ html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 
 .cell > span { display: grid; place-items: center; width: 100%; height: 100%; }
 .need img { width: 26px; height: 26px; object-fit: contain; display: block; }
 #ghost img { width: 52px; height: 52px; object-fit: contain; }
+
+.links{margin-top:1rem;text-align:center;font-size:.9rem}.links a{color:inherit}

@@ -409,7 +409,8 @@ function openSettings() {
   const opt = (k, v, label) => `<button class="opt ${P[k] === v ? 'on' : ''}" data-pref="${k}" data-val="${v}">${label}</button>`;
   openModal(`<h2>${t('settings')}</h2>
     <h3>${t('language')}</h3><div class="opts">${opt('lang', 'en', 'English')}${opt('lang', 'de', 'Deutsch')}</div>
-    <h3>${t('sound')}</h3><div class="opts">${opt('sound', true, t('on'))}${opt('sound', false, t('off'))}</div>`);
+    <h3>${t('sound')}</h3><div class="opts">${opt('sound', true, t('on'))}${opt('sound', false, t('off'))}</div>
+    <p class="links"><a href="https://play.nyrathen.com/legal/tasty-island-privacy.${P.lang}.html" target="_blank" rel="noopener">${t('privacy')}</a> · <a href="mailto:lords.azz6@gmail.com">${t('support')}</a></p>`);
 }
 
 function applyStaticTexts() {
