@@ -1,0 +1,28 @@
+# Unsigned iOS archive on a free GitHub macOS runner (repo is public). Signing and App Store upload happen
+# on the Contabo host with the account's keys. Trigger: commit message containing "run:ios", or manual.
+name: iOS build
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:ios')
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate project
+        run: brew install xcodegen && cd ios && xcodegen generate
+      - name: Archive (unsigned)
+        run: |
+          cd ios
+          xcodebuild -project AmysTastyIsland.xcodeproj -scheme AmysTastyIsland -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/ati.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
+          cd $RUNNER_TEMP/ati.xcarchive/Products/Applications && ditto -c -k --keepParent AmysTastyIsland.app $RUNNER_TEMP/AmysTastyIsland-unsigned.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ios-unsigned-${{ github.run_number }}
+          path: ${{ runner.temp }}/AmysTastyIsland-unsigned.zip
+          retention-days: 30
