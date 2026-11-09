@@ -246,10 +246,13 @@ function goldenFix() {
   S.orders.forEach(o => o.need.forEach(x => { if (x.l === 0) x.l = 1; }));
 }
 
-function buyMoney(p) {
-  // Prototype: test purchase, no payment. Real stores: Play Billing / StoreKit / Stripe.
+const NATIVE = window.AndroidBilling || null;
+let nativePrices = {};
+const productById = id => (id === 'starter' ? DATA.starter : id === 'pass' ? DATA.pass : DATA.money.find(p => p.id === id));
+const priceOf = p => nativePrices[p.id] || p.price;
+
+function grantMoney(p) {
   if (p.id === 'starter') {
-    if (S.starterBought) return;
     S.starterBought = true; S.gems += p.gems; S.energy += p.energy; S.perm.golden = true; goldenFix();
   } else if (p.id === 'pass') {
     S.passUntil = Math.max(now(), S.passUntil) + p.days * 864e5;
@@ -257,9 +260,23 @@ function buyMoney(p) {
   } else {
     S.gems += p.gems;
   }
-  toast(t('testBuy', { name: pName(p) })); sfx('buy');
-  commit(); openShop();
+  sfx('buy');
+  commit();
+  if (!$('modal').hidden) openShop();
 }
+
+function buyMoney(p) {
+  if (p.id === 'starter' && S.starterBought) return;
+  if (NATIVE) { NATIVE.buy(p.id); return; }
+  // Browser test version: no payment.
+  toast(t('testBuy', { name: pName(p) }));
+  grantMoney(p);
+}
+
+window.onNativePurchase = id => { const p = productById(id); if (p) { grantMoney(p); toast(`✅ ${pName(p)}`); } };
+window.onNativePrices = map => { nativePrices = map || {}; };
+window.onNativePurchaseError = code => toast(t('buyError', { code }));
+window.onNativeBack = () => { if (!$('modal').hidden) closeModal(); else if (NATIVE) NATIVE.exit(); };
 
 function buyGem(item) {
   if (S.gems < item.cost) { toast(t('noGems')); sfx('error'); return; }
@@ -403,13 +420,13 @@ function applyStaticTexts() {
 
 function openShop() {
   const money = p => `<div class="prod"><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}</div>
-    <button data-money="${p.id}" ${p.id === 'starter' && S.starterBought ? 'disabled' : ''}>${p.id === 'starter' && S.starterBought ? t('owned') : p.price}</button></div>`;
+    <button data-money="${p.id}" ${p.id === 'starter' && S.starterBought ? 'disabled' : ''}>${p.id === 'starter' && S.starterBought ? t('owned') : priceOf(p)}</button></div>`;
   const gem = g => {
     const owned = g.kind === 'perm' && S.perm[g.id];
     return `<div class="prod"><div><b>${g.icon} ${pName(g)}</b><small>${pDesc(g)}</small></div>
       <button data-gem="${g.id}" ${owned ? 'disabled' : ''}>${owned ? t('owned') : `💎 ${g.cost}`}</button></div>`;
   };
-  openModal(`<h2>${t('shop')}</h2><p class="note">${t('shopNote')}</p>
+  openModal(`<h2>${t('shop')}</h2>${NATIVE ? '' : `<p class="note">${t('shopNote')}</p>`}
     <h3>${t('offers')}</h3>${money(DATA.starter)}${money(DATA.pass)}
     <h3>${t('power')}</h3>${DATA.gemShop.map(gem).join('')}
     <h3>${t('gemsH')}</h3>${DATA.money.map(money).join('')}`);
@@ -501,7 +518,7 @@ $('orders').addEventListener('click', e => {
 
 $('modal-body').addEventListener('click', e => {
   const m = e.target.closest('[data-money]');
-  if (m) { const id = m.dataset.money; buyMoney(id === 'starter' ? DATA.starter : id === 'pass' ? DATA.pass : DATA.money.find(p => p.id === id)); }
+  if (m) buyMoney(productById(m.dataset.money));
   const g = e.target.closest('[data-gem]');
   if (g) buyGem(DATA.gemShop.find(x => x.id === g.dataset.gem));
   const tk = e.target.closest('[data-task]');

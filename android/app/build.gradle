@@ -1,0 +1,43 @@
+plugins { id 'com.android.application' }
+
+def ks = file(System.getenv('TI_KEYSTORE') ?: 'none')
+
+android {
+    namespace 'com.nyrathen.tastyisland'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.nyrathen.tastyisland'
+        minSdk 24
+        targetSdk 35
+        versionCode Integer.parseInt(System.getenv('TI_VERSION_CODE') ?: '1')
+        versionName '1.0.0'
+    }
+    signingConfigs {
+        upload {
+            if (ks.exists()) {
+                storeFile ks
+                storePassword System.getenv('TI_KEYSTORE_PASS')
+                keyAlias 'upload'
+                keyPassword System.getenv('TI_KEYSTORE_PASS')
+            }
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ks.exists()) signingConfig signingConfigs.upload
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    sourceSets { main { assets.srcDirs = ["$buildDir/www-assets"] } }
+}
+
+dependencies {
+    implementation 'com.android.billingclient:billing:7.1.1'
+}
+
+tasks.register('copyWeb', Copy) {
+    from("$rootDir/../web") { exclude '**/.DS_Store' }
+    into "$buildDir/www-assets/www"
+}
+preBuild.dependsOn copyWeb
