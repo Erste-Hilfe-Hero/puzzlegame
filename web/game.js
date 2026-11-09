@@ -283,11 +283,17 @@ function buyGem(item) {
 }
 
 // ---------- UI ----------
+function icon(ch, l) {
+  if (!DATA.chains[ch].img) return DATA.chains[ch].items[l];
+  const key = `${ch}_${l}`;
+  return `<img src="${(window.IMG && window.IMG[key]) || `img/${key}.png`}" alt="" draggable="false">`;
+}
+
 function cellHtml(c) {
   if (!c) return '';
   if (c.gen) return `<span class="gen">${DATA.chains[c.gen].gen}</span>`;
   if (c.joker) return '<span>🃏</span>';
-  return `<span>${DATA.chains[c.c].items[c.l]}</span><b>${c.l + 1}</b>`;
+  return `<span>${icon(c.c, c.l)}</span><b>${c.l + 1}</b>`;
 }
 
 function itemName(c) {
@@ -321,7 +327,7 @@ function render() {
     const parts = o.need.map(x => {
       const have = S.board.some(c => c && c.c === x.c && c.l === x.l);
       S.board.forEach((c, i) => { if (c && c.c === x.c && c.l === x.l) wanted.add(i); });
-      return `<span class="need ${have ? 'have' : ''}">${DATA.chains[x.c].items[x.l]}<i>${x.l + 1}</i></span>`;
+      return `<span class="need ${have ? 'have' : ''}">${icon(x.c, x.l)}<i>${x.l + 1}</i></span>`;
     }).join('');
     return `<div class="order ${ok ? 'ready' : ''}"><div class="who">${o.who}</div><div class="needs">${parts}</div>
       ${ok ? `<button data-deliver="${k}">${t('deliver')}</button>` : `<small>🪙${o.coins}</small>`}</div>`;

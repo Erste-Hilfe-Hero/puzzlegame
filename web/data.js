@@ -11,10 +11,10 @@ const DATA = {
   sellCoins: l => 1 + l,
 
   chains: {
-    bakery: { name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
+    bakery: { img: true, name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
       items: ['🌾', '🍞', '🥐', '🥖', '🥨', '🧇', '🍰', '🎂'],
       names: ['Wheat', 'Bread', 'Croissant', 'Baguette', 'Pretzel', 'Waffle', 'Cake Slice', 'Party Cake'] },
-    fruit: { name: 'Fruit', gen: '🌳', genName: 'Orchard', unlock: 2,
+    fruit: { img: true, name: 'Fruit', gen: '🌳', genName: 'Orchard', unlock: 2,
       items: ['🍒', '🍓', '🍎', '🍐', '🍑', '🍍', '🍉', '🧺'],
       names: ['Cherry', 'Strawberry', 'Apple', 'Pear', 'Peach', 'Pineapple', 'Watermelon', 'Fruit Basket'] },
     cafe: { name: 'Drinks', gen: '☕', genName: 'Coffee Machine', unlock: 4,
