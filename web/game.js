@@ -397,7 +397,7 @@ function renderTut() {
   const box = $('tut');
   if (S.tut >= 4) { box.hidden = true; return; }
   box.hidden = false;
-  box.textContent = t('tut' + S.tut);
+  box.innerHTML = `<img class="amy" src="img/amy_face.png" alt=""><span>${t('tut' + S.tut)}</span>`;
   let target = null;
   if (S.tut === 0) target = $('board').children[S.board.findIndex(c => c && c.gen === 'bakery')];
   if (S.tut === 2) target = document.querySelector('[data-deliver]');
@@ -427,7 +427,7 @@ function openShop() {
     return `<div class="prod"><div><b>${g.icon} ${pName(g)}</b><small>${pDesc(g)}</small></div>
       <button data-gem="${g.id}" ${owned ? 'disabled' : ''}>${owned ? t('owned') : `💎 ${g.cost}`}</button></div>`;
   };
-  openModal(`<h2>${t('shop')}</h2>${NATIVE ? '' : `<p class="note">${t('shopNote')}</p>`}
+  openModal(`<h2 class="amyh"><img class="amy" src="img/amy_face.png" alt="">${t('shop')}</h2>${NATIVE ? '' : `<p class="note">${t('shopNote')}</p>`}
     <h3>${t('offers')}</h3>${money(DATA.starter)}${money(DATA.pass)}
     <h3>${t('power')}</h3>${DATA.gemShop.map(gem).join('')}
     <h3>${t('gemsH')}</h3>${DATA.money.map(money).join('')}`);
@@ -544,6 +544,11 @@ applyStaticTexts();
 daily();
 fillOrders();
 commit();
+if (S.tut === 0 && !S.metAmy) {
+  S.metAmy = true; save();
+  openModal(`<div class="welcome"><img src="img/amy_full.png" alt="Amy"><h2>${t('hiAmy')}</h2><p>${t('hiAmyText')}</p><button id="btn-go">${t('letsGo')}</button></div>`);
+  $('btn-go').onclick = closeModal;
+}
 setInterval(render, 1000);
 setInterval(autoMergeTick, 700);
 window.__game = { get state() { return S; }, spawn, drop, deliver, buyGem, buyMoney, doTask };
