@@ -14,6 +14,11 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Use Xcode 26 (App Store needs the iOS 26 SDK)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          echo "xcode: $X"; ls -d /Applications/Xcode*.app
+          [ -n "$X" ] && sudo xcode-select -s "$X"; xcodebuild -version
       - name: Generate project
         run: brew install xcodegen && cd ios && xcodegen generate
       - name: Archive (unsigned)
