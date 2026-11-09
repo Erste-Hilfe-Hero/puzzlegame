@@ -10,6 +10,8 @@ const DATA = {
   dailyGems: 2,
   sellCoins: l => 1 + l,
 
+  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker'],
+
   chains: {
     bakery: { img: true, name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
       items: ['🌾', '🍞', '🥐', '🥖', '🥨', '🧇', '🍰', '🎂'],
@@ -17,16 +19,16 @@ const DATA = {
     fruit: { img: true, name: 'Fruit', gen: '🌳', genName: 'Orchard', unlock: 2,
       items: ['🍒', '🍓', '🍎', '🍐', '🍑', '🍍', '🍉', '🧺'],
       names: ['Cherry', 'Strawberry', 'Apple', 'Pear', 'Peach', 'Pineapple', 'Watermelon', 'Fruit Basket'] },
-    cafe: { name: 'Drinks', gen: '☕', genName: 'Coffee Machine', unlock: 4,
+    cafe: { img: true, name: 'Drinks', gen: '☕', genName: 'Coffee Machine', unlock: 4,
       items: ['🥛', '☕', '🍵', '🥤', '🧋', '🍹', '🍨', '🍧'],
-      names: ['Milk', 'Coffee', 'Tea', 'Soda', 'Bubble Tea', 'Smoothie', 'Ice Cream', 'Shaved Ice'] },
-    kitchen: { name: 'Kitchen', gen: '🍳', genName: 'Stove', unlock: 6,
+      names: ['Milk', 'Coffee', 'Tea', 'Soda', 'Bubble Tea', 'Smoothie', 'Sundae', 'Ice Pop'] },
+    kitchen: { img: true, name: 'Kitchen', gen: '🍳', genName: 'Stove', unlock: 6,
       items: ['🥚', '🍳', '🥞', '🥪', '🌮', '🍔', '🍕', '🍱'],
       names: ['Egg', 'Fried Egg', 'Pancakes', 'Sandwich', 'Taco', 'Burger', 'Pizza', 'Bento Box'] },
-    veggie: { name: 'Veggies', gen: '🚜', genName: 'Farm', unlock: 8,
+    veggie: { img: true, name: 'Veggies', gen: '🚜', genName: 'Farm', unlock: 8,
       items: ['🥕', '🌽', '🥦', '🍅', '🥗', '🍲', '🥘', '🍛'],
       names: ['Carrot', 'Corn', 'Broccoli', 'Tomato', 'Salad', 'Soup', 'Paella', 'Curry'] },
-    sweets: { name: 'Sweets', gen: '🍭', genName: 'Candy Cart', unlock: 11,
+    sweets: { img: true, name: 'Sweets', gen: '🍭', genName: 'Candy Cart', unlock: 11,
       items: ['🍬', '🍭', '🍫', '🍪', '🍩', '🧁', '🍮', '🎁'],
       names: ['Candy', 'Lollipop', 'Chocolate', 'Cookie', 'Donut', 'Cupcake', 'Pudding', 'Sweet Box'] }
   },

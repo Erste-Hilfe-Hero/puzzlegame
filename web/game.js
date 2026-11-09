@@ -102,7 +102,7 @@ function addXp(x) {
     S.level++;
     S.gems += DATA.levelUpGems;
     S.energy = Math.max(S.energy, energyMax());
-    toast(t('levelUp', { n: S.level, g: DATA.levelUpGems })); sfx('level');
+    toast(t('levelUp', { n: S.level, g: DATA.levelUpGems })); sfx('level'); setTimeout(() => { amySay('amyLevel'); fly($('lvl'), 'gems', '💎', 3); }, 400);
     for (const [key, ch] of Object.entries(DATA.chains)) {
       if (ch.unlock === S.level) placeGenerator(key);
     }
@@ -153,6 +153,10 @@ function deliver(k) {
   const o = S.orders[k];
   const cells = findItems(o.need);
   if (!cells) return;
+  const card = $('orders').children[k];
+  fly(card, 'coins', '🪙', Math.min(6, 2 + Math.floor(o.coins / 10)));
+  fly(card, 'xp', '⭐', 2);
+  if (Math.random() < 0.5) amySay('amyOrder');
   cells.forEach(i => { S.board[i] = null; });
   S.coins += o.coins;
   S.orders.splice(k, 1);
@@ -163,6 +167,46 @@ function deliver(k) {
   toast(`+${o.coins} 🪙  +${o.xp} XP`); sfx('deliver');
   if (S.tut === 2) S.tut = 3;
   commit();
+}
+
+
+// ---------- juice ----------
+const RM = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+function center(el) { const r = el.getBoundingClientRect(); return [r.left + r.width / 2, r.top + r.height / 2]; }
+function burst(i, big) {
+  const el = $('board').children[i]; if (!el || RM()) return;
+  const [x, y] = center(el);
+  const cols = ['#ffd84d', '#ff8fb1', '#7fe3ff', '#ffffff', '#9dff7a'];
+  for (let k = 0; k < (big ? 18 : 10); k++) {
+    const p = document.createElement('i'); p.className = 'spark';
+    const a = Math.random() * Math.PI * 2, d = 22 + Math.random() * (big ? 46 : 28);
+    p.style.cssText = `left:${x}px;top:${y}px;background:${cols[k % cols.length]};--dx:${Math.cos(a) * d}px;--dy:${Math.sin(a) * d}px`;
+    document.body.appendChild(p); setTimeout(() => p.remove(), 650);
+  }
+  const ring = document.createElement('i'); ring.className = 'ring';
+  ring.style.cssText = `left:${x}px;top:${y}px`; document.body.appendChild(ring); setTimeout(() => ring.remove(), 500);
+}
+function fly(fromEl, toId, glyph, n) {
+  const to = $(toId); if (!fromEl || !to) return;
+  const [x0, y0] = center(fromEl), [x1, y1] = center(to);
+  for (let k = 0; k < n; k++) {
+    const f = document.createElement('i'); f.className = 'fly'; f.textContent = glyph;
+    f.style.cssText = `left:${x0 + (Math.random() - .5) * 30}px;top:${y0 + (Math.random() - .5) * 20}px`;
+    document.body.appendChild(f);
+    setTimeout(() => {
+      f.style.transform = `translate(${x1 - x0}px, ${y1 - y0}px) scale(.6)`; f.style.opacity = '.3';
+    }, 30 + k * 70);
+    setTimeout(() => { f.remove(); bump(toId); }, 650 + k * 70);
+  }
+}
+function bump(id) { const el = $(id).closest('.res, .lvl') || $(id); el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+let amyT = 0;
+function amySay(key) {
+  const a = $('amy-pop'); if (!a) return;
+  const lines = t(key).split('|');
+  a.querySelector('span').textContent = lines[rnd(0, lines.length - 1)];
+  a.hidden = false; a.classList.remove('in'); void a.offsetWidth; a.classList.add('in');
+  clearTimeout(amyT); amyT = setTimeout(() => { a.hidden = true; }, 2400);
 }
 
 // ---------- board actions ----------
@@ -205,11 +249,11 @@ function drop(from, to) {
   if (from === to || to < 0) return;
   const a = S.board[from], b = S.board[to];
   if (a && a.joker && b && b.c && b.l < MAX_L) {
-    b.l++; S.board[from] = null; flash(to); S.stats.merges++; sfx('merge');
+    b.l++; S.board[from] = null; flash(to); burst(to, true); S.stats.merges++; sfx('merge');
   } else if (a && b && a.c && b.c && a.c === b.c && a.l === b.l && a.l < MAX_L) {
-    S.board[to] = { c: a.c, l: a.l + 1 }; S.board[from] = null; flash(to); S.stats.merges++; sfx('merge');
+    S.board[to] = { c: a.c, l: a.l + 1 }; S.board[from] = null; flash(to); burst(to, a.l + 1 >= 5); S.stats.merges++; sfx('merge');
     if (S.tut === 1) S.tut = 2;
-    if (a.l + 1 === MAX_L) toast(t('maxLevel', { name: nm(a.c, MAX_L) }));
+    if (a.l + 1 === MAX_L) { toast(t('maxLevel', { name: nm(a.c, MAX_L) })); amySay('amyMax'); }
   } else {
     S.board[to] = a; S.board[from] = b;
   }
@@ -301,15 +345,21 @@ function buyGem(item) {
 
 // ---------- UI ----------
 function icon(ch, l) {
-  if (!DATA.chains[ch].img) return DATA.chains[ch].items[l];
+  const a = DATA.chains[ch].img;
+  if (!a || (a !== true && l >= a)) return DATA.chains[ch].items[l];
   const key = `${ch}_${l}`;
   return `<img src="${(window.IMG && window.IMG[key]) || `img/${key}.png`}" alt="" draggable="false">`;
 }
 
+const ART = new Set(['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker'].filter(k => DATA.art && DATA.art.includes(k)));
+function art(key, emoji) {
+  return ART.has(key) ? `<img src="${(window.IMG && window.IMG[key]) || `img/${key}.png`}" alt="" draggable="false">` : emoji;
+}
+
 function cellHtml(c) {
   if (!c) return '';
-  if (c.gen) return `<span class="gen">${DATA.chains[c.gen].gen}</span>`;
-  if (c.joker) return '<span>🃏</span>';
+  if (c.gen) return `<span class="gen">${art('gen_' + c.gen, DATA.chains[c.gen].gen)}</span>`;
+  if (c.joker) return `<span>${art('joker', '🃏')}</span>`;
   return `<span>${icon(c.c, c.l)}</span><b>${c.l + 1}</b>`;
 }
 
