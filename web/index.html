@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>Alchemy Isle</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="lvl"><span id="lvl">1</span><div class="xpbar"><div id="xp"></div></div></div>
+    <div class="res" id="res-energy">⚡ <span id="energy">100</span><small id="energy-timer"></small></div>
+    <div class="res">🪙 <span id="coins">0</span></div>
+    <div class="res">💎 <span id="gems">0</span></div>
+    <button id="btn-shop" class="shop-btn">Shop</button>
+  </header>
+  <div id="boosts"></div>
+  <section id="orders"></section>
+  <main id="board"></main>
+  <footer id="bottom">
+    <div id="info">Tap a generator to make items. Drag two equal items together to merge.</div>
+    <button id="btn-sell" hidden>Sell</button>
+    <button id="btn-island">🏝️ Island</button>
+  </footer>
+</div>
+<div id="ghost" hidden></div>
+<div id="toast" hidden></div>
+<div id="modal" hidden><div class="sheet"><button class="close" id="modal-close">✕</button><div id="modal-body"></div></div></div>
+<script src="data.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
