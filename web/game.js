@@ -342,7 +342,7 @@ function openShop() {
 
 function openIsland() {
   const z = DATA.zones[S.zone];
-  if (!z) { openModal('<h2>Travel</h2><p>All places restored. More trips coming soon!</p>'); return; }
+  if (!z) { openModal('<h2>Island</h2><p>All places restored. More islands coming soon!</p>'); return; }
   const rows = z.tasks.map((t, k) => {
     const done = S.tasksDone.includes(k);
     return `<div class="prod ${done ? 'done' : ''}"><div><b>${done ? '✅' : '🔨'} ${t.name}</b></div>

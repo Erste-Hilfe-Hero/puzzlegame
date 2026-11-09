@@ -1,12 +1,12 @@
-# Amy's Tasty World - Konzept (Merge-2, nur Ingame-Kaeufe)
+# Amy's Tasty Island - Konzept (Merge-2, nur Ingame-Kaeufe)
 
-Stand 09.11.2026. Name "Amy's Tasty World" (Store: "Amy's Tasty World: Merge & Cook") (Hauptsprache Englisch, Deutsch als 2. Sprache).
+Stand 09.11.2026. Name "Amy's Tasty Island" (Store: "Amy's Tasty Island: Merge & Cook") (Hauptsprache Englisch, Deutsch als 2. Sprache).
 
 ## Idee (eigene Welt, keine Kopie)
 
-Die junge Koechin Amy reist um die Welt und bringt heruntergekommene Cafes und Restaurants wieder zum Laufen: Paris Cafe, Tokyo Tea House, New York Diner, spaeter mehr. Sie zieht Zutaten zusammen (Merge-2: Weizen -> Brot -> Croissant ..., Kirsche -> ... -> Obstkorb, Milch -> Kaffee -> ... -> Eis), bedient Gaeste mit Bestellungen und renoviert mit dem Gold jeden Ort.
+Die junge Koechin Amy kommt auf eine verlassene Urlaubsinsel und bringt deren heruntergekommene Cafes und Restaurants wieder zum Laufen: Seaside Cafe, Blossom Tea House, Harbor Diner, spaeter weitere Inseln. Sie zieht Zutaten zusammen (Merge-2: Weizen -> Brot -> Croissant ..., Kirsche -> ... -> Obstkorb, Milch -> Kaffee -> ... -> Eis), bedient Gaeste mit Bestellungen und renoviert mit dem Gold jeden Ort.
 
-Gleiches Genre und gleiche Mechanik wie Tasty Travels (Merge-2, Kochen, Reisen, Renovieren). Bewusst NICHT uebernommen: Name, Figuren, Grafik, Orte-Reihenfolge, Texte und UI-Look. Grund: Store-Ablehnung wegen Verwechslung/Nachahmung und Markenrecht.
+Gleiches Genre und gleiche Mechanik wie Tasty Travels (Merge-2, Kochen, Orte renovieren). Bewusst NICHT uebernommen: Name, Figuren, Grafik, Orte-Reihenfolge, Texte und UI-Look. Grund: Store-Ablehnung wegen Verwechslung/Nachahmung und Markenrecht.
 
 ## Kern-Schleife
 

@@ -25,20 +25,20 @@ const DATA = {
   customers: ['👩‍🌾', '🧙', '🧝', '👨‍🍳', '🧑‍🚀', '👵', '🧛', '🧚', '🧜', '🤴'],
 
   zones: [
-    { name: 'Paris Café', bonusGems: 20, tasks: [
+    { name: 'Seaside Café', bonusGems: 20, tasks: [
       { name: 'Sweep the terrace', cost: 30 },
       { name: 'Fix the counter', cost: 60 },
       { name: 'Hang the awning', cost: 100 },
       { name: 'Polish the espresso bar', cost: 150 },
       { name: 'Set the bistro tables', cost: 220 },
       { name: 'Light the street lamps', cost: 300 }] },
-    { name: 'Tokyo Tea House', bonusGems: 30, tasks: [
+    { name: 'Blossom Tea House', bonusGems: 30, tasks: [
       { name: 'Repair the paper doors', cost: 400 },
       { name: 'Lay the tatami mats', cost: 520 },
       { name: 'Hang the lanterns', cost: 650 },
       { name: 'Plant the cherry tree', cost: 800 },
       { name: 'Open the tea counter', cost: 1000 }] },
-    { name: 'New York Diner', bonusGems: 50, tasks: [
+    { name: 'Harbor Diner', bonusGems: 50, tasks: [
       { name: 'Fix the neon sign', cost: 1300 },
       { name: 'Reupholster the booths', cost: 1600 },
       { name: 'Install the jukebox', cost: 2000 },
