@@ -11,38 +11,38 @@ const DATA = {
   sellCoins: l => 1 + l,
 
   chains: {
-    herb: { name: 'Herbs', gen: '🪴', genName: 'Herb Bed', unlock: 1,
-      items: ['🌱', '🌿', '🍀', '🌾', '🌸', '🌻', '🌳', '🌺'],
-      names: ['Sprout', 'Herb', 'Clover', 'Wheat Bundle', 'Blossom', 'Sunflower', 'Elder Tree', 'Moonflower'] },
-    crystal: { name: 'Crystals', gen: '⛲', genName: 'Spring', unlock: 2,
-      items: ['💧', '❄️', '🧊', '💠', '🔹', '💎', '🔮', '🌈'],
-      names: ['Drop', 'Frost', 'Ice Shard', 'Prism', 'Gemlet', 'Crystal', 'Orb', 'Rainbow Core'] },
-    potion: { name: 'Potions', gen: '🫕', genName: 'Cauldron', unlock: 4,
-      items: ['🧪', '⚗️', '🍶', '🍯', '🏺', '🧉', '🏆', '👑'],
-      names: ['Vial', 'Flask', 'Tonic', 'Honey Draught', 'Amphora', 'Elixir', 'Grand Cup', 'Crown Potion'] }
+    bakery: { name: 'Bakery', gen: '🌾', genName: 'Wheat Field', unlock: 1,
+      items: ['🌾', '🍞', '🥐', '🥖', '🥨', '🧇', '🍰', '🎂'],
+      names: ['Wheat', 'Bread', 'Croissant', 'Baguette', 'Pretzel', 'Waffle', 'Cake Slice', 'Party Cake'] },
+    fruit: { name: 'Fruit', gen: '🌳', genName: 'Orchard', unlock: 2,
+      items: ['🍒', '🍓', '🍎', '🍐', '🍑', '🍍', '🍉', '🧺'],
+      names: ['Cherry', 'Strawberry', 'Apple', 'Pear', 'Peach', 'Pineapple', 'Watermelon', 'Fruit Basket'] },
+    cafe: { name: 'Drinks', gen: '☕', genName: 'Coffee Machine', unlock: 4,
+      items: ['🥛', '☕', '🍵', '🥤', '🧋', '🍹', '🍨', '🍧'],
+      names: ['Milk', 'Coffee', 'Tea', 'Soda', 'Bubble Tea', 'Smoothie', 'Ice Cream', 'Shaved Ice'] }
   },
 
   customers: ['👩‍🌾', '🧙', '🧝', '👨‍🍳', '🧑‍🚀', '👵', '🧛', '🧚', '🧜', '🤴'],
 
   zones: [
-    { name: 'Workshop', bonusGems: 20, tasks: [
-      { name: 'Clear the rubble', cost: 30 },
+    { name: 'Paris Café', bonusGems: 20, tasks: [
+      { name: 'Sweep the terrace', cost: 30 },
       { name: 'Fix the counter', cost: 60 },
-      { name: 'Light the lamps', cost: 100 },
-      { name: 'Repair the shelves', cost: 150 },
-      { name: 'Paint the door', cost: 220 },
-      { name: 'Plant the herb garden', cost: 300 }] },
-    { name: 'Harbor', bonusGems: 30, tasks: [
-      { name: 'Patch the pier', cost: 400 },
-      { name: 'Raise the sail', cost: 520 },
-      { name: 'Hang the nets', cost: 650 },
-      { name: 'Build a fish stall', cost: 800 },
-      { name: 'Light the lighthouse', cost: 1000 }] },
-    { name: 'Sky Market', bonusGems: 50, tasks: [
-      { name: 'Set up the stalls', cost: 1300 },
-      { name: 'Hang the banners', cost: 1600 },
-      { name: 'Open the tea house', cost: 2000 },
-      { name: 'Ring the market bell', cost: 2500 }] }
+      { name: 'Hang the awning', cost: 100 },
+      { name: 'Polish the espresso bar', cost: 150 },
+      { name: 'Set the bistro tables', cost: 220 },
+      { name: 'Light the street lamps', cost: 300 }] },
+    { name: 'Tokyo Tea House', bonusGems: 30, tasks: [
+      { name: 'Repair the paper doors', cost: 400 },
+      { name: 'Lay the tatami mats', cost: 520 },
+      { name: 'Hang the lanterns', cost: 650 },
+      { name: 'Plant the cherry tree', cost: 800 },
+      { name: 'Open the tea counter', cost: 1000 }] },
+    { name: 'New York Diner', bonusGems: 50, tasks: [
+      { name: 'Fix the neon sign', cost: 1300 },
+      { name: 'Reupholster the booths', cost: 1600 },
+      { name: 'Install the jukebox', cost: 2000 },
+      { name: 'Open the rooftop bar', cost: 2500 }] }
   ],
 
   // Real-money products. In the prototype they are test purchases.

@@ -1,19 +1,19 @@
-# Amy's Tasty Potions - Konzept (Merge-2, nur Ingame-Kaeufe)
+# Amy's Tasty World - Konzept (Merge-2, nur Ingame-Kaeufe)
 
-Stand 09.11.2026. Name "Amy's Tasty Potions" (Store: "Amy's Tasty Potions: Merge") (Hauptsprache Englisch, Deutsch als 2. Sprache).
+Stand 09.11.2026. Name "Amy's Tasty World" (Store: "Amy's Tasty World: Merge & Cook") (Hauptsprache Englisch, Deutsch als 2. Sprache).
 
 ## Idee (eigene Welt, keine Kopie)
 
-Die junge Alchemistin Amy erbt eine verfallene Trank-Werkstatt auf einer schwebenden Insel. Sie zieht Kraeuter, Kristalle und Traenke zusammen (Merge-2), erfuellt Auftraege von Inselbewohnern und baut mit dem verdienten Gold die Insel Stueck fuer Stueck wieder auf (Werkstatt, Garten, Hafen, Leuchtturm, Markt). Jede Zone bringt neue Bewohner, neue Ketten und neue Erzeuger.
+Die junge Koechin Amy reist um die Welt und bringt heruntergekommene Cafes und Restaurants wieder zum Laufen: Paris Cafe, Tokyo Tea House, New York Diner, spaeter mehr. Sie zieht Zutaten zusammen (Merge-2: Weizen -> Brot -> Croissant ..., Kirsche -> ... -> Obstkorb, Milch -> Kaffee -> ... -> Eis), bedient Gaeste mit Bestellungen und renoviert mit dem Gold jeden Ort.
 
-Gleiches Genre wie Tasty Travels (Merge-2 + Auftraege + Aufbau), aber eigene Welt, eigene Figuren, eigene Ketten, eigener Name.
+Gleiches Genre und gleiche Mechanik wie Tasty Travels (Merge-2, Kochen, Reisen, Renovieren). Bewusst NICHT uebernommen: Name, Figuren, Grafik, Orte-Reihenfolge, Texte und UI-Look. Grund: Store-Ablehnung wegen Verwechslung/Nachahmung und Markenrecht.
 
 ## Kern-Schleife
 
-1. Erzeuger antippen (Kraeuterbeet, Quelle, Kessel) -> kostet 1 Energie -> neues Teil auf dem Brett.
+1. Erzeuger antippen (Weizenfeld, Obstgarten, Kaffeemaschine) -> kostet 1 Energie -> neues Teil auf dem Brett.
 2. Zwei gleiche Teile zusammenziehen -> naechste Stufe (8 Stufen pro Kette).
 3. Bewohner bestellen bestimmte Teile -> liefern -> Gold + Erfahrung.
-4. Gold -> Insel-Aufgaben (z. B. "Theke reparieren") -> Sterne -> neue Zone.
+4. Gold -> Renovier-Aufgaben (z. B. "Theke reparieren") -> naechster Ort.
 5. Level-Aufstieg -> Gratis-Edelsteine + Energie aufgefuellt.
 
 ## Waehrungen
@@ -31,10 +31,10 @@ Regel: **Keine Pop-ups, keine Werbung, keine Kauf-Erinnerungen, kein roter Punkt
 | Gruppe | Artikel | Preis | Wirkung |
 |---|---|---|---|
 | Edelsteine | 80 / 500 / 1.200 / 2.600 / 7.000 / 15.000 | 0,99 / 4,99 / 9,99 / 19,99 / 49,99 / 99,99 EUR | Premium-Waehrung |
-| Starterpaket (einmalig) | 300 Edelsteine + Goldener Kessel + 200 Energie | 2,99 EUR | starker Einstieg |
+| Starterpaket (einmalig) | 300 Edelsteine + Goldene Kueche + 200 Energie | 2,99 EUR | starker Einstieg |
 | Monatspass (Amy's Pass) | 30 Tage: 60 Edelsteine/Tag + Energie-Max 150 | 9,99 EUR | Dauer-Vorteil |
 | Energie | 100 Energie | 20 Edelsteine | sofort weiter |
-| Pay2win dauerhaft | Goldener Kessel (Erzeuger startet auf Stufe 2) | 400 Edelsteine | doppelter Fortschritt |
+| Pay2win dauerhaft | Goldene Kueche (Erzeuger startet auf Stufe 2) | 400 Edelsteine | doppelter Fortschritt |
 | | Grosses Brett (+1 Reihe) | 250 Edelsteine | mehr Platz |
 | | Energie-Brunnen (+50 Max-Energie, schnellere Ladung) | 600 Edelsteine | mehr spielen |
 | | Vierter Auftrags-Platz | 300 Edelsteine | mehr Gold |

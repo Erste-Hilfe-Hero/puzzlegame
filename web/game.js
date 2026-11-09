@@ -1,5 +1,5 @@
 'use strict';
-const SAVE_KEY = 'alchemy-isle-v1';
+const SAVE_KEY = 'amy-tasty-v1';
 const MAX_L = 7;
 const $ = id => document.getElementById(id);
 const now = () => Date.now();
@@ -16,9 +16,9 @@ function newState() {
     orders: [], zone: 0, tasksDone: [],
     perm: {}, boosts: {}, passUntil: 0, starterBought: false, lastDaily: '', stats: { merges: 0, orders: 0 }
   };
-  s.board[idx(3, 3, s)] = { gen: 'herb' };
-  s.board[idx(2, 2, s)] = { c: 'herb', l: 0 };
-  s.board[idx(2, 4, s)] = { c: 'herb', l: 0 };
+  s.board[idx(3, 3, s)] = { gen: 'bakery' };
+  s.board[idx(2, 2, s)] = { c: 'bakery', l: 0 };
+  s.board[idx(2, 4, s)] = { c: 'bakery', l: 0 };
   return s;
 }
 
@@ -32,7 +32,7 @@ function load() {
   } catch (e) { S = null; }
   if (!S || S.v !== 1) S = newState();
   if (S.orders.length === 0) {
-    S.orders.push({ who: '👩‍🌾', need: [{ c: 'herb', l: 1 }], coins: 10, xp: 8 });
+    S.orders.push({ who: '👩‍🌾', need: [{ c: 'bakery', l: 1 }], coins: 10, xp: 8 });
     fillOrders();
   }
 }
@@ -342,13 +342,13 @@ function openShop() {
 
 function openIsland() {
   const z = DATA.zones[S.zone];
-  if (!z) { openModal('<h2>Island</h2><p>All zones restored. More coming soon!</p>'); return; }
+  if (!z) { openModal('<h2>Travel</h2><p>All places restored. More trips coming soon!</p>'); return; }
   const rows = z.tasks.map((t, k) => {
     const done = S.tasksDone.includes(k);
     return `<div class="prod ${done ? 'done' : ''}"><div><b>${done ? '✅' : '🔨'} ${t.name}</b></div>
       <button data-task="${k}" ${done ? 'disabled' : ''}>${done ? 'Done' : `🪙 ${t.cost}`}</button></div>`;
   }).join('');
-  openModal(`<h2>🏝️ ${z.name}</h2><p class="note">Zone ${S.zone + 1}/${DATA.zones.length} - ${S.tasksDone.length}/${z.tasks.length} done. Finish all for +${z.bonusGems} 💎</p>${rows}`);
+  openModal(`<h2>📍 ${z.name}</h2><p class="note">Place ${S.zone + 1}/${DATA.zones.length} - ${S.tasksDone.length}/${z.tasks.length} done. Finish all for +${z.bonusGems} 💎</p>${rows}`);
 }
 
 function doTask(k) {
