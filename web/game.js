@@ -9,12 +9,50 @@ const today = () => new Date().toISOString().slice(0, 10);
 let S = null;
 let selected = -1;
 
+// ---------- prefs, texts, sound ----------
+const PREFS_KEY = 'amy-tasty-prefs';
+let P = { lang: (navigator.language || 'en').toLowerCase().startsWith('de') ? 'de' : 'en', sound: true };
+try { Object.assign(P, JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')); } catch (e) { /* storage blocked */ }
+function savePrefs() { try { localStorage.setItem(PREFS_KEY, JSON.stringify(P)); } catch (e) { /* storage blocked */ } }
+
+function t(k, v = {}) {
+  const s = (I18N[P.lang] && I18N[P.lang][k]) || I18N.en[k] || k;
+  return s.replace(/\{(\w+)\}/g, (m, x) => (v[x] !== undefined ? v[x] : m));
+}
+const DE = () => (P.lang === 'de' ? I18N.de : null);
+const nm = (c, l) => (DE() ? DE().chains[c].names[l] : DATA.chains[c].names[l]);
+const genNm = c => (DE() ? DE().chains[c].genName : DATA.chains[c].genName);
+const chainNm = c => (DE() ? DE().chains[c].name : DATA.chains[c].name);
+const taskNm = (z, k) => (DE() ? DE().tasks[z][k] : DATA.zones[z].tasks[k].name);
+const pName = p => (DE() && DE().products[p.id] ? DE().products[p.id].name : p.name);
+const pDesc = p => (DE() && DE().products[p.id] && DE().products[p.id].desc) || p.desc;
+const pTag = s => (DE() && DE().tags[s]) || s;
+
+let AC = null;
+function sfx(kind) {
+  if (!P.sound) return;
+  try {
+    AC = AC || new (window.AudioContext || window.webkitAudioContext)();
+    const notes = { spawn: [660], merge: [523, 784], deliver: [784, 1046, 1318], level: [523, 659, 784, 1046], error: [180], buy: [988, 1318] }[kind];
+    notes.forEach((f, k) => {
+      const o = AC.createOscillator(), gn = AC.createGain(), at = AC.currentTime + k * 0.07;
+      o.type = kind === 'error' ? 'square' : 'triangle';
+      o.frequency.value = f;
+      gn.gain.setValueAtTime(0.0001, at);
+      gn.gain.exponentialRampToValueAtTime(0.18, at + 0.01);
+      gn.gain.exponentialRampToValueAtTime(0.0001, at + 0.16);
+      o.connect(gn).connect(AC.destination);
+      o.start(at); o.stop(at + 0.18);
+    });
+  } catch (e) { /* audio unavailable */ }
+}
+
 function newState() {
   const s = {
     v: 1, level: 1, xp: 0, energy: DATA.energyStart, energyTs: now(), coins: 0, gems: 10,
     board: new Array(DATA.cols * DATA.rows).fill(null), rows: DATA.rows,
     orders: [], zone: 0, tasksDone: [],
-    perm: {}, boosts: {}, passUntil: 0, starterBought: false, lastDaily: '', stats: { merges: 0, orders: 0 }
+    perm: {}, boosts: {}, passUntil: 0, starterBought: false, lastDaily: '', tut: 0, stats: { merges: 0, orders: 0 }
   };
   s.board[idx(3, 3, s)] = { gen: 'bakery' };
   s.board[idx(2, 2, s)] = { c: 'bakery', l: 0 };
@@ -64,7 +102,7 @@ function addXp(x) {
     S.level++;
     S.gems += DATA.levelUpGems;
     S.energy = Math.max(S.energy, energyMax());
-    toast(`Level ${S.level}! +${DATA.levelUpGems} 💎, energy refilled`);
+    toast(t('levelUp', { n: S.level, g: DATA.levelUpGems })); sfx('level');
     for (const [key, ch] of Object.entries(DATA.chains)) {
       if (ch.unlock === S.level) placeGenerator(key);
     }
@@ -73,9 +111,9 @@ function addXp(x) {
 
 function placeGenerator(key) {
   const i = S.board.findIndex(c => c === null);
-  if (i < 0) { toast(`New ${DATA.chains[key].genName} waits for a free cell`); S.pendingGen = key; return; }
+  if (i < 0) { toast(t('genWait', { gen: genNm(key) })); S.pendingGen = key; return; }
   S.board[i] = { gen: key };
-  toast(`New generator: ${DATA.chains[key].genName} ${DATA.chains[key].gen}`);
+  toast(t('genNew', { gen: `${genNm(key)} ${DATA.chains[key].gen}` }));
 }
 
 function unlockedChains() {
@@ -122,7 +160,8 @@ function deliver(k) {
   addXp(o.xp);
   fillOrders();
   if (S.pendingGen) { const g = S.pendingGen; S.pendingGen = null; placeGenerator(g); }
-  toast(`+${o.coins} 🪙  +${o.xp} XP`);
+  toast(`+${o.coins} 🪙  +${o.xp} XP`); sfx('deliver');
+  if (S.tut === 2) S.tut = 3;
   commit();
 }
 
@@ -141,7 +180,7 @@ function nearestEmpty(from) {
 
 function spawn(genIdx) {
   tickEnergy();
-  if (S.energy < 1) { toast('Out of energy. It refills over time.'); return; }
+  if (S.energy < 1) { toast(t('noEnergy')); sfx('error'); return; }
   const key = S.board[genIdx].gen;
   const count = boostOn('double') ? 2 : 1;
   let placed = 0;
@@ -154,7 +193,9 @@ function spawn(genIdx) {
     placed++;
     flash(i);
   }
-  if (!placed) { toast('Board is full. Merge, deliver or sell items.'); return; }
+  if (!placed) { toast(t('boardFull')); sfx('error'); return; }
+  sfx('spawn');
+  if (S.tut === 0) S.tut = 1;
   if (S.energy >= energyMax()) S.energyTs = now();
   S.energy--;
   commit();
@@ -164,10 +205,11 @@ function drop(from, to) {
   if (from === to || to < 0) return;
   const a = S.board[from], b = S.board[to];
   if (a && a.joker && b && b.c && b.l < MAX_L) {
-    b.l++; S.board[from] = null; flash(to); S.stats.merges++;
+    b.l++; S.board[from] = null; flash(to); S.stats.merges++; sfx('merge');
   } else if (a && b && a.c && b.c && a.c === b.c && a.l === b.l && a.l < MAX_L) {
-    S.board[to] = { c: a.c, l: a.l + 1 }; S.board[from] = null; flash(to); S.stats.merges++;
-    if (a.l + 1 === MAX_L) toast(`Max level: ${DATA.chains[a.c].names[MAX_L]}!`);
+    S.board[to] = { c: a.c, l: a.l + 1 }; S.board[from] = null; flash(to); S.stats.merges++; sfx('merge');
+    if (S.tut === 1) S.tut = 2;
+    if (a.l + 1 === MAX_L) toast(t('maxLevel', { name: nm(a.c, MAX_L) }));
   } else {
     S.board[to] = a; S.board[from] = b;
   }
@@ -194,7 +236,7 @@ function sell() {
   S.board[selected] = null;
   S.coins += coins;
   selected = -1;
-  toast(`Sold for ${coins} 🪙`);
+  toast(t('sold', { c: coins }));
   commit();
 }
 
@@ -215,16 +257,16 @@ function buyMoney(p) {
   } else {
     S.gems += p.gems;
   }
-  toast(`TEST purchase: ${p.name} (no money charged)`);
+  toast(t('testBuy', { name: pName(p) })); sfx('buy');
   commit(); openShop();
 }
 
 function buyGem(item) {
-  if (S.gems < item.cost) { toast('Not enough gems'); return; }
+  if (S.gems < item.cost) { toast(t('noGems')); sfx('error'); return; }
   if (item.kind === 'perm' && S.perm[item.id]) return;
   if (item.kind === 'item') {
     const i = S.board.findIndex(c => c === null);
-    if (i < 0) { toast('Board is full'); return; }
+    if (i < 0) { toast(t('boardFullShort')); return; }
     S.board[i] = { joker: 1 };
   }
   S.gems -= item.cost;
@@ -236,7 +278,7 @@ function buyGem(item) {
     if (item.id === 'orderSlot') fillOrders();
     if (item.id === 'golden') goldenFix();
   }
-  toast(`${item.icon} ${item.name} active`);
+  toast(t('active', { name: `${item.icon} ${pName(item)}` })); sfx('buy');
   commit(); openShop();
 }
 
@@ -249,9 +291,9 @@ function cellHtml(c) {
 }
 
 function itemName(c) {
-  if (c.gen) return `${DATA.chains[c.gen].genName}: tap to make ${DATA.chains[c.gen].name.toLowerCase()} (1 ⚡)`;
-  if (c.joker) return 'Joker: drop on any item to raise it one level';
-  return `${DATA.chains[c.c].names[c.l]} (level ${c.l + 1}/${MAX_L + 1})`;
+  if (c.gen) return t('genInfo', { gen: genNm(c.gen), chain: chainNm(c.gen) });
+  if (c.joker) return t('jokerInfo');
+  return t('itemInfo', { name: nm(c.c, c.l), l: c.l + 1, max: MAX_L + 1 });
 }
 
 function render() {
@@ -282,7 +324,7 @@ function render() {
       return `<span class="need ${have ? 'have' : ''}">${DATA.chains[x.c].items[x.l]}<i>${x.l + 1}</i></span>`;
     }).join('');
     return `<div class="order ${ok ? 'ready' : ''}"><div class="who">${o.who}</div><div class="needs">${parts}</div>
-      ${ok ? `<button data-deliver="${k}">Deliver</button>` : `<small>🪙${o.coins}</small>`}</div>`;
+      ${ok ? `<button data-deliver="${k}">${t('deliver')}</button>` : `<small>🪙${o.coins}</small>`}</div>`;
   }).join('');
 
   const board = $('board');
@@ -300,9 +342,10 @@ function render() {
   });
 
   const sc = S.board[selected];
-  $('info').textContent = sc ? itemName(sc) : 'Tap a generator to make items. Drag two equal items together to merge.';
+  $('info').textContent = sc ? itemName(sc) : t('hint');
+  renderTut();
   $('btn-sell').hidden = !(sc && !sc.gen);
-  if (sc && !sc.gen) $('btn-sell').textContent = `Sell +${sc.joker ? 0 : DATA.sellCoins(sc.l)}🪙`;
+  if (sc && !sc.gen) $('btn-sell').textContent = t('sell', { c: sc.joker ? 0 : DATA.sellCoins(sc.l) });
 }
 
 function commit() { save(); render(); }
@@ -324,54 +367,84 @@ function flash(i) {
 }
 
 function openModal(html) { $('modal-body').innerHTML = html; $('modal').hidden = false; }
-function closeModal() { $('modal').hidden = true; }
+function closeModal() { $('modal').hidden = true; if (S.tut === 4) S.tut = 5; commit(); }
+
+function renderTut() {
+  document.querySelectorAll('.hl').forEach(el => el.classList.remove('hl'));
+  const box = $('tut');
+  if (S.tut >= 4) { box.hidden = true; return; }
+  box.hidden = false;
+  box.textContent = t('tut' + S.tut);
+  let target = null;
+  if (S.tut === 0) target = $('board').children[S.board.findIndex(c => c && c.gen === 'bakery')];
+  if (S.tut === 2) target = document.querySelector('[data-deliver]');
+  if (S.tut === 3) target = $('btn-island');
+  if (target) target.classList.add('hl');
+}
+
+function openSettings() {
+  const opt = (k, v, label) => `<button class="opt ${P[k] === v ? 'on' : ''}" data-pref="${k}" data-val="${v}">${label}</button>`;
+  openModal(`<h2>${t('settings')}</h2>
+    <h3>${t('language')}</h3><div class="opts">${opt('lang', 'en', 'English')}${opt('lang', 'de', 'Deutsch')}</div>
+    <h3>${t('sound')}</h3><div class="opts">${opt('sound', true, t('on'))}${opt('sound', false, t('off'))}</div>`);
+}
+
+function applyStaticTexts() {
+  document.documentElement.lang = P.lang;
+  $('btn-shop').textContent = t('shop');
+  $('btn-island').textContent = '🏝️ ' + t('island');
+}
 
 function openShop() {
-  const money = p => `<div class="prod"><div><b>${p.name}</b>${p.tag ? `<em>${p.tag}</em>` : ''}${p.desc ? `<small>${p.desc}</small>` : ''}</div>
-    <button data-money="${p.id}" ${p.id === 'starter' && S.starterBought ? 'disabled' : ''}>${p.id === 'starter' && S.starterBought ? 'Owned' : p.price}</button></div>`;
+  const money = p => `<div class="prod"><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}</div>
+    <button data-money="${p.id}" ${p.id === 'starter' && S.starterBought ? 'disabled' : ''}>${p.id === 'starter' && S.starterBought ? t('owned') : p.price}</button></div>`;
   const gem = g => {
     const owned = g.kind === 'perm' && S.perm[g.id];
-    return `<div class="prod"><div><b>${g.icon} ${g.name}</b><small>${g.desc}</small></div>
-      <button data-gem="${g.id}" ${owned ? 'disabled' : ''}>${owned ? 'Owned' : `💎 ${g.cost}`}</button></div>`;
+    return `<div class="prod"><div><b>${g.icon} ${pName(g)}</b><small>${pDesc(g)}</small></div>
+      <button data-gem="${g.id}" ${owned ? 'disabled' : ''}>${owned ? t('owned') : `💎 ${g.cost}`}</button></div>`;
   };
-  openModal(`<h2>Shop</h2><p class="note">Prototype: purchases are TEST purchases, no money is charged.</p>
-    <h3>Offers</h3>${money(DATA.starter)}${money(DATA.pass)}
-    <h3>Power</h3>${DATA.gemShop.map(gem).join('')}
-    <h3>Gems</h3>${DATA.money.map(money).join('')}`);
+  openModal(`<h2>${t('shop')}</h2><p class="note">${t('shopNote')}</p>
+    <h3>${t('offers')}</h3>${money(DATA.starter)}${money(DATA.pass)}
+    <h3>${t('power')}</h3>${DATA.gemShop.map(gem).join('')}
+    <h3>${t('gemsH')}</h3>${DATA.money.map(money).join('')}`);
 }
 
 function openIsland() {
   const z = DATA.zones[S.zone];
-  if (!z) { openModal('<h2>Island</h2><p>All places restored. More islands coming soon!</p>'); return; }
-  const rows = z.tasks.map((t, k) => {
+  if (S.tut === 3) S.tut = 4;
+  if (!z) { openModal(`<h2>${t('island')}</h2><p>${t('allDone')}</p>`); return; }
+  const rows = z.tasks.map((task, k) => {
     const done = S.tasksDone.includes(k);
-    return `<div class="prod ${done ? 'done' : ''}"><div><b>${done ? '✅' : '🔨'} ${t.name}</b></div>
-      <button data-task="${k}" ${done ? 'disabled' : ''}>${done ? 'Done' : `🪙 ${t.cost}`}</button></div>`;
+    return `<div class="prod ${done ? 'done' : ''}"><div><b>${done ? '✅' : '🔨'} ${taskNm(S.zone, k)}</b></div>
+      <button data-task="${k}" ${done ? 'disabled' : ''}>${done ? t('done') : `🪙 ${task.cost}`}</button></div>`;
   }).join('');
-  openModal(`<h2>📍 ${z.name}</h2><p class="note">Place ${S.zone + 1}/${DATA.zones.length} - ${S.tasksDone.length}/${z.tasks.length} done. Finish all for +${z.bonusGems} 💎</p>${rows}`);
+  const tip = S.tut === 4 ? `<p class="tut-inline">${t('tut4')}</p>` : '';
+  openModal(`<h2>📍 ${z.name}</h2>${tip}<p class="note">${t('placeNote', { i: S.zone + 1, n: DATA.zones.length, d: S.tasksDone.length, t: z.tasks.length, g: z.bonusGems })}</p>${rows}`);
 }
 
 function doTask(k) {
   const z = DATA.zones[S.zone];
-  const t = z && z.tasks[k];
-  if (!t) return;
+  const task = z && z.tasks[k];
+  if (!task) return;
   if (S.tasksDone.includes(k)) return;
-  if (S.coins < t.cost) { toast('Not enough coins. Deliver orders!'); return; }
-  S.coins -= t.cost;
+  if (S.coins < task.cost) { toast(t('noCoins')); sfx('error'); return; }
+  S.coins -= task.cost;
+  sfx('buy');
+  if (S.tut === 4) S.tut = 5;
   S.tasksDone.push(k);
   addXp(10);
   if (S.tasksDone.length === z.tasks.length) {
     S.gems += z.bonusGems;
     S.zone++; S.tasksDone = [];
-    toast(`${z.name} restored! +${z.bonusGems} 💎`);
-  } else toast(`${t.name} ✅`);
+    toast(t('restored', { name: z.name, g: z.bonusGems }));
+  } else toast(`${taskNm(S.zone, k)} ✅`);
   commit(); openIsland();
 }
 
 function daily() {
   if (S.lastDaily === today()) return;
   const g = DATA.dailyGems + (passActive() ? DATA.pass.dailyGems : 0);
-  if (S.lastDaily) { S.gems += g; toast(`Daily bonus: +${g} 💎`); }
+  if (S.lastDaily) { S.gems += g; toast(t('daily', { g })); }
   S.lastDaily = today();
 }
 
@@ -425,17 +498,25 @@ $('modal-body').addEventListener('click', e => {
   if (m) { const id = m.dataset.money; buyMoney(id === 'starter' ? DATA.starter : id === 'pass' ? DATA.pass : DATA.money.find(p => p.id === id)); }
   const g = e.target.closest('[data-gem]');
   if (g) buyGem(DATA.gemShop.find(x => x.id === g.dataset.gem));
-  const t = e.target.closest('[data-task]');
-  if (t) doTask(+t.dataset.task);
+  const tk = e.target.closest('[data-task]');
+  if (tk) doTask(+tk.dataset.task);
+  const pr = e.target.closest('[data-pref]');
+  if (pr) {
+    P[pr.dataset.pref] = pr.dataset.pref === 'sound' ? pr.dataset.val === 'true' : pr.dataset.val;
+    savePrefs(); applyStaticTexts(); render(); openSettings(); sfx('spawn');
+  }
 });
 
 $('btn-shop').onclick = openShop;
 $('btn-island').onclick = openIsland;
+$('btn-settings').onclick = openSettings;
 $('btn-sell').onclick = sell;
 $('modal-close').onclick = closeModal;
 $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
 
 load();
+if (S.tut === undefined) S.tut = 5;
+applyStaticTexts();
 daily();
 fillOrders();
 commit();

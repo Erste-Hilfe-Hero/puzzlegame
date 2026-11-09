@@ -10,7 +10,7 @@ Gleiches Genre und gleiche Mechanik wie Tasty Travels (Merge-2, Kochen, Orte ren
 
 ## Kern-Schleife
 
-1. Erzeuger antippen (Weizenfeld, Obstgarten, Kaffeemaschine) -> kostet 1 Energie -> neues Teil auf dem Brett.
+1. Erzeuger antippen (Baeckerei, Obstgarten, Kaffeemaschine) -> kostet 1 Energie -> neues Teil auf dem Brett.
 2. Zwei gleiche Teile zusammenziehen -> naechste Stufe (8 Stufen pro Kette).
 3. Bewohner bestellen bestimmte Teile -> liefern -> Gold + Erfahrung.
 4. Gold -> Renovier-Aufgaben (z. B. "Theke reparieren") -> naechster Ort.

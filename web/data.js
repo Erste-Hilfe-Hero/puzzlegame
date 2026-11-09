@@ -11,7 +11,7 @@ const DATA = {
   sellCoins: l => 1 + l,
 
   chains: {
-    bakery: { name: 'Bakery', gen: '🌾', genName: 'Wheat Field', unlock: 1,
+    bakery: { name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
       items: ['🌾', '🍞', '🥐', '🥖', '🥨', '🧇', '🍰', '🎂'],
       names: ['Wheat', 'Bread', 'Croissant', 'Baguette', 'Pretzel', 'Waffle', 'Cake Slice', 'Party Cake'] },
     fruit: { name: 'Fruit', gen: '🌳', genName: 'Orchard', unlock: 2,
@@ -19,7 +19,16 @@ const DATA = {
       names: ['Cherry', 'Strawberry', 'Apple', 'Pear', 'Peach', 'Pineapple', 'Watermelon', 'Fruit Basket'] },
     cafe: { name: 'Drinks', gen: '☕', genName: 'Coffee Machine', unlock: 4,
       items: ['🥛', '☕', '🍵', '🥤', '🧋', '🍹', '🍨', '🍧'],
-      names: ['Milk', 'Coffee', 'Tea', 'Soda', 'Bubble Tea', 'Smoothie', 'Ice Cream', 'Shaved Ice'] }
+      names: ['Milk', 'Coffee', 'Tea', 'Soda', 'Bubble Tea', 'Smoothie', 'Ice Cream', 'Shaved Ice'] },
+    kitchen: { name: 'Kitchen', gen: '🍳', genName: 'Stove', unlock: 6,
+      items: ['🥚', '🍳', '🥞', '🥪', '🌮', '🍔', '🍕', '🍱'],
+      names: ['Egg', 'Fried Egg', 'Pancakes', 'Sandwich', 'Taco', 'Burger', 'Pizza', 'Bento Box'] },
+    veggie: { name: 'Veggies', gen: '🚜', genName: 'Farm', unlock: 8,
+      items: ['🥕', '🌽', '🥦', '🍅', '🥗', '🍲', '🥘', '🍛'],
+      names: ['Carrot', 'Corn', 'Broccoli', 'Tomato', 'Salad', 'Soup', 'Paella', 'Curry'] },
+    sweets: { name: 'Sweets', gen: '🍭', genName: 'Candy Cart', unlock: 11,
+      items: ['🍬', '🍭', '🍫', '🍪', '🍩', '🧁', '🍮', '🎁'],
+      names: ['Candy', 'Lollipop', 'Chocolate', 'Cookie', 'Donut', 'Cupcake', 'Pudding', 'Sweet Box'] }
   },
 
   customers: ['👩‍🌾', '🧙', '🧝', '👨‍🍳', '🧑‍🚀', '👵', '🧛', '🧚', '🧜', '🤴'],
@@ -42,7 +51,25 @@ const DATA = {
       { name: 'Fix the neon sign', cost: 1300 },
       { name: 'Reupholster the booths', cost: 1600 },
       { name: 'Install the jukebox', cost: 2000 },
-      { name: 'Open the rooftop bar', cost: 2500 }] }
+      { name: 'Open the rooftop bar', cost: 2500 }] },
+    { name: 'Sunset Pizzeria', bonusGems: 60, tasks: [
+      { name: 'Rebuild the stone oven', cost: 3000 },
+      { name: 'Paint the walls', cost: 3400 },
+      { name: 'Set up the terrace', cost: 3800 },
+      { name: 'Hang the fairy lights', cost: 4300 },
+      { name: 'Open the pizza window', cost: 4800 }] },
+    { name: 'Coconut Beach Bar', bonusGems: 80, tasks: [
+      { name: 'Clear the beach', cost: 5400 },
+      { name: 'Build the bamboo bar', cost: 6000 },
+      { name: 'Put up sun umbrellas', cost: 6700 },
+      { name: 'Install the hammocks', cost: 7400 },
+      { name: 'Start the beach party', cost: 8200 }] },
+    { name: 'Lighthouse Restaurant', bonusGems: 100, tasks: [
+      { name: 'Fix the spiral stairs', cost: 9000 },
+      { name: 'Clean the big windows', cost: 10000 },
+      { name: 'Build the panorama kitchen', cost: 11000 },
+      { name: 'Set the candle tables', cost: 12500 },
+      { name: 'Light the beacon', cost: 14000 }] }
   ],
 
   // Real-money products. In the prototype they are test purchases.

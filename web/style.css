@@ -55,3 +55,11 @@ html, body { margin: 0; height: 100%; background: radial-gradient(circle at 50% 
 .prod button { min-width: 82px; background: linear-gradient(#ffd96b, #f0a92c); color: #432b00; border: 0; border-radius: 10px; padding: 8px; font-weight: 800; }
 .prod button:disabled { background: #fff2; color: var(--muted); }
 .prod.done { opacity: .6; }
+#tut { background: linear-gradient(90deg, #ffcf5a, #ffb03a); color: #432b00; font-weight: 700; border-radius: 12px; padding: 8px 12px; margin-bottom: 6px; text-align: center; }
+.hl { animation: hl 1s ease-in-out infinite; position: relative; z-index: 2; }
+@keyframes hl { 0%, 100% { box-shadow: 0 0 0 3px #ffcf5a; } 50% { box-shadow: 0 0 0 7px #ffcf5a88; } }
+.tut-inline { background: #ffcf5a; color: #432b00; font-weight: 700; border-radius: 10px; padding: 8px 10px; }
+.opts { display: flex; gap: 8px; }
+.opt { flex: 1; background: var(--cell2); color: var(--text); border: 2px solid transparent; border-radius: 10px; padding: 10px; font-weight: 700; }
+.opt.on { border-color: var(--gold); }
+@media (prefers-reduced-motion: reduce) { .hl, .cell.pop > span { animation: none; } }
