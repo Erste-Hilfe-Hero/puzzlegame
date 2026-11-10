@@ -10,7 +10,7 @@ const DATA = {
   dailyGems: 2,
   sellCoins: l => 1 + l,
 
-  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker', 'chest', 'place_0', 'place_1', 'place_2', 'place_3', 'place_4', 'place_5', 'res_0', 'res_1', 'res_2', 'res_3', 'res_4', 'res_5'],
+  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker', 'chest', 'place_0', 'place_1', 'place_2', 'place_3', 'place_4', 'place_5', 'res_0', 'res_1', 'res_2', 'res_3', 'res_4', 'res_5', 'cu_0', 'cu_1', 'cu_2', 'cu_3'],
 
   chains: {
     bakery: { img: true, name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
@@ -33,7 +33,7 @@ const DATA = {
       names: ['Candy', 'Lollipop', 'Chocolate', 'Cookie', 'Donut', 'Cupcake', 'Pudding', 'Sweet Box'] }
   },
 
-  customers: ['👩‍🌾', '🧙', '🧝', '👨‍🍳', '🧑‍🚀', '👵', '🧛', '🧚', '🧜', '🤴'],
+  customers: ['cu_0', 'cu_1', 'cu_2', 'cu_3'],
 
   zones: [
     { name: 'Seaside Café', bonusGems: 20, tasks: [

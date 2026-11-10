@@ -28,6 +28,11 @@ const pName = p => (DE() && DE().products[p.id] ? DE().products[p.id].name : p.n
 const pDesc = p => (DE() && DE().products[p.id] && DE().products[p.id].desc) || p.desc;
 const pTag = s => (DE() && DE().tags[s]) || s;
 
+const src = k => (window.IMG && window.IMG[k]) || `img/${k}.png`;
+const EM = { '🪙': 'ui_coin', '💎': 'ui_gem', '⚡': 'ui_energy', '⭐': 'ui_xp', '✅': 'ui_check', '🔨': 'ui_hammer', '🔒': 'ui_lock', '🏝️': 'ui_island', '📦': 'ui_store', '📖': 'ui_album', '🃏': 'joker', '🎁': 'chest' };
+const EM_RE = new RegExp(Object.keys(EM).join('|'), 'g');
+const emo = h => String(h).replace(EM_RE, m => `<img class="ic" src="${src(EM[m])}" alt="">`);
+
 let AC = null;
 function sfx(kind) {
   if (!P.sound) return;
@@ -69,8 +74,9 @@ function load() {
     if (raw) S = JSON.parse(raw);
   } catch (e) { S = null; }
   if (!S || S.v !== 1) S = newState();
+  S.orders.forEach(o => { if (!/^(res|cu)_/.test(o.who)) o.who = DATA.customers[rnd(0, DATA.customers.length - 1)]; });
   if (S.orders.length === 0) {
-    S.orders.push({ who: '👩‍🌾', need: [{ c: 'bakery', l: 1 }], coins: 10, xp: 8 });
+    S.orders.push({ who: 'cu_0', need: [{ c: 'bakery', l: 1 }], coins: 10, xp: 8 });
     fillOrders();
   }
 }
@@ -113,7 +119,7 @@ function placeGenerator(key) {
   const i = S.board.findIndex(c => c === null);
   if (i < 0) { toast(t('genWait', { gen: genNm(key) })); S.pendingGen = key; return; }
   S.board[i] = { gen: key };
-  toast(t('genNew', { gen: `${genNm(key)} ${DATA.chains[key].gen}` }));
+  toast(t('genNew', { gen: genNm(key) }));
 }
 
 function unlockedChains() {
@@ -191,7 +197,7 @@ function fly(fromEl, toId, glyph, n) {
   const to = $(toId); if (!fromEl || !to) return;
   const [x0, y0] = center(fromEl), [x1, y1] = center(to);
   for (let k = 0; k < n; k++) {
-    const f = document.createElement('i'); f.className = 'fly'; f.textContent = glyph;
+    const f = document.createElement('i'); f.className = 'fly'; f.innerHTML = `<img src="${src(EM[glyph])}" alt="">`;
     f.style.cssText = `left:${x0 + (Math.random() - .5) * 30}px;top:${y0 + (Math.random() - .5) * 20}px`;
     document.body.appendChild(f);
     setTimeout(() => {
@@ -342,7 +348,7 @@ function buyGem(item) {
     if (item.id === 'orderSlot') fillOrders();
     if (item.id === 'golden') goldenFix();
   }
-  toast(t('active', { name: `${item.icon} ${pName(item)}` })); sfx('buy');
+  toast(t('active', { name: pName(item) })); sfx('buy');
   commit(); openShop();
 }
 
@@ -351,12 +357,12 @@ function icon(ch, l) {
   const a = DATA.chains[ch].img;
   if (!a || (a !== true && l >= a)) return DATA.chains[ch].items[l];
   const key = `${ch}_${l}`;
-  return `<img src="${(window.IMG && window.IMG[key]) || `img/${key}.png`}" alt="" draggable="false">`;
+  return `<img src="${src(key)}" alt="" draggable="false">`;
 }
 
 const ART = new Set(DATA.art || []);
 function art(key, emoji) {
-  return ART.has(key) ? `<img src="${(window.IMG && window.IMG[key]) || `img/${key}.png`}" alt="" draggable="false">` : emoji;
+  return ART.has(key) ? `<img src="${src(key)}" alt="" draggable="false">` : emoji;
 }
 
 function cellHtml(c) {
@@ -391,13 +397,13 @@ function render() {
 
   const boosts = [];
   for (const g of DATA.gemShop.filter(x => x.kind === 'boost')) {
-    if (boostOn(g.id)) boosts.push(`${g.icon} ${Math.ceil((S.boosts[g.id] - now()) / 60000)}m`);
+    if (boostOn(g.id)) boosts.push(`${pIcon(g)} ${Math.ceil((S.boosts[g.id] - now()) / 60000)}m`);
   }
-  if (passActive()) boosts.push(`🎫 ${Math.ceil((S.passUntil - now()) / 864e5)}d`);
-  $('boosts').textContent = boosts.join('   ');
+  if (passActive()) boosts.push(`${art('gs_pass', '🎫')} ${Math.ceil((S.passUntil - now()) / 864e5)}d`);
+  $('boosts').innerHTML = emo(boosts.join(' &nbsp; '));
 
   const wanted = new Set();
-  $('orders').innerHTML = S.orders.map((o, k) => {
+  $('orders').innerHTML = emo(S.orders.map((o, k) => {
     const ok = findItems(o.need);
     const parts = o.need.map(x => {
       const have = S.board.some(c => c && c.c === x.c && c.l === x.l);
@@ -406,7 +412,7 @@ function render() {
     }).join('');
     return `<div class="order ${ok ? 'ready' : ''}"><div class="who">${whoHtml(o.who)}</div><div class="needs">${parts}</div>
       ${ok ? `<button data-deliver="${k}">${t('deliver')}</button>` : `<small>🪙${o.coins}</small>`}</div>`;
-  }).join('');
+  }).join(''));
 
   const board = $('board');
   board.style.gridTemplateRows = `repeat(${S.rows}, 1fr)`;
@@ -427,7 +433,7 @@ function render() {
   renderTut();
   $('btn-sell').hidden = !(sc && (sc.c || sc.joker));
   badges();
-  if (sc && !sc.gen) $('btn-sell').textContent = t('sell', { c: sc.joker ? 0 : DATA.sellCoins(sc.l) });
+  if (sc && !sc.gen) $('btn-sell').innerHTML = emo(t('sell', { c: sc.joker ? 0 : DATA.sellCoins(sc.l) }));
 }
 
 function commit() { save(); render(); }
@@ -435,7 +441,7 @@ function commit() { save(); render(); }
 let toastT = 0;
 function toast(msg) {
   const t = $('toast');
-  t.textContent = msg; t.hidden = false;
+  t.innerHTML = emo(msg); t.hidden = false;
   clearTimeout(toastT);
   toastT = setTimeout(() => { t.hidden = true; }, 2200);
 }
@@ -448,7 +454,7 @@ function flash(i) {
   });
 }
 
-function openModal(html) { $('modal-body').innerHTML = html; $('modal').hidden = false; }
+function openModal(html) { $('modal-body').innerHTML = emo(html); $('modal-body').scrollTop = 0; $('modal').hidden = false; }
 function closeModal() { $('modal').hidden = true; if (S.tut === 4) S.tut = 5; commit(); }
 
 function renderTut() {
@@ -474,16 +480,17 @@ function openSettings() {
 
 function applyStaticTexts() {
   document.documentElement.lang = P.lang;
-  $('btn-shop').textContent = t('shop');
-  $('btn-island').textContent = '🏝️ ' + t('island');
+  const lab = { island: 'island', daily: 'navDaily', shop: 'shop', store: 'storeH', album: 'navAlbum' };
+  for (const k in lab) $('btn-' + k).querySelector('span').textContent = t(lab[k]);
+  document.querySelectorAll('[data-ic]').forEach(el => { el.src = src(el.dataset.ic); });
 }
 
 function openShop() {
-  const money = p => `<div class="prod"><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}</div>
+  const money = p => `<div class="prod"><span class="pi">${p.id === 'starter' || p.id === 'pass' ? art('gs_' + p.id, p.id === 'pass' ? '🎫' : '🎁') : '💎'}</span><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}</div>
     <button data-money="${p.id}" ${p.id === 'starter' && S.starterBought ? 'disabled' : ''}>${p.id === 'starter' && S.starterBought ? t('owned') : priceOf(p)}</button></div>`;
   const gem = g => {
     const owned = g.kind === 'perm' && S.perm[g.id];
-    return `<div class="prod"><div><b>${g.icon} ${pName(g)}</b><small>${pDesc(g)}</small></div>
+    return `<div class="prod"><span class="pi">${pIcon(g)}</span><div><b>${pName(g)}</b><small>${pDesc(g)}</small></div>
       <button data-gem="${g.id}" ${owned ? 'disabled' : ''}>${owned ? t('owned') : `💎 ${g.cost}`}</button></div>`;
   };
   openModal(`<h2 class="amyh"><img class="amy" src="img/amy_face.png" alt="">${t('shop')}</h2>${NATIVE ? '' : `<p class="note">${t('shopNote')}</p>`}
@@ -492,9 +499,10 @@ function openShop() {
     <h3>${t('gemsH')}</h3>${DATA.money.map(money).join('')}`);
 }
 
+const pIcon = g => art('gs_' + g.id, g.icon);
 const zoneNm = z => (DE() ? DE().zones[z] : DATA.zones[z].name);
 const resOf = z => ({ ...DATA.residents[z], ...(DE() ? DE().residents[z] : {}) });
-const whoHtml = w => (String(w).startsWith('res_') ? art(w, DATA.residents[+w.slice(4)].emoji) : w);
+const whoHtml = w => (/^(res|cu)_/.test(w) ? art(w, w[0] === 'r' ? DATA.residents[+w.slice(4)].emoji : '🙂') : w);
 const ISLAND_SVG = `<svg viewBox="0 0 100 130" preserveAspectRatio="none" aria-hidden="true">
   <path d="M18 112 C4 98 6 74 14 62 C8 46 14 26 30 16 C44 6 70 4 82 16 C96 30 92 50 88 62 C96 78 92 104 76 116 C60 128 32 126 18 112 Z" fill="#f6dc9c" stroke="#fff6d8" stroke-width="2.5"/>
   <path d="M24 104 C14 92 16 76 22 66 C18 52 22 34 34 24 C46 14 66 14 76 24 C86 34 84 50 80 62 C86 76 82 96 70 106 C56 116 36 116 24 104 Z" fill="#8fd16a"/>
@@ -528,7 +536,7 @@ function openPlace() {
   openModal(`<div class="place-top"><div class="place-pic" style="--p:${S.tasksDone.length / z.tasks.length}">${art('place_' + S.zone, '🏠')}</div>
     <div><h2>${zoneNm(S.zone)}</h2><div class="pbar"><i style="width:${pct}%"></i></div><p class="note">${t('placeNote', { i: S.zone + 1, n: DATA.zones.length, d: S.tasksDone.length, t: z.tasks.length, g: z.bonusGems })}</p></div></div>
     <div class="say"><span class="face">${whoHtml('res_' + S.zone)}</span><p><b>${r.name}</b><br>${r.hi}</p></div>${tip}${rows}
-    ${S.tut >= 5 ? `<button class="back" id="btn-map">🗺️ ${t('map')}</button>` : ''}`);
+    ${S.tut >= 5 ? `<button class="back" id="btn-map">🏝️ ${t('map')}</button>` : ''}`);
   const b = $('btn-map'); if (b) b.onclick = openIsland;
 }
 
@@ -598,7 +606,7 @@ function grant(r) {
   }
   sfx('buy');
 }
-const rewardTxt = r => [r.gems && `${r.gems} 💎`, r.coins && `${r.coins} 🪙`, r.energy && `${r.energy} ⚡`, r.chest && art('chest', '🎁'), r.joker && art('joker', '🃏')].filter(Boolean).join(' ');
+const rewardTxt = r => [r.gems && `${r.gems} 💎`, r.coins && `${r.coins} 🪙`, r.energy && `${r.energy} ⚡`, r.chest && '🎁', r.joker && '🃏'].filter(Boolean).join(' ');
 function canClaim() {
   return (S.cal && !S.cal.got && S.cal.i >= 0) || (S.day && (S.day.tasks.some(x => x.p >= x.n && !x.got) || (!S.day.bonus && S.day.tasks.every(x => x.got))));
 }
@@ -775,6 +783,7 @@ $('btn-store').onclick = openStore;
 $('btn-album').onclick = openAlbum;
 $('btn-island').onclick = openIsland;
 $('btn-settings').onclick = openSettings;
+$('res-gems').onclick = openShop;
 $('btn-sell').onclick = sell;
 $('modal-close').onclick = closeModal;
 $('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
