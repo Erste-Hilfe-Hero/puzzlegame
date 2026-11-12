@@ -140,3 +140,122 @@ const I18N = {
     ]
   }
 };
+
+// ---------- content round 2 (x-content.js): UI texts EN/DE, German island content ----------
+Object.assign(I18N.en, {
+  xcOk: 'OK', unitH: 'h',
+  xcFriendH: 'Friendship', xcFriendStep: 'Friendship with {name}: {n}/3!', xcFriendBar: 'Friendship {n}/3 - {d} orders',
+  xcFriend: 'Thanks for always thinking of me!|You are a true friend of this island.|Whatever you need, just ask. Friends forever!',
+  xcBonus: 'Bonus: {b}', xcB_spawnUp: '{gen} makes level 2 items ({p} % chance)', xcB_orderPct: '+{n} % coins on every order',
+  xcB_orderEnergy: '+{n} ⚡ for every order', xcB_chestItem: '+{n} item in every chest',
+  xcStoryH: 'A clue from the storm',
+  xcLockedH: 'Not yet open', xcLockedText: 'Restore {prev} first.', xcLockedCost: '{n} tasks, {c} 🪙 in total, +{g} 💎 at the end',
+  xcLockedRes: 'Someone is waiting here...',
+  xcDecoH: 'Decoration', xcDecoNote: 'Just for looks, no other effect.', xcDecoOn: 'Active', xcDecoUse: 'Use',
+  xcDeco_classic: 'Classic', xcDeco_lagoon: 'Lagoon', xcDeco_rose: 'Rose', xcDeco_gold: 'Gold',
+  xcIslLock: 'Restore all of {name}', xcIslHere: 'You are here', xcIslGo: 'Sail there', xcIslDone: 'Restored',
+  xcSailed: 'Welcome to {name}!', xcNextIsland: '{name} is waiting! Open the map and sail there.',
+  xcTabItems: 'Items', xcTabGuests: 'Guests', xcTabFinds: 'Finds',
+  xcGuestsNote: 'Deliver orders to residents to become friends.', xcFav: 'Loves: {name}', xcDelivered: '{n} orders',
+  xcWalkers: 'Walk-in guests', xcUnknown: '???',
+  xcFindsNote: 'Rare finds turn up now and then when you tap a generator.', xcFound: 'A rare find: {name}!',
+  xcStep: 'First {name}! +{c} 🪙',
+  xcEvent: '{name} is here! New generator: {gen}', xcEventEnd: '{name} is over. Thanks for celebrating!', xcTier: '{name}: {r}',
+  xcBottle: 'A message in a bottle! A special order waits for 24 h.'
+});
+Object.assign(I18N.de, {
+  xcOk: 'OK', unitH: ' Std.',
+  xcFriendH: 'Freundschaft', xcFriendStep: 'Freundschaft mit {name}: {n}/3!', xcFriendBar: 'Freundschaft {n}/3 - {d} Bestellungen',
+  xcFriend: 'Danke, dass du immer an mich denkst!|Du bist eine echte Freundin dieser Insel.|Was du auch brauchst, frag einfach. Freunde für immer!',
+  xcBonus: 'Bonus: {b}', xcB_spawnUp: '{gen} macht Teile der Stufe 2 ({p} % Chance)', xcB_orderPct: '+{n} % Münzen bei jeder Bestellung',
+  xcB_orderEnergy: '+{n} ⚡ für jede Bestellung', xcB_chestItem: '+{n} Teil in jeder Truhe',
+  xcStoryH: 'Ein Hinweis auf den Sturm',
+  xcLockedH: 'Noch geschlossen', xcLockedText: 'Renoviere zuerst {prev}.', xcLockedCost: '{n} Aufgaben, zusammen {c} 🪙, am Ende +{g} 💎',
+  xcLockedRes: 'Hier wartet schon jemand...',
+  xcDecoH: 'Deko', xcDecoNote: 'Nur für die Optik, sonst keine Wirkung.', xcDecoOn: 'Aktiv', xcDecoUse: 'Nutzen',
+  xcDeco_classic: 'Klassisch', xcDeco_lagoon: 'Lagune', xcDeco_rose: 'Rosé', xcDeco_gold: 'Gold',
+  xcIslLock: 'Renoviere ganz {name}', xcIslHere: 'Du bist hier', xcIslGo: 'Hinsegeln', xcIslDone: 'Renoviert',
+  xcSailed: 'Willkommen auf {name}!', xcNextIsland: '{name} wartet! Öffne die Karte und segle hin.',
+  xcTabItems: 'Teile', xcTabGuests: 'Gäste', xcTabFinds: 'Funde',
+  xcGuestsNote: 'Liefere Bestellungen an Bewohner, um Freunde zu werden.', xcFav: 'Liebt: {name}', xcDelivered: '{n} Bestellungen',
+  xcWalkers: 'Laufkunden', xcUnknown: '???',
+  xcFindsNote: 'Seltene Funde tauchen ab und zu auf, wenn du einen Erzeuger antippst.', xcFound: 'Ein seltener Fund: {name}!',
+  xcStep: 'Erstes Mal {name}! +{c} 🪙',
+  xcEvent: '{name} ist da! Neuer Erzeuger: {gen}', xcEventEnd: '{name} ist vorbei. Danke fürs Mitfeiern!', xcTier: '{name}: {r}',
+  xcBottle: 'Eine Flaschenpost! Ein Sonderauftrag wartet 24 Std.'
+});
+
+I18N.de.stories = [
+  'Hinter der Theke findet Amy ein zerrissenes Segel mit einem aufgestickten Leuchtturm. Wer hat es im Sturm verloren?',
+  'Unter den Tatami-Matten liegt ein durchnässtes Logbuch. Letzter Eintrag: "Das Leuchtfeuer ist erloschen. Die Schiffe fanden den Hafen nicht."',
+  'Die Jukebox spuckt ein altes Foto aus: die junge Oma Rosa, winkend oben auf dem Leuchtturm.',
+  'Im kalten Steinofen findet Amy einen Eisenschlüssel mit Anhänger: "Lampenraum".',
+  'Am Strand angespült: die große Leuchtturmlinse, noch ganz. Kai hilft, sie nach Hause zu tragen.',
+  'Amy dreht den Schlüssel, Kai setzt die Linse ein und Oma Rosa entzündet das Leuchtfeuer. Der Sturm ist vorbei - jedes Schiff findet die Insel wieder.'
+];
+[
+  ['Du weißt noch, wie ich mein Brot mag. Das bedeutet einem alten Seebären viel.', 'Setz dich zu mir, Amy. Das Café fühlt sich wieder wie Zuhause an.', 'Hier, mein alter Kompass. Er zeigt immer zu guten Freunden.'],
+  ['Du gießt Tee ein wie meine Großmutter. Ganz sanft.', 'Ich habe einen zweiten Kirschbaum gepflanzt. Er ist für dich.', 'Wer Tee teilt, teilt alles. Willkommen, Amy.'],
+  ['Du bist schnell! Willst du am Grill anfangen?', 'Ich habe deinen Namen auf die Jukebox geschrieben. Titel Nummer eins!', 'Die beste Partnerin, die ein Diner je hatte. Burger gehen für immer auf mich.'],
+  ['Du hast gute Hände für Teig, amica.', 'Meine Nonna hätte dich geliebt. Hier, ihr geheimes Basilikum.', 'Der Ofen singt, wenn du da bist. Grazie, Amy.'],
+  ['Du gehörst jetzt zur Strandcrew!', 'Ich habe den Möwen beigebracht, dir zu winken. Schau!', 'Morgen bei Sonnenaufgang surfen? Du und ich!'],
+  ['Du steigst die Treppen hoch wie ich in deinem Alter.', 'Ich habe meine alten Rezepte aufgeschrieben. Jetzt gehören sie dir.', 'Das Licht leuchtet auch für dich, Schätzchen. Immer.']
+].forEach((f, k) => { I18N.de.residents[k].friend = f; });
+
+I18N.de.finds = { shell: 'Spiralmuschel', bottle: 'Flaschenpost', glass: 'Seeglas', coral: 'Rosa Koralle', pearl: 'Glücksperle', compass: 'Sturmkompass' };
+I18N.de.eventChains = {
+  lantern27: { name: 'Laternennacht', genName: 'Laternenstand', names: ['Kerze', 'Papierlaterne', 'Grillspieß', 'Reisbällchen', 'Mondkuchen', 'Wirbelkuchen', 'Mondschau-Tablett', 'Laternen-Feuerwerk'] }
+};
+
+// Islands: index 0 shares the arrays above, x-content.js swaps zones/tasks/residents to the current island.
+I18N.de.islands = [
+  { name: 'Sonnenmelonen-Insel', zones: I18N.de.zones, tasks: I18N.de.tasks, residents: I18N.de.residents },
+  { name: 'Korallenatoll',
+    zones: ['Muschelstand', 'Stelzenhaus-Grill', 'Perlentaucher-Bar', 'Riff-Bistro', 'Lagunen-Eisdiele', 'Atoll-Festsaal'],
+    tasks: [
+      ['Muscheln sortieren', 'Fischernetze flicken', 'Preistafeln bemalen', 'Muscheltheke bauen', 'Muschel-Windspiele aufhängen', 'Stand eröffnen'],
+      ['Stelzen reparieren', 'Neue Planken legen', 'Grillstelle bauen', 'Strickleiter aufhängen', 'Tische mit Meerblick decken', 'Erstes Feuer anzünden'],
+      ['Tauchflagge hissen', 'Perlentheke polieren', 'Alte Taucherhelme aufhängen', 'Aquarium füllen', 'Lagunenpunsch mischen', 'Perlennacht feiern'],
+      ['Korallenfliesen schrubben', 'Glasboden einbauen', 'Offene Küche bauen', 'Rifftische decken', 'Speisekarte schreiben', 'Erstes Abendessen servieren'],
+      ['Gefriertruhe reparieren', 'Pastellstreifen malen', 'Waffelecke bauen', 'Sonnenschirme aufstellen', 'Streusel auffüllen', 'Erste Kugel ausgeben'],
+      ['Saal ausräumen', 'Palmendach aufstellen', 'Bühne bauen', 'Muschelgirlanden aufhängen', 'Lange Tafel decken', 'Atollfest eröffnen']
+    ],
+    residents: [
+      { name: 'Mira', hi: 'Hi! Ich sammle Muscheln, aber der Sturm hat meinen kleinen Stand verschüttet. Gräbst du ihn mit mir aus?', thanks: 'Mein Stand ist zurück! Jeder Gast bekommt eine Glücksmuschel.',
+        lines: ['Ein Snack für die Muscheljägerin?', 'Ebbe! Zeit fürs Mittagessen!', 'Heute habe ich eine rosa Muschel gefunden. Lass uns feiern!'] },
+      { name: 'Der alte Tomas', hi: 'Mein Grill steht auf Stelzen über dem Wasser. Na ja, vor dem Sturm jedenfalls.', thanks: 'Wieder fest wie ein Fels. Das erste Feuer brennt für dich.',
+        lines: ['Die Kohlen glühen. Bring mir was!', 'Fischer kommen hungrig nach Hause.', 'Nichts geht über ein Abendessen über den Wellen.'] },
+      { name: 'Nalu', hi: 'Ich tauche den ganzen Tag nach Perlen. Abends will ich eine Bar zum Heimkommen!', thanks: 'Schau, wie das Aquarium leuchtet! Taucher von jedem Riff werden kommen.',
+        lines: ['Tiefer Tauchgang, großer Hunger!', 'Was Kühles für nach dem Tauchen?', 'Perle gefunden. Leckereien für alle!'] },
+      { name: 'Köchin Odile', hi: 'Ein Bistro mit Glasboden über dem Riff. Die Fische schauen beim Essen zu! Hilfst du mir beim Bauen?', thanks: 'Das Riff glitzert unter jedem Tisch. Merci, Amy!',
+        lines: ['Meine Gäste wollen etwas Frisches.', 'Das Riff ist hübsch, aber Teller sind hübscher!', 'Bring mir dein Bestes, die Kritiker sind da.'] },
+      { name: 'Pippa', hi: 'Eis an der Lagune! Nur ist die Gefriertruhe voller Sand...', thanks: 'Pastellstreifen und kalte Kugeln. Die Lagune war nie süßer!',
+        lines: ['Naschkatzen-Alarm!', 'Streusel, Streusel, Streusel!', 'Eine Waffel für jedes Kind auf dem Atoll!'] },
+      { name: 'Bürgermeister Bo', hi: 'Jedes Jahr feiert das Atoll ein Fest. Dieses Jahr hat der Saal kein Dach!', thanks: 'Das Fest ist zurück! Amy, du bist unser Ehrengast.',
+        lines: ['Der Rat hat Hunger. Großen Hunger.', 'Ein Fest braucht eine lange Tafel voller Essen!', 'Reden sind mit Snacks besser.'] }
+    ] },
+  { name: 'Glutberg',
+    zones: ['Bergbäckerei', 'Thermal-Teestube', 'Lavastein-Grill', 'Kräuterhütte', 'Gipfelkäserei', 'Kraterfest-Halle'],
+    tasks: [
+      ['Ofen freilegen', 'Mehlmühle reparieren', 'Brennholz stapeln', 'Brotregal bauen', 'Schild schnitzen', 'Gipfelbrot backen'],
+      ['Quelle reinigen', 'Steinweg legen', 'Teebänke bauen', 'Dampfvorhänge aufhängen', 'Erste Kanne brühen', 'Teezeremonie halten'],
+      ['Lavasteine abkühlen', 'Steingrill bauen', 'Bankreihen aufstellen', 'Eisenlampen aufhängen', 'Spieße schärfen', 'Grillnacht anfeuern'],
+      ['Beete jäten', 'Trockengestell reparieren', 'Minzwand pflanzen', 'Gewürzgläser füllen', 'Kräuteröl ansetzen', 'Kräutermarkt eröffnen'],
+      ['Keller reinigen', 'Butterfass reparieren', 'Käseregale bauen', 'Ziegen hochholen', 'Ersten Laib wenden', 'Verkostung abhalten'],
+      ['Kraterweg räumen', 'Großes Zelt aufbauen', 'Feuerring bauen', 'Glutlaternen aufhängen', 'Festtafel decken', 'Kraterfeuer entzünden']
+    ],
+    residents: [
+      { name: 'Bäckerin Greta', hi: 'Brot backt am besten in der Bergluft. Aber Asche hat meinen Ofen bedeckt!', thanks: 'Das Gipfelbrot geht wieder auf. Warmes Brot für alle Bergsteiger!',
+        lines: ['Frisch vom Berg, bitte!', 'Bergsteiger brauchen knuspriges Brot.', 'Der Ofen ist heiß, die Körbe sind leer!'] },
+      { name: 'Meister Ren', hi: 'Die heiße Quelle sprudelt noch. Nur die Teestube drumherum ist weg.', thanks: 'Warmes Wasser, warmer Tee, ruhiges Herz. Danke, Amy.',
+        lines: ['Ein stiller Snack für einen stillen Geist.', 'Tee allein ist einsam. Bring ihm Gesellschaft.', 'Der Dampf sagt: Mittagszeit.'] },
+      { name: 'Der große Jorge', hi: 'Ich grille auf Steinen direkt vom Vulkan. Heiße Sache! Hilfst du beim Aufbau?', thanks: 'Die Grillnacht ist zurück! Der ganze Berg duftet köstlich.',
+        lines: ['Die Steine sind heiß. Hungrige Menge!', 'Mehr für den Grill, amigo!', 'Nichts schmeckt wie vom Lavastein.'] },
+      { name: 'Wren', hi: 'Meine Kräuter lieben den warmen Vulkanboden. Das Unkraut leider auch...', thanks: 'Minze, Basilikum, Thymian - die ganze Hütte duftet nach Sommer!',
+        lines: ['Etwas Grünes und Frisches?', 'Meine Kräuter wollen einen leckeren Partner.', 'Markttag! Bring die guten Sachen.'] },
+      { name: 'Die alte Hilde', hi: 'Hier oben geben die Ziegen die beste Milch. Meine Käserei braucht nur etwas Liebe.', thanks: 'Der erste Laib ist gewendet. In einem Jahr ist es der beste Käse auf dem Meer!',
+        lines: ['Ein Häppchen für die Käserin?', 'Die Ziegen sind gefüttert. Jetzt ich!', 'Verkostungstag! Bring was Passendes mit.'] },
+      { name: 'Häuptling Tavi', hi: 'Einmal im Jahr feiern wir im alten Krater. Hilfst du uns, das Feuer wieder zu entzünden?', thanks: 'Das Kraterfeuer brennt! Alle drei Inseln sind eingeladen.',
+        lines: ['Die Festhalle wartet auf dich!', 'Großes Feuer, große Tafel, großer Hunger.', 'Bring das beste Gericht des Berges!'] }
+    ] }
+];

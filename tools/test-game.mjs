@@ -542,5 +542,119 @@ test('F36/F38 text check: en/de keys, placeholders, Amy style', () => {
   eq(checkTexts().errors, []);
 });
 
+// ---------- area B round 2: x-content.js ----------
+test('B24/B28 sailing to island 2 starts a new board, the old board is kept and restored', () => {
+  const g = boot();
+  ok(g.ctx.__content, 'x-content installed');
+  g.run('S.tut = 5; S.level = 6; S.zone = 6; S.board[40] = { c: "fruit", l: 4 }; commit()');
+  const old = JSON.stringify(g.S().board);
+  g.ctx.__content.sail(1);
+  eq(g.S().island, 1); eq(g.S().zone, 0); eq(g.run('DATA.zones[0].name'), 'Shell Stand');
+  ok(gensOn(g).includes('bakery') && gensOn(g).includes('kitchen'), 'unlocked generators on the new board');
+  ok(!g.S().board.some(c => c && c.c === 'fruit' && c.l === 4), 'fresh board');
+  g.ctx.__content.sail(0);
+  eq(g.S().island, 0); eq(g.S().zone, 6); eq(JSON.stringify(g.S().board), old);
+});
+
+test('B24 save on island 2 loads with island 2 data', () => {
+  const g = boot();
+  g.run('S.tut = 5; S.zone = 6; commit()');
+  g.ctx.__content.sail(1);
+  g.run('S.zone = 2; save()');
+  const h = boot(g.store['amy-tasty-v1']);
+  eq(h.S().island, 1); eq(h.S().zone, 2); eq(h.run('DATA.zones[2].name'), 'Pearl Diver Bar'); eq(h.run('DATA.residents.length'), 6);
+});
+
+test('B25 island 3 stays locked until island 2 is restored', () => {
+  const g = boot();
+  g.run('S.tut = 5; commit()');
+  g.ctx.__content.sail(1);
+  eq(g.S().island, 0, 'island 1 not finished');
+  g.run('S.zone = 6'); g.ctx.__content.sail(1); g.ctx.__content.sail(2);
+  eq(g.S().island, 1);
+});
+
+test('B15 friendship step 1 after 5 resident orders gives a chest', () => {
+  const g = boot();
+  g.run('S.tut = 5; S.zone = 1; commit()');
+  for (let k = 0; k < 5; k++) {
+    g.run("S.orders[0] = orderReward({ who: 'res_0', need: [{ c: 'bakery', l: 0 }], got: [false] }); S.board[30] = { c: 'bakery', l: 0 }");
+    g.G.deliver(0);
+  }
+  eq(g.S().friend['0:0'], 5);
+  ok(g.S().board.some(c => c && c.chest) || g.S().inbox.some(c => c.chest), 'chest granted');
+});
+
+test('B48 restored Rosie adds 5 % order coins and Kai +1 energy', () => {
+  const g = boot();
+  g.run('S.tut = 5; S.zone = 5; S.energy = 10; commit()');
+  g.run("S.orders[0] = orderReward({ who: 'cu_0', need: [{ c: 'bakery', l: 3 }], got: [false] }); S.board[30] = { c: 'bakery', l: 3 }");
+  const c0 = g.S().coins, pay = g.S().orders[0].coins;
+  g.G.deliver(0);
+  eq(g.S().coins - c0, Math.round(pay * 1.05) + 0, 'coins');
+  ok(g.S().energy >= 11, 'energy bonus');
+});
+
+test('B37 first level 4 item pays 20 coins once', () => {
+  const g = boot();
+  const c0 = g.S().coins;
+  g.run("seen('fruit', 3); seen('fruit', 3)");
+  eq(g.S().coins - c0, 20);
+});
+
+test('B47 bottle order once per day with 3 different chains, joker and chest on delivery', () => {
+  const g = boot();
+  g.run("S.tut = 5; S.level = 6; S.board[40] = { gen: 'fruit' }; S.board[41] = { gen: 'cafe' }; commit()");
+  ok(g.ctx.__content.bottleCheck(), 'created');
+  ok(!g.ctx.__content.bottleCheck(), 'only once a day');
+  const k = g.S().orders.findIndex(o => o.bottle);
+  const o = g.S().orders[k];
+  eq(new Set(o.need.map(x => x.c)).size, 3);
+  g.run(`S.orders[${k}].need.forEach((x, j) => { S.board[44 + j] = { c: x.c, l: x.l }; })`);
+  g.G.deliver(k);
+  const all = g.S().board.concat(g.S().inbox);
+  ok(all.some(c => c && c.joker) && all.some(c => c && c.chest), 'joker and chest');
+  g.ctx.__content.bottleCheck();
+  g.setT(T0 + 864e5 + 1000); g.run('S.tut = 5');
+  ok(g.ctx.__content.bottleCheck(), 'next day again');
+  g.setT(T0 + 3 * 864e5); ok(g.ctx.__content.bottleExpire(), 'expires after 24 h');
+});
+
+test('B33 event chain registers in its window, gives tiers and is cleaned up after', () => {
+  const T1 = new Date(2027, 0, 16, 12).getTime();
+  const g = boot(null, { T: T1 });
+  ok(g.run('!!DATA.chains.lantern27'), 'registered');
+  g.run('S.tut = 5; S.level = 6'); g.ctx.__content.eventTick(); g.run('commit()');
+  ok(gensOn(g).includes('lantern27'), 'generator placed');
+  const gems = g.S().gems;
+  g.run("S.board[30] = { c: 'lantern27', l: 6 }; seen('lantern27', 6)");
+  eq(g.S().gems - gems, 10);
+  g.run('P.lang = "de"'); eq(g.run("nm('lantern27', 4)"), 'Mondkuchen');
+  g.setT(new Date(2027, 0, 23, 12).getTime());
+  g.ctx.__content.eventTick();
+  ok(!g.run('!!DATA.chains.lantern27'), 'removed');
+  ok(!g.S().board.some(c => c && (c.c === 'lantern27' || c.gen === 'lantern27')), 'board cleaned');
+});
+
+test('B18 Luca orders kitchen in the evening', () => {
+  const g = boot(null, { T: new Date(2026, 10, 12, 19).getTime() });
+  g.run("S.tut = 5; S.level = 12; S.zone = 4; S.board[40] = { gen: 'kitchen' }; commit()");
+  let luca = 0;
+  for (let k = 0; k < 300; k++) { const o = g.run('makeOrder()'); if (o.who === 'res_3' && !o.special) { luca++; ok(o.need.length === 1 && o.need[0].c === 'kitchen', 'kitchen ' + JSON.stringify(o)); } }
+  ok(luca > 20, 'Luca orders often in the evening: ' + luca);
+});
+
+test('B11/B24 every island has 6 places, 6 tasks each, EN and DE names', () => {
+  const g = boot();
+  const isl = g.run('DATA.islands'), de = g.run('I18N.de.islands');
+  isl.forEach((a, i) => {
+    eq(a.places.length, 6); eq(a.residents.length, 6); eq(a.pins.length, 6);
+    eq(de[i].zones.length, 6); eq(de[i].residents.length, 6);
+    a.places.forEach((p, k) => { eq(p.tasks.length, 6); eq(de[i].tasks[k].length, 6); });
+  });
+  const en = g.run('I18N.en'), dk = g.run('I18N.de');
+  eq(Object.keys(en).filter(k => k.startsWith('xc') && !(k in dk)), []);
+});
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

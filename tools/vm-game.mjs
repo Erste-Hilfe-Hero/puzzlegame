@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 export const WEB = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'web');
-export const FILES = ['data.js', 'i18n.js', 'x-core.js', 'x-native.js', 'game.js'].map(f => [f, fs.readFileSync(path.join(WEB, f), 'utf8')]);
+export const FILES = ['data.js', 'i18n.js', 'x-core.js', 'x-content.js', 'x-native.js', 'game.js'].map(f => [f, fs.readFileSync(path.join(WEB, f), 'utf8')]);
 export const T0 = new Date(2026, 10, 12, 12, 0, 0).getTime();
 
 class CL {
