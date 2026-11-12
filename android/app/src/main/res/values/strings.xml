@@ -1,1 +1,4 @@
-<resources><string name="app_name">Amy\'s Tasty Island</string></resources>
+<resources>
+    <string name="app_name">Amy\'s Tasty Island</string>
+    <string name="old_webview">Your Android System WebView is too old for this game. Please update "Android System WebView" (or Chrome) in the Play Store.</string>
+</resources>

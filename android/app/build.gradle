@@ -11,7 +11,10 @@ android {
         targetSdk 35
         versionCode Integer.parseInt(System.getenv('TI_VERSION_CODE') ?: '1')
         versionName '1.0.0'
+        // Play license key (Play Console, Monetization setup) for local purchase signature checks; empty = no check.
+        buildConfigField 'String', 'PLAY_KEY', "\"${System.getenv('TI_PLAY_LICENSE_KEY') ?: ''}\""
     }
+    buildFeatures { buildConfig true }
     signingConfigs {
         upload {
             if (ks.exists()) {
@@ -24,7 +27,9 @@ android {
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             if (ks.exists()) signingConfig signingConfigs.upload
         }
     }
