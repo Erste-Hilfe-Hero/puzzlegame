@@ -3,8 +3,8 @@
 // Loaded after game.js; hooks in by wrapping global functions, game.js stays unchanged.
 (function () {
   const XT = {
-    en: { music: 'Music', effects: 'Sound effects', haptics: 'Vibration', motion: 'Animations', full: 'Full', reduced: 'Reduced', day: 'Day', min: 'min', h: 'h', level: 'Level', settings: 'Settings', close: 'Close', skip: 'Tap to continue' },
-    de: { music: 'Musik', effects: 'Soundeffekte', haptics: 'Vibration', motion: 'Animationen', full: 'Voll', reduced: 'Reduziert', day: 'Tag', min: 'Min.', h: 'Std.', level: 'Level', settings: 'Einstellungen', close: 'Schließen', skip: 'Tippen zum Weiter' }
+    en: { music: 'Music', effects: 'Sound effects', haptics: 'Vibration', motion: 'Animations', full: 'Full', reduced: 'Reduced', day: 'Day', min: 'min', h: 'h', level: 'Level', settings: 'Settings', close: 'Close', skip: 'Tap to continue', loading: 'Loading...', deviceLang: 'Device language', volume: 'Volume' },
+    de: { music: 'Musik', effects: 'Soundeffekte', haptics: 'Vibration', motion: 'Animationen', full: 'Voll', reduced: 'Reduziert', day: 'Tag', min: 'Min.', h: 'Std.', level: 'Level', settings: 'Einstellungen', close: 'Schließen', skip: 'Tippen zum Weiter', loading: 'Lädt...', deviceLang: 'Gerätesprache', volume: 'Lautstärke' }
   };
   const X = k => (XT[P.lang] || XT.en)[k];
   const has = n => typeof window[n] === 'function';
@@ -18,7 +18,10 @@
   // ---------- prefs: separate music / effects, vibration, motion ----------
   if (P.sfx === undefined) P.sfx = P.sound !== false;
   if (P.music === undefined) P.music = P.sound !== false;
-  if (P.haptics === undefined) P.haptics = true;
+  // I43: volume 0-100 per bus instead of on/off; vibration uses the game's own switch (P.haptic).
+  if (P.musicVol === undefined) P.musicVol = P.music ? 100 : 0;
+  if (P.sfxVol === undefined) P.sfxVol = P.sfx ? 100 : 0;
+  const MUS_GAIN = 0.4;
   if (P.motion === undefined) P.motion = 'full';
   const mq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   const xRM = () => P.motion === 'reduced' || !!(mq && mq.matches);
@@ -27,7 +30,9 @@
     document.body.classList.toggle('rm', xRM());
     $('btn-settings').setAttribute('aria-label', X('settings'));
     $('modal-close').setAttribute('aria-label', X('close'));
-    if (musBus) musBus.gain.value = P.music ? 0.4 : 0;
+    P.music = P.musicVol > 0; P.sfx = P.sfxVol > 0; P.sound = P.sfx;
+    if (musBus) musBus.gain.value = MUS_GAIN * P.musicVol / 100;
+    if (sfxBus) sfxBus.gain.value = P.sfxVol / 100;
     if (P.music) startMusic(); else stopMusic();
   }
 
@@ -39,8 +44,8 @@
     const C = window.AudioContext || window.webkitAudioContext;
     if (!C) return null;
     XA = new C();
-    sfxBus = XA.createGain(); sfxBus.gain.value = 1; sfxBus.connect(XA.destination);
-    musBus = XA.createGain(); musBus.gain.value = P.music ? 0.4 : 0; musBus.connect(XA.destination);
+    sfxBus = XA.createGain(); sfxBus.gain.value = P.sfxVol / 100; sfxBus.connect(XA.destination);
+    musBus = XA.createGain(); musBus.gain.value = MUS_GAIN * P.musicVol / 100; musBus.connect(XA.destination);
     try { AC = XA; } catch (e) { /* game.js without AC */ }
     buildSamples();
     return XA;
@@ -107,13 +112,13 @@
     const s = XA.createBufferSource(); s.buffer = BUF[k]; s.playbackRate.value = rate || 1;
     s.connect(sfxBus); s.start();
   }
+  // Android/browser vibrate through game.js buzz(); WKWebView has no navigator.vibrate, so iOS gets a native haptic.
   function haptic(kind) {
-    if (!P.haptics) return;
+    if (P.haptic === false) return;
     try {
       const wk = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic;
       if (wk) wk.postMessage(kind);
-      else if (navigator.vibrate) navigator.vibrate(kind === 'deliver' ? [12, 50, 12] : 12);
-    } catch (e) { /* no vibration */ }
+    } catch (e) { /* no haptics */ }
   }
   let remap = null, mergeLevel = null;
   const withMap = (m, fn) => { const old = remap; remap = m; try { return fn(); } finally { remap = old; } };
@@ -261,7 +266,9 @@
     const oDeliver = window.deliver;
     window.deliver = function (k) {
       const o = S.orders[k], card = $('orders').children[k];
-      const cells = o && findItems(o.need);
+      // findItems(o) returns parts { b: cell } / { s: slot } / { got } (A32/A41); only board cells can fly.
+      const parts = o && findItems(o);
+      const cells = parts && parts.filter(p => p.b !== undefined).map(p => p.b);
       if (cells && card && !xRM()) {
         const [x1, y1] = center(card);
         cells.forEach((i, n) => { const el = cellEl(i), u = imgOf(i); if (el && u) { const [x0, y0] = center(el); flyImg(u, x0, y0, x1, y1, 320, el.offsetWidth * 0.8, null, n * 60); } });
@@ -309,6 +316,7 @@
   }
 
   // C9 C35: gem pack art and shop card types
+  let priceAsk = 0;
   if (has('openShop')) {
     const oShop = window.openShop;
     window.openShop = function () {
@@ -321,6 +329,15 @@
         row.classList.add('k-gems');
         const pi = row.querySelector('.pi'); if (pi) pi.innerHTML = `<img src="${src('gem_' + Math.min(5, k))}" alt="">`;
       });
+      // I12: store buttons stay off and say "Loading..." until the store sent prices.
+      if (typeof NATIVE !== 'undefined' && NATIVE) {
+        let wait = false;
+        body.querySelectorAll('[data-money]').forEach(b => {
+          if (nativePrices[b.dataset.money]) return;
+          b.disabled = true; b.classList.add('wait'); b.textContent = X('loading'); wait = true;
+        });
+        if (wait && Date.now() - priceAsk > 5000) { priceAsk = Date.now(); try { NATIVE.requestPrices(); } catch (e) { /* bridge gone */ } }
+      }
       body.querySelectorAll('[data-gem]').forEach(b => {
         const g = DATA.gemShop.find(x => x.id === b.dataset.gem), row = b.closest('.prod');
         if (g && row) row.classList.add('k-' + g.kind);
@@ -341,15 +358,40 @@
       if (opts) {
         const o = (k, v, label) => `<button class="opt ${P[k] === v ? 'on' : ''}" data-xpref="${k}" data-val="${v}">${label}</button>`;
         const row = (h, k, a, b, la, lb) => `<h3>${h}</h3><div class="opts">${o(k, a, la)}${o(k, b, lb)}</div>`;
+        const vol = (h, k) => `<h3>${h}</h3><div class="opts vol"><input type="range" min="0" max="100" step="10" value="${P[k]}" data-xvol="${k}" aria-label="${h} ${X('volume')}"><output>${P[k]}%</output></div>`;
         const h3 = opts.previousElementSibling;
         if (h3 && h3.tagName === 'H3') h3.remove();
-        opts.outerHTML = row(X('music'), 'music', true, false, t('on'), t('off')) + row(X('effects'), 'sfx', true, false, t('on'), t('off')) +
-          row(X('haptics'), 'haptics', true, false, t('on'), t('off')) + row(X('motion'), 'motion', 'full', 'reduced', X('full'), X('reduced'));
+        opts.outerHTML = vol(X('music'), 'musicVol') + vol(X('effects'), 'sfxVol') + row(X('motion'), 'motion', 'full', 'reduced', X('full'), X('reduced'));
+      }
+      // I50: "Device language" next to the fixed languages
+      const lo = document.querySelector('#modal-body [data-pref="lang"]');
+      const lopts = lo && lo.closest('.opts');
+      if (lopts) {
+        if (P.langAuto) lopts.querySelectorAll('.on').forEach(b => b.classList.remove('on'));
+        lopts.insertAdjacentHTML('afterbegin', `<button class="opt ${P.langAuto ? 'on' : ''}" data-xlang="auto">${X('deviceLang')}</button>`);
       }
       return r;
     };
     $('btn-settings').onclick = window.openSettings;
   }
+  $('modal-body').addEventListener('input', e => {
+    const r = e.target.closest('[data-xvol]');
+    if (!r) return;
+    P[r.dataset.xvol] = +r.value;
+    const out = r.nextElementSibling; if (out) out.textContent = r.value + '%';
+    applyPrefs();
+  });
+  $('modal-body').addEventListener('change', e => {
+    if (!e.target.closest('[data-xvol]')) return;
+    savePrefs(); if (e.target.dataset.xvol === 'sfxVol') sfx('merge');
+  });
+  // I50: a fixed language choice switches device language off (runs before game.js handles data-pref/data-wlang).
+  $('modal-body').addEventListener('click', e => {
+    if (e.target.closest('[data-pref="lang"], [data-wlang]')) P.langAuto = false;
+  }, true);
+  $('modal-body').addEventListener('click', e => {
+    if (e.target.closest('[data-xlang]')) { P.langAuto = true; followDevice(true); openSettings(); sfx('spawn'); }
+  });
   $('modal-body').addEventListener('click', e => {
     const b = e.target.closest('[data-xpref]');
     if (!b) return;
@@ -542,6 +584,22 @@
     DATA.zones.forEach((z, k) => keys.push('place_' + k, 'res_' + k));
     keys.forEach(k => { const im = new Image(); im.src = src(k); });
   });
+
+  // ---------- I50: device language ----------
+  function deviceLang() {
+    const l = ((navigator.languages && navigator.languages[0]) || navigator.language || 'en').toLowerCase();
+    return Object.keys(I18N).find(k => l === k || l.startsWith(k + '-')) || 'en';
+  }
+  function followDevice(force) {
+    if (!P.langAuto) return;
+    const l = deviceLang();
+    if (l === P.lang && !force) return;
+    P.lang = l; savePrefs(); applyStaticTexts(); render();
+  }
+  if (P.langAuto === undefined) P.langAuto = P.lang === deviceLang();
+  window.addEventListener('languagechange', () => followDevice(false));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) followDevice(false); });
+  followDevice(false);
 
   applyPrefs();
   afterRender();

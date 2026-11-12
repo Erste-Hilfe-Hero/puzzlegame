@@ -1,0 +1,43 @@
+# I34: tests on every push and PR; Android release build as second job. Merge only on green: set this
+# workflow's jobs "web-tests" and "android" as required checks in the branch protection of main.
+name: CI
+on:
+  push:
+  pull_request:
+jobs:
+  web-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Syntax
+        run: for f in web/*.js; do node --check "$f"; done
+      - name: Unit, purchase and i18n tests
+        run: node tools/test-game.mjs
+      - name: Data validation
+        run: node tools/test-data.mjs
+      - name: Playwright
+        run: npm i --no-save playwright && npx playwright install --with-deps chromium
+      - name: Browser smoke (tutorial, settings, devices, bundle, short soak)
+        run: |
+          node tools/smoke-core.cjs
+          node tools/smoke-settings.cjs
+          node tools/device-matrix.cjs
+          node tools/check-bundle.cjs
+          SOAK_MIN=3 node tools/soak.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: qa-evidence, path: production/qa/evidence, retention-days: 14 }
+  android:
+    needs: web-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: assembleRelease (unsigned without TI_KEYSTORE)
+        run: cd android && gradle -q assembleRelease
