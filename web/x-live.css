@@ -1,0 +1,53 @@
+/* Live features (plan section E). Loaded after style.css. */
+#xl-row { display: flex; align-items: center; gap: 6px; min-height: 22px; }
+#xl-row #boosts { flex: 1; min-width: 0; }
+.xl-chip { flex-shrink: 0; height: 22px; display: flex; align-items: center; gap: 3px; padding: 0 8px 0 3px; border: 2px solid #fff; border-radius: 11px;
+  background: linear-gradient(#fffdf6, var(--panel)); box-shadow: 0 2px 0 #0003; font-size: 11px; font-weight: 700; color: var(--wood2); white-space: nowrap; }
+.xl-chip b { font-size: 14px; line-height: 1; }
+.xl-chip .ic { width: 16px; height: 16px; }
+#btn-daily .xl-cnt { position: absolute; left: 50%; top: 8px; transform: translateX(-50%); min-width: 24px; padding: 0 4px; height: 14px; line-height: 14px; border-radius: 7px;
+  background: var(--wood2); color: #fff; font-size: 9.5px; font-weight: 700; font-style: normal; text-align: center; border: 1.5px solid #fff; }
+#btn-daily .xl-cnt:empty { display: none; }
+
+.xl-streak { display: flex; align-items: center; justify-content: space-between; gap: 6px; font-weight: 700; margin: 0 0 6px; flex-wrap: wrap; }
+.xl-streak small { color: var(--muted); font-size: 12px; font-weight: 600; }
+.xl-ms { display: flex; gap: 4px; margin-bottom: 8px; }
+.xl-ms span { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px; background: var(--cell); border-radius: 10px; font-size: 10px; text-align: center; line-height: 1.1; }
+.xl-ms span b { font-size: 13px; color: var(--accent2); }
+.xl-ms span.got { background: #d8f7df; opacity: .7; }
+.xl-ms .ic { width: 14px; height: 14px; }
+.xl-bar3 { display: flex; align-items: center; gap: 8px; margin: 2px 0 8px; }
+.xl-bar3 .pbar { flex: 1; margin: 0; }
+.xl-bar3 b { font-weight: 700; color: var(--wood2); white-space: nowrap; }
+.xl-hi { background: #fff3b0; box-shadow: inset 0 -2px 0 #e8c95a; }
+.xl-line { display: flex; align-items: center; gap: 6px; padding: 7px 10px; margin-bottom: 7px; background: #fff; border-radius: 12px; font-size: 13px; font-weight: 600; }
+.xl-line button { flex-shrink: 0; margin-left: auto; border: 0; border-radius: 11px; padding: 4px 10px; font-weight: 700; color: #fff; background: linear-gradient(#ff93ad, var(--accent)); box-shadow: 0 2px 0 var(--accent2); }
+.xl-rw p { margin: 2px 0 0; font-size: 12.5px; }
+.xl-rw p.lock { color: var(--muted); }
+.xl-rw > div { flex: 1; min-width: 0; }
+.xl-tom { margin: 8px 0 0; text-align: center; font-weight: 600; color: var(--wood2); font-size: 13px; }
+.xl-st .day small:last-child { color: var(--muted); }
+.xl-tier { gap: 8px; }
+.xl-tier .xl-tn { flex: 0 0 26px; height: 26px; display: grid; place-items: center; border-radius: 50%; background: var(--wood2); color: #fff; font-weight: 700; font-size: 12px; }
+.xl-tier button { min-width: 64px; }
+.xl-tier .xl-pb { background: linear-gradient(#c79bff, #8f5bdc); box-shadow: 0 3px 0 #6a3cb0; text-shadow: none; }
+.xl-nick { display: flex; gap: 8px; margin-bottom: 8px; }
+.xl-nick input { flex: 1; min-width: 0; font: inherit; font-weight: 600; padding: 8px 10px; border: 2px solid var(--cell2); border-radius: 12px; background: #fff; color: var(--text);
+  user-select: text; -webkit-user-select: text; touch-action: auto; }
+.xl-nick button { border: 0; border-radius: 12px; padding: 0 14px; font-weight: 700; color: #fff; background: linear-gradient(#7fe890, var(--ok)); box-shadow: 0 3px 0 var(--ok2); }
+.xl-v { font-weight: 700; white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+.xl-it img { width: 26px; height: 26px; object-fit: contain; vertical-align: middle; }
+.xl-top { margin: 0 0 8px; padding: 0 0 0 22px; }
+.xl-top li { padding: 4px 0; border-bottom: 2px solid var(--cell); }
+.xl-top li span { display: inline-block; min-width: 110px; }
+.xl-bgs { flex-wrap: wrap; }
+.xl-bgs .opt { flex: 1 1 40%; display: flex; align-items: center; gap: 6px; }
+.xl-sw { flex: 0 0 18px; height: 18px; border-radius: 6px; border: 2px solid #fff; box-shadow: 0 1px 2px #0004; background: linear-gradient(#d99a55, #c9853f); }
+
+/* E40 board looks */
+#board[data-xlbg="cherry"], .xl-sw[data-xlbg="cherry"] { background: linear-gradient(#ffc4d6, #f08fb0); }
+#board[data-xlbg="cherry"] { border-color: #c2577c; }
+#board[data-xlbg="harbor"], .xl-sw[data-xlbg="harbor"] { background: linear-gradient(#8fd8ee, #3fa7c9); }
+#board[data-xlbg="harbor"] { border-color: #1f6f8f; }
+#board[data-xlbg="gold"], .xl-sw[data-xlbg="gold"] { background: linear-gradient(#ffe58a, #e8b33a); }
+#board[data-xlbg="gold"] { border-color: #a8740f; }
