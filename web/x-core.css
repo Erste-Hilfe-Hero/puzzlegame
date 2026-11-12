@@ -36,3 +36,54 @@
 pre.econ { font-size: 10px; white-space: pre-wrap; background: #fff; border-radius: 8px; padding: 6px; }
 .sheet:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) { .cell.hint > span, .cell.back > span, .cell.shake, #combo.in, .fly, .spark, .ring, .conf { animation: none; } }
+/* D20 double spawn counter next to the boost row */
+#xboosts { text-align: center; min-height: 0; }
+#xboosts:empty { display: none; }
+.prod small.passp { color: var(--ok2); font-weight: 600; }
+/* D43 save code */
+textarea.code { width: 100%; box-sizing: border-box; font: 12px/1.3 monospace; border: 2px solid var(--cell2); border-radius: 10px; padding: 6px; margin: 0 0 10px; word-break: break-all; }
+/* F44 at least 14 px for tutorial and info texts, large text option */
+#tut, #info, .tut-inline { font-size: 14px; }
+body.big #tut, body.big #info, body.big .tut-inline, body.big .note, body.big .prod small, body.big #amy-pop span, body.big #toast { font-size: 17px; }
+body.big .prod b, body.big .welcome p, body.big #modal-body h3 { font-size: 18px; }
+/* F5 tapping hand on the generator, static arrow with reduced motion */
+#tut-tap { position: fixed; width: 44px; height: 44px; margin: -6px 0 0 -10px; z-index: 22; pointer-events: none; animation: xtap 1.1s ease-in-out infinite; filter: drop-shadow(0 3px 2px #0005); }
+#tut-tap svg { width: 100%; height: 100%; display: block; }
+@keyframes xtap { 0%, 100% { transform: translate(0, 10px) scale(1); } 45% { transform: translate(0, 0) scale(.88); } }
+#tut-arrow { position: fixed; z-index: 22; pointer-events: none; transform: translate(-50%, -100%); font-size: 30px; line-height: 1; color: #fff; text-shadow: 0 0 3px #5a3217, 0 2px 0 #5a3217; }
+/* F26 first ready: button pulses once, matching items wiggle */
+.order button.ready1 { animation: xready .9s ease-out 1; }
+@keyframes xready { 0% { transform: scale(1); } 30% { transform: scale(1.18); box-shadow: 0 0 0 6px #43c46655; } 100% { transform: scale(1); } }
+.cell.wig > span { animation: xwig .7s ease-in-out 1; }
+@keyframes xwig { 20% { transform: rotate(-9deg); } 40% { transform: rotate(8deg); } 60% { transform: rotate(-6deg); } 80% { transform: rotate(4deg); } }
+/* F15 before/after */
+.reno-pics { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 6px 0; }
+.reno-pics figure { margin: 0; text-align: center; }
+.reno-pics img { width: 112px; height: 112px; object-fit: contain; }
+.reno-pics span { font-size: 64px; display: block; }
+.reno-a img { filter: grayscale(.9) sepia(.35) brightness(.85); }
+.reno-b img { animation: xshine 1.4s ease-out 1; }
+@keyframes xshine { 0% { filter: grayscale(.9) sepia(.35) brightness(.85); } 100% { filter: none; } }
+.reno-pics figcaption { font-weight: 700; color: var(--muted); }
+.reno-arrow { font-size: 26px; color: var(--ok); }
+/* F47 */
+.outlook { margin: -4px 0 8px; font-weight: 700; color: var(--ok2); text-align: center; }
+/* F13 intro */
+#intro { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; background: linear-gradient(#4fc3f7, #9be7ff 55%, #fff3c4); text-align: center; }
+#intro p { margin: 0; font-size: 20px; font-weight: 700; color: #5a3217; background: #fffd; border-radius: 16px; padding: 10px 16px; max-width: 300px; }
+#intro .i-pic { width: 260px; height: 220px; display: grid; place-items: center; position: relative; overflow: hidden; border-radius: 24px; background: #fff6; border: 4px solid #fff; animation: xin .5s ease-out; }
+#intro .i-pic img { max-width: 200px; max-height: 190px; object-fit: contain; }
+@keyframes xin { from { transform: scale(.9); opacity: 0; } to { transform: none; opacity: 1; } }
+#intro .i-sea { position: absolute; inset: 0; background: linear-gradient(transparent 55%, #2bb8d9 55%); }
+#intro .i-boat { position: absolute; bottom: 30px; left: 0; width: 140px; animation: xboat 4s linear forwards; }
+#intro .i-boat img { position: absolute; left: 36px; bottom: 22px; width: 52px; height: 52px; }
+#intro .i-boat svg { width: 140px; display: block; }
+@keyframes xboat { from { transform: translateX(-140px); } to { transform: translateX(70px); } }
+#intro .i-cafe img { filter: grayscale(.95) sepia(.4) brightness(.8); }
+#intro .i-finn .i-wave { position: absolute; right: 34px; top: 34px; font-size: 40px; transform-origin: 70% 80%; animation: xwave .6s ease-in-out infinite alternate; }
+@keyframes xwave { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+#intro .i-dots { display: flex; gap: 6px; } #intro .i-dots i { width: 9px; height: 9px; border-radius: 50%; background: #fff8; } #intro .i-dots i.on { background: #fff; }
+#intro-skip { position: absolute; right: 14px; top: 14px; min-height: 40px; padding: 6px 16px; border: 2px solid #fff; border-radius: 20px; background: #5a3217cc; color: #fff; font-weight: 700; font-size: 15px; }
+@media (prefers-reduced-motion: reduce) { #tut-tap, .order button.ready1, .cell.wig > span, .reno-b img, #intro .i-pic, #intro .i-boat, #intro .i-wave { animation: none; } #intro .i-boat { transform: translateX(60px); } }
+body.rm #tut-tap, body.rm .order button.ready1, body.rm .cell.wig > span, body.rm .reno-b img, body.rm #intro .i-pic, body.rm #intro .i-wave { animation: none; }
+body.rm #intro .i-boat { animation: none; transform: translateX(60px); }

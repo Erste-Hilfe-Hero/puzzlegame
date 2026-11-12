@@ -1,57 +1,8 @@
 // Node tests for web/game.js core rules. Loads data.js, i18n.js, x-core.js and game.js into a vm context with a
 // minimal fake DOM. Run: node tools/test-game.mjs  (exit code 1 on failure)
 process.env.TZ = 'Europe/Berlin';
-import vm from 'node:vm';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-
-const WEB = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'web');
-const FILES = ['data.js', 'i18n.js', 'x-core.js', 'x-native.js', 'game.js'].map(f => [f, fs.readFileSync(path.join(WEB, f), 'utf8')]);
-const T0 = new Date(2026, 10, 12, 12, 0, 0).getTime();
-
-class CL {
-  constructor() { this.s = new Set(); }
-  add(...c) { c.forEach(x => this.s.add(x)); } remove(...c) { c.forEach(x => this.s.delete(x)); }
-  toggle(c, on) { if (on === undefined) on = !this.s.has(c); if (on) this.s.add(c); else this.s.delete(c); return on; }
-  contains(c) { return this.s.has(c); }
-}
-class El {
-  constructor(id) { this.id = id; this.children = []; this.classList = new CL(); this.style = {}; this.dataset = {}; this.hidden = false; this._in = ''; this.sets = 0; this.textContent = ''; this.attrs = {}; }
-  set innerHTML(h) {
-    this._in = h; this.sets++;
-    if (this.id === 'board') this.children = Array.from({ length: (h.match(/class="cell"/g) || []).length }, (_, i) => { const e = new El(null); e.dataset.i = String(i); return e; });
-    if (this.id === 'orders') this.children = Array.from({ length: (h.match(/class="order /g) || []).length }, () => new El(null));
-  }
-  get innerHTML() { return this._in; }
-  addEventListener() {} setPointerCapture() {} focus() {} remove() {} appendChild() {}
-  querySelector() { return new El(null); } querySelectorAll() { return []; } closest() { return null; }
-  setAttribute(k, v) { this.attrs[k] = v; } getBoundingClientRect() { return { left: 0, top: 0, width: 40, height: 40 }; }
-  get offsetWidth() { return 0; }
-}
-
-function boot(save, opts = {}) {
-  const els = {};
-  const store = { ...(save ? { 'amy-tasty-v1': typeof save === 'string' ? save : JSON.stringify(save) } : {}), ...(opts.ls || {}) };
-  const document = {
-    hidden: false, body: new El('body'), documentElement: {},
-    getElementById: id => els[id] || (els[id] = Object.assign(new El(id), { hidden: ['modal', 'tut', 'toast', 'ghost', 'amy-pop', 'combo', 'btn-undo', 'btn-sell'].includes(id) })),
-    createElement: () => new El(null), querySelectorAll: () => [], querySelector: () => null, addEventListener() {}, elementFromPoint: () => null
-  };
-  const ctx = {
-    document, console, navigator: { language: opts.lang || 'en' }, location: { search: '' },
-    localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } },
-    matchMedia: () => ({ matches: false }), requestAnimationFrame: () => 0,
-    setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, addEventListener() {}, __T: opts.T || T0
-  };
-  ctx.window = ctx;
-  vm.createContext(ctx);
-  vm.runInContext('Date.now = () => globalThis.__T;', ctx);
-  for (const [f, code] of FILES) vm.runInContext(code, ctx, { filename: f });
-  const run = code => vm.runInContext(code, ctx);
-  if (!opts.keepModal) run('closeModal()');
-  return { ctx, run, G: ctx.__game, S: () => ctx.__game.state, els, store, setT: t => { ctx.__T = t; } };
-}
+import { FILES, T0, boot } from './vm-game.mjs';
+import { check as checkTexts } from './check-texts.mjs';
 
 let pass = 0, fail = 0;
 function test(name, fn) {
@@ -513,6 +464,82 @@ test('I26/F36 every t() key in game.js exists in en and de, x-core placeholders 
     const ph = s => (s.match(/\{\w+\}/g) || []).sort().join();
     eq(ph(de[k] || ''), ph(en[k]), 'placeholders ' + k);
   }
+});
+
+
+test('D20 double spawn counts taps', () => {
+  const g = boot();
+  g.run('S.gems = 100'); g.G.buyGem(g.run("allGemItems().find(x => x.id === 'double')"));
+  eq(g.S().doubleN, 100); eq(g.S().gems, 60);
+  const n0 = g.S().board.filter(c => c && c.c).length;
+  g.G.spawn(g.S().board.findIndex(c => c && c.gen));
+  eq(g.S().board.filter(c => c && c.c).length, n0 + 2); eq(g.S().doubleN, 99);
+});
+
+test('D18/D42 pass progress, receipts, rebuy extends end', () => {
+  const g = boot();
+  g.run("grantMoney(DATA.pass)");
+  eq(g.S().passPaid, 60); eq(g.S().receipts.length, 1); eq(g.S().receipts[0].id, 'pass');
+  ok(/Day 1 of 30/.test(g.run('passInfo()')), g.run('passInfo()'));
+  g.run("grantMoney(DATA.pass)");
+  ok(/Day 1 of 60/.test(g.run('passInfo()')), 'rebuy extends');
+});
+
+test('D18 pass catch-up is paid once when x-live is present', () => {
+  const g = boot();
+  g.run("S.passUntil = now() + 30 * 864e5; S.xl = {}; S.lastDaily = '2026-11-09'");
+  const gems = g.S().gems; g.G.daily();
+  eq(g.S().gems - gems, 60);
+});
+
+test('D41 browser price follows the language', () => {
+  const g = boot();
+  ok(/^€0\.99$/.test(g.run('shownPrice(DATA.money[0])')), g.run('shownPrice(DATA.money[0])'));
+  g.run("P.lang = 'de'");
+  ok(/^0,99\s€$/.test(g.run('shownPrice(DATA.money[0])')), g.run('shownPrice(DATA.money[0])'));
+});
+
+test('D43 save code round trip, tampered code rejected, import needs a second tap', () => {
+  const g = boot();
+  g.run('S.coins = 1234; S.level = 7');
+  const code = g.run('saveCode()');
+  eq(g.run(`readCode(${JSON.stringify(code)})`).coins, 1234);
+  eq(g.run(`readCode(${JSON.stringify(code.replace(/.$/, 'q'))})`), null);
+  g.run('S.coins = 0'); ok(!g.run(`importSave(${JSON.stringify(code)})`), 'first tap only arms');
+  ok(g.run(`importSave(${JSON.stringify(code)})`)); eq(g.S().coins, 1234);
+});
+
+test('D49 coin sinks first from X.sinkCoins', () => {
+  const g = boot();
+  g.run('S.coins = X.sinkCoins; openShop()');
+  const h = g.els['modal-body'].innerHTML;
+  ok(h.indexOf('Coin shop') < h.indexOf('Offers'), 'coin shop on top');
+});
+
+test('F23/F24 early xp table', () => {
+  const g = boot();
+  eq([1, 2, 3, 4].map(l => g.run(`DATA.xpForLevel(${l})`)), [150, 160, 170, 80]);
+  eq(g.run('DATA.xpForLevel(20)'), 320 + 150);
+});
+
+test('F15/F47 first renovation picture and island outlook once', () => {
+  const g = boot();
+  g.run('S.tut = 5; S.coins = 1000'); g.G.doTask(0);
+  ok(/reno-pics/.test(g.els['modal-body'].innerHTML), 'before/after');
+  g.run('S.zone = 1; openIsland()');
+  ok(/class="outlook"/.test(g.els['modal-body'].innerHTML));
+  g.run('openIsland()');
+  ok(!/class="outlook"/.test(g.els['modal-body'].innerHTML), 'only once');
+});
+
+test('F45 generator cell has an aria-label', () => {
+  const g = boot();
+  const gi = g.S().board.findIndex(c => c && c.gen);
+  ok(/Bakery/.test(g.els.board.children[gi].attrs['aria-label']), JSON.stringify(g.els.board.children[gi].attrs));
+});
+
+test('F36/F38 text check: en/de keys, placeholders, Amy style', () => {
+  eq(checkTexts().errors, []);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);

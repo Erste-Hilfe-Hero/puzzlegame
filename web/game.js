@@ -90,7 +90,8 @@ function newState() {
     board: new Array(DATA.cols * DATA.rows).fill(null), rows: DATA.rows,
     orders: [], zone: 0, tasksDone: [],
     perm: {}, boosts: {}, passUntil: 0, starterBought: false, lastDaily: '', tut: 0, stats: { merges: 0, orders: 0 },
-    pendingGens: [], inbox: [], store: [], storeExtra: 0, ui: {}, tips: {}, funnel: { start: now() }, swapTs: 0, seenTs: now()
+    pendingGens: [], inbox: [], store: [], storeExtra: 0, ui: {}, tips: {}, funnel: { start: now() }, swapTs: 0, seenTs: now(),
+    doubleN: 0, passFrom: 0, passPaid: 0, receipts: []
   };
   s.board[idx(3, 3)] = { gen: 'bakery' };
   s.board[idx(2, 2)] = { c: 'bakery', l: 0 };
@@ -139,7 +140,7 @@ function validCell(c) {
 function repair(s) {
   const d = newState();
   for (const k of Object.keys(d)) if (s[k] === undefined || s[k] === null) s[k] = d[k];
-  for (const k of ['level', 'xp', 'energy', 'coins', 'gems', 'zone', 'rows', 'energyTs', 'storeExtra', 'swapTs', 'passUntil']) {
+  for (const k of ['level', 'xp', 'energy', 'coins', 'gems', 'zone', 'rows', 'energyTs', 'storeExtra', 'swapTs', 'passUntil', 'doubleN', 'passFrom', 'passPaid']) {
     if (!Number.isFinite(s[k]) || s[k] < 0) s[k] = d[k];
   }
   s.level = Math.max(1, Math.floor(s.level));
@@ -152,6 +153,7 @@ function repair(s) {
   s.inbox = list(s.inbox).map(validCell).filter(Boolean);
   s.pendingGens = list(s.pendingGens).filter(k => DATA.chains[k]);
   s.tasksDone = list(s.tasksDone).filter(Number.isInteger);
+  s.receipts = list(s.receipts).filter(r => r && typeof r.id === 'string');
   s.orders = list(s.orders).filter(o => o && Array.isArray(o.need) && o.need.length && o.need.every(x => x && DATA.chains[x.c] && Number.isInteger(x.l) && x.l >= 0 && x.l <= MAX_L));
   s.orders.forEach(o => {
     if (!Array.isArray(o.got) || o.got.length !== o.need.length) o.got = o.need.map(() => false);
@@ -342,7 +344,11 @@ function locate(o) {
     return null;
   });
 }
-function findItems(o) { const p = locate(o); return p.every(Boolean) ? p : null; }
+// x-design still calls findItems(o.need) with the need list: accept it and return board indices then.
+function findItems(o) {
+  if (Array.isArray(o)) { const p = findItems({ need: o, got: o.map(() => false) }); return p && p.filter(x => x.b !== undefined).map(x => x.b); }
+  const p = locate(o); return p.every(Boolean) ? p : null;
+}
 function takeParts(parts) {
   parts.forEach(p => { if (p.b !== undefined) S.board[p.b] = null; });
   parts.filter(p => p.s !== undefined).map(p => p.s).sort((a, b) => b - a).forEach(q => S.store.splice(q, 1));
@@ -528,7 +534,7 @@ function spawn(genIdx) {
     if (!S.tips.energy) { S.tips.energy = 1; const d = new Date(now() + energyLeftMs() + (energyMax() - 1) * regenMs()); amySay('amyEnergy', { t: `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}` }); } // F22
     return;
   }
-  const count = boostOn('double') ? 2 : 1;
+  const count = boostOn('double') || S.doubleN > 0 ? 2 : 1; // D20: old 1 h boosts still run, new ones count spawns
   let placed = 0;
   for (let k = 0; k < count; k++) {
     let l = S.perm.golden ? 1 : 0;
@@ -541,6 +547,7 @@ function spawn(genIdx) {
     flash(i);
   }
   if (!placed) { boardFull(); cellFx(genIdx, 'shake', 260); return; }
+  if (count === 2 && !boostOn('double')) S.doubleN--;
   sfx('spawn'); funnel('spawn');
   if (S.tut === 0) S.tut = 1;
   if (S.energy >= energyMax()) S.energyTs = now();
@@ -760,6 +767,44 @@ if (NATIVE) {
 }
 window.onNativeBack = () => { if (!$('modal').hidden) closeModal(); else if (NATIVE) NATIVE.exit(); };
 
+// D42: every granted purchase is kept with its time stamp in S.receipts (last X.receiptsMax). A store transaction that is
+// already in the receipts (for example after a restart, when nativeTx was trimmed) is acknowledged without a second grant.
+// D18: the pass keeps its start and the gems paid out in this pass period.
+let receiptTx = '';
+const nativePurchase = window.onNativePurchase;
+window.onNativePurchase = (id, tx) => {
+  if (tx && S.receipts.some(r => r.tx === tx)) { saveAll(); if (NATIVE) NATIVE.ack(tx); return; }
+  receiptTx = tx || '';
+  try { nativePurchase(id, tx); } finally { receiptTx = ''; }
+};
+const grantMoneyBase = grantMoney;
+grantMoney = function (p) {
+  S.receipts.push({ id: p.id, tx: receiptTx || (NATIVE ? '' : 'test'), ts: now() });
+  if (S.receipts.length > X.receiptsMax) S.receipts.splice(0, S.receipts.length - X.receiptsMax);
+  if (p.id === 'pass') {
+    if (!passActive()) { S.passFrom = now(); S.passPaid = 0; }
+    S.passPaid = (S.passPaid || 0) + p.dailyGems;
+    econ('gems', 'pass', p.dailyGems);
+  }
+  grantMoneyBase(p);
+  if (p.id === 'pass') setTimeout(() => toast(t('passUntil', { date: dateStr(S.passUntil) })), 900);
+};
+const dateStr = ts => { try { return new Intl.DateTimeFormat(P.lang, { day: 'numeric', month: 'short' }).format(new Date(ts)); } catch (e) { return new Date(ts).toDateString(); } };
+// D18: pass day x of n, gems paid so far, end date (a second purchase moves the end date).
+function passInfo() {
+  if (!passActive()) return '';
+  const from = S.passFrom && S.passFrom < S.passUntil ? S.passFrom : S.passUntil - DATA.pass.days * 864e5;
+  const n = Math.round((S.passUntil - from) / 864e5), d = Math.min(n, Math.floor((now() - from) / 864e5) + 1);
+  return t('passProg', { d, n, g: fmt(S.passPaid || 0), date: dateStr(S.passUntil) }) + ' ' + t('passMore', { date: dateStr(S.passUntil + DATA.pass.days * 864e5) });
+}
+// D41: without a store (browser build) the data.js euro price is formatted for the player's language.
+// The app build shows only store prices (priceOf).
+function shownPrice(p) {
+  if (NATIVE) return priceOf(p);
+  const v = parseFloat(String(p.price).replace(/[^\d,.]/g, '').replace(',', '.'));
+  try { return new Intl.NumberFormat(P.lang, { style: 'currency', currency: 'EUR' }).format(v); } catch (e) { return p.price; }
+}
+
 const allGemItems = () => DATA.gemShop.concat(X.gemShop);
 // D24: energy refill fills up to max, priced per started 100 missing.
 function gemCost(item) {
@@ -786,6 +831,7 @@ function buyGem(item) {
   if (item.kind === 'energy') S.energy = Math.max(S.energy, energyMax());
   if (item.kind === 'coins') { S.coins += item.coins; econ('coins', 'shop', item.coins); }
   if (item.kind === 'boost') S.boosts[item.id] = Math.max(now(), S.boosts[item.id] || 0) + item.hours * 36e5;
+  if (item.kind === 'spawns') S.doubleN = (S.doubleN || 0) + item.spawns;
   if (item.kind === 'perm') {
     S.perm[item.id] = true;
     const rows = item.id === 'bigBoard' ? 1 : item.rows || 0;
@@ -889,6 +935,7 @@ function hud() {
   }
   if (passActive()) boosts.push(`${art('gs_pass', '🎫')} ${Math.ceil((S.passUntil - now()) / 864e5)}${t('unitD')}`);
   setHTML($('boosts'), emo(boosts.join(' &nbsp; ')));
+  setHTML($('xboosts'), S.doubleN > 0 ? `<span class="bst">${pIcon(DATA.gemShop.find(g => g.id === 'double') || {})} ${t('spawnsLeft', { n: S.doubleN })}</span>` : ''); // D20
   const u = $('btn-undo');
   if (u) { u.hidden = !canUndo(); u.textContent = t('undo'); }
 }
@@ -912,6 +959,8 @@ function renderBoard(wanted) {
     el.classList.toggle('empty', !!(c && c.gen && noE));
     el.classList.toggle('dw', !!(c && c.drift));
     el.classList.toggle('hint', pulseCells.has(i));
+    const al = c ? (c.gen ? t('genAria', { gen: genNm(c.gen) }) : itemName(c).replace(/<[^>]+>/g, '')) : ''; // F45
+    if (el._al !== al) { el._al = al; if (al) { el.setAttribute('aria-label', al); el.setAttribute('role', 'button'); } else { el.setAttribute('aria-label', t('emptyCell')); el.setAttribute('role', 'gridcell'); } }
   });
 }
 
@@ -947,9 +996,26 @@ function goalText() {
   return t('goal', { task: taskNm(S.zone, k), c: fmt(Math.min(S.coins, cost)), n: fmt(cost) });
 }
 
+// F26: the first time an order becomes deliverable its button pulses once and the matching items wiggle.
+const readySeen = new Set();
+function readyFx() {
+  S.orders.forEach((o, k) => {
+    const key = o.who + sigOf(o) + (o.got || []).join();
+    const parts = findItems(o);
+    if (!parts) { readySeen.delete(key); return; }
+    if (readySeen.has(key)) return;
+    readySeen.add(key);
+    const card = $('orders').children[k];
+    const b = card && card.querySelector('[data-deliver]');
+    if (b) { b.classList.remove('ready1'); void b.offsetWidth; b.classList.add('ready1'); }
+    parts.forEach(p => { if (p.b !== undefined) cellFx(p.b, 'wig', 700); });
+  });
+}
+
 function render() {
   hud();
   setHTML($('orders'), ordersHtml());
+  readyFx();
   renderBoard(wantedCells());
   renderStrip();
   renderTut();
@@ -1026,10 +1092,31 @@ function syncTut() {
   else if (S.tut === 1 && w < 2) S.tut = 0;
 }
 
+// F5: a tapping hand on the generator in step 0 (step 1 drag hand: x-design #tut-hand).
+// With reduced motion a static arrow points at the generator or the first item to drag.
+const reducedMotion = () => RM() || document.body.classList.contains('rm');
+function tutPointer(target) {
+  let hand = document.getElementById('tut-tap'), arrow = document.getElementById('tut-arrow');
+  const rm = reducedMotion(), show = target && $('modal').hidden && target.getBoundingClientRect;
+  const wantHand = show && !rm && S.tut === 0, wantArrow = show && rm && S.tut <= 1;
+  if (!wantHand && hand) { hand.remove(); hand = null; }
+  if (!wantArrow && arrow) { arrow.remove(); arrow = null; }
+  if (!wantHand && !wantArrow) return;
+  const r = target.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height / 2;
+  if (wantHand) {
+    if (!hand) { hand = document.createElement('div'); hand.id = 'tut-tap'; hand.setAttribute('aria-hidden', 'true'); hand.innerHTML = TAP_SVG; document.body.appendChild(hand); }
+    hand.style.left = x + 'px'; hand.style.top = y + 'px';
+  } else {
+    if (!arrow) { arrow = document.createElement('div'); arrow.id = 'tut-arrow'; arrow.setAttribute('aria-hidden', 'true'); arrow.textContent = '⬇'; document.body.appendChild(arrow); }
+    arrow.style.left = x + 'px'; arrow.style.top = r.top + 'px';
+  }
+}
+const TAP_SVG = '<svg viewBox="0 0 48 48"><path d="M18 6a4 4 0 0 1 8 0v14l2-1a4 4 0 0 1 5 2l1 1a4 4 0 0 1 5 3v1a4 4 0 0 1 4 4v6c0 8-6 12-13 12h-3c-5 0-8-2-11-6L9 32a4 4 0 0 1 6-5l3 3Z" fill="#fff" stroke="#5a3217" stroke-width="2.5" stroke-linejoin="round"/></svg>';
+
 function renderTut() {
   document.querySelectorAll('.hl').forEach(el => el.classList.remove('hl'));
   const box = $('tut');
-  if (S.tut >= 4) { box.hidden = true; return; }
+  if (S.tut >= 4) { box.hidden = true; tutPointer(null); return; }
   box.hidden = false;
   const v = { gen: genNm('bakery'), item: nm('bakery', 0), bread: nm('bakery', 1), place: zoneNm(0) };
   setHTML(box, emo(`<img class="amy" src="${src('amy_face')}" alt=""><span>${t('ctut' + S.tut, v)}</span>`)); // F6/F7/I44
@@ -1043,6 +1130,7 @@ function renderTut() {
   }
   if (S.tut === 3) targets.push($('btn-island'));
   targets.forEach(el => { if (el) el.classList.add('hl'); });
+  tutPointer(S.tut <= 1 ? targets[0] : null);
 }
 
 // F8/F9: daily, storage and album appear step by step.
@@ -1083,9 +1171,51 @@ function openSettings() {
     <h3>${t('sound')}</h3><div class="opts">${opt('sound', true, t('on'))}${opt('sound', false, t('off'))}</div>
     <h3>${t('hints')}</h3><div class="opts">${opt('hint', true, t('on'))}${opt('hint', false, t('off'))}</div>
     <h3>${t('haptic')}</h3><div class="opts">${opt('haptic', true, t('on'))}${opt('haptic', false, t('off'))}</div>
+    <h3>${t('bigText')}</h3><div class="opts">${opt('big', true, t('on'))}${opt('big', false, t('off'))}</div>
     <button class="back" data-help="1">${t('helpBtn')}</button>
+    <h3>${t('saveH')}</h3><p class="note">${t('saveNote')}</p><div class="opts"><button class="opt" data-sv="out">${t('saveOut')}</button><button class="opt" data-sv="in">${t('saveIn')}</button></div>
     ${S.tut >= 5 ? `<button class="back" data-retut="1">${t('tutAgain')}</button>` : ''}
     <p class="links"><a href="https://play.nyrathen.com/legal/tasty-island-privacy.${P.lang}.html" target="_blank" rel="noopener">${t('privacy')}</a> · <a href="mailto:lords.azz6@gmail.com">${t('support')}</a></p>${dbg}`);
+}
+
+// D43: the save as a text code (export) and back (import), so a wiped app or a new phone keeps starter, pass and progress.
+const hash = str => { let h = 2166136261; for (let k = 0; k < str.length; k++) { h ^= str.charCodeAt(k); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); };
+function saveCode() {
+  const json = JSON.stringify(S);
+  const bytes = new TextEncoder().encode(json);
+  let bin = '';
+  for (let k = 0; k < bytes.length; k++) bin += String.fromCharCode(bytes[k]);
+  return `ATI1.${btoa(bin)}.${hash(json)}`;
+}
+function readCode(code) {
+  const m = /^ATI1\.([A-Za-z0-9+/=]+)\.([a-z0-9]+)$/.exec(String(code || '').replace(/\s+/g, ''));
+  if (!m) return null;
+  try {
+    const bin = atob(m[1]);
+    const json = new TextDecoder().decode(Uint8Array.from(bin, ch => ch.charCodeAt(0)));
+    if (hash(json) !== m[2]) return null;
+    const s = parseSave(json);
+    return s ? repair(s) : null;
+  } catch (e) { return null; }
+}
+let importArm = '';
+function openSaveCode(kind) {
+  importArm = '';
+  if (kind === 'out') {
+    openModal(`<h2>${t('saveOut')}</h2><p class="note">${t('saveOutNote')}</p><textarea class="code" readonly rows="6">${saveCode()}</textarea><button class="back" data-sv="copy">${t('copy')}</button>`);
+  } else {
+    openModal(`<h2>${t('saveIn')}</h2><p class="note">${t('saveInNote')}</p><textarea class="code" rows="6" placeholder="ATI1..."></textarea><button class="back" data-sv="load">${t('saveLoad')}</button>`);
+  }
+}
+function importSave(code) {
+  const s = readCode(code);
+  if (!s) { toast(t('saveBad')); sfx('error'); return false; }
+  if (importArm !== code) { importArm = code; toast(t('saveSure', { l: s.level, z: Math.min(s.zone + 1, DATA.zones.length) })); return false; }
+  S = s; undo = null; selected = -1;
+  saveAll();
+  toast(t('saveDone'));
+  if (typeof location.reload === 'function') setTimeout(() => location.reload(), 600);
+  return true;
 }
 
 // F29: short help page.
@@ -1107,11 +1237,15 @@ function applyStaticTexts() {
   document.querySelectorAll('[data-ic]').forEach(el => { el.src = src(el.dataset.ic); });
   $('btn-settings').setAttribute('aria-label', t('settings')); // I45
   $('modal-close').setAttribute('aria-label', t('close'));
+  for (const k in lab) $('btn-' + k).setAttribute('aria-label', t(lab[k])); // F45
+  $('res-gems').setAttribute('aria-label', t('shop'));
+  $('board').setAttribute('role', 'grid');
+  document.body.classList.toggle('big', !!P.big); // F44
 }
 
 function openShop() {
-  const money = p => `<div class="prod"><span class="pi">${p.id === 'starter' || p.id === 'pass' ? art('gs_' + p.id, p.id === 'pass' ? '🎫' : '🎁') : '💎'}</span><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}</div>
-    <button data-money="${p.id}">${priceOf(p)}</button></div>`;
+  const money = p => `<div class="prod"><span class="pi">${p.id === 'starter' || p.id === 'pass' ? art('gs_' + p.id, p.id === 'pass' ? '🎫' : '🎁') : '💎'}</span><div><b>${pName(p)}</b>${p.tag ? `<em>${pTag(p.tag)}</em>` : ''}${pDesc(p) ? `<small>${pDesc(p)}</small>` : ''}${p.id === 'pass' && passActive() ? `<small class="passp">${passInfo()}</small>` : ''}</div>
+    <button data-money="${p.id}">${shownPrice(p)}</button></div>`;
   const gem = g => {
     const owned = g.kind === 'perm' && S.perm[g.id];
     const cost = gemCost(g);
@@ -1119,7 +1253,8 @@ function openShop() {
     let label = owned ? t('owned') : full ? t('full') : `💎 ${fmt(cost)}`;
     if (!owned && !full && cost > S.gems) label = t('missGems', { n: fmt(cost - S.gems) }); // D33
     else if (!owned && shopArm === g.id) label = t('sure', { c: `💎 ${fmt(cost)}` }); // D32
-    return `<div class="prod"><span class="pi">${pIcon(g)}</span><div><b>${pName(g)}</b><small>${pDesc(g)}</small></div>
+    const left = g.kind === 'spawns' && S.doubleN > 0 ? `<small>${t('spawnsLeft', { n: S.doubleN })}</small>` : '';
+    return `<div class="prod"><span class="pi">${pIcon(g)}</span><div><b>${pName(g)}</b><small>${pDesc(g)}</small>${left}</div>
       <button data-gem="${g.id}" class="${shopArm === g.id ? 'armed' : ''}" ${owned || full ? 'disabled' : ''}>${label}</button></div>`;
   };
   const coin = c => {
@@ -1130,10 +1265,12 @@ function openShop() {
     return `<div class="prod"><span class="pi">${art(c.icon, '🪙')}</span><div><b>${t('p_' + c.id)}</b><small>${t('p_' + c.id + 'D')}</small></div>
       <button data-coin="${c.id}" class="${shopArm === c.id ? 'armed' : ''}" ${owned ? 'disabled' : ''}>${label}</button></div>`;
   };
+  const coins = `<h3>${t('coinShopH')}</h3>${X.coinShop.filter(c => S.zone >= (c.zone || 0)).map(coin).join('')}`;
+  const sinkFirst = S.zone >= DATA.zones.length || S.coins >= X.sinkCoins; // D49
   openModal(`<h2 class="amyh"><img class="amy" src="${src('amy_face')}" alt="">${t('shop')}</h2>${NATIVE ? '' : `<p class="note">${t('shopNote')}</p>`}
-    <h3>${t('offers')}</h3>${S.starterBought ? '' : money(DATA.starter)}${money(DATA.pass)}
+    ${sinkFirst ? coins : ''}<h3>${t('offers')}</h3>${S.starterBought ? '' : money(DATA.starter)}${money(DATA.pass)}
     <h3>${t('power')}</h3>${allGemItems().filter(g => !g.req || S.perm[g.req]).map(gem).join('')}
-    <h3>${t('coinShopH')}</h3>${X.coinShop.filter(c => S.zone >= (c.zone || 0)).map(coin).join('')}
+    ${sinkFirst ? '' : coins}
     <h3>${t('gemsH')}</h3>${DATA.money.map(money).join('')}`);
 }
 
@@ -1157,7 +1294,9 @@ function openIsland() {
     const badge = st === 'lock' ? '🔒' : st === 'done' ? '✅' : `${S.tasksDone.length}/${z.tasks.length}`;
     return `<button class="pin ${st}" data-place="${k}" style="left:${x}%;top:${y}%;--p:${prog}"><b class="pic">${art('place_' + k, '🏠')}</b><span>${badge}</span><small>${zoneNm(k)}</small></button>`;
   }).join('');
-  openModal(`<h2>🏝️ ${t('map')}</h2><div class="map">${ISLAND_SVG}${pins}</div>`);
+  const outlook = S.zone >= 1 && !S.ui.outlook; // F47: once, after the first restored place
+  if (outlook) { S.ui.outlook = 1; save(); }
+  openModal(`<h2>🏝️ ${t('map')}</h2>${outlook ? `<p class="outlook">${t('outlook', { n: DATA.zones.length })}</p>` : ''}<div class="map">${ISLAND_SVG}${pins}</div>`);
 }
 
 function openPlace() {
@@ -1184,6 +1323,14 @@ function showResident(k, restored) {
     ${restored ? `<p class="note">${t('newGuest', { name: r.name })}</p>` : ''}<button id="btn-go">${t('talk')}</button></div>`);
   $('btn-go').onclick = () => { if (restored) openIsland(); else closeModal(); };
   if (restored && !RM()) confetti();
+}
+
+// F15: the first renovation gets a before/after picture with confetti.
+function showReno(k) {
+  const pic = p => `<figure class="reno-${p}"><span>${art('place_0', '🏠')}</span><figcaption>${t(p === 'a' ? 'before' : 'after')}</figcaption></figure>`;
+  openModal(`<div class="welcome reno"><h2>${t('renoH', { task: taskNm(0, k) })}</h2><div class="reno-pics">${pic('a')}<b class="reno-arrow">➜</b>${pic('b')}</div>
+    <p>${t('renoText', { place: zoneNm(0) })}</p><button class="back" data-reno="1">${t('renoGo')}</button></div>`);
+  if (!RM()) confetti();
 }
 
 function confetti() {
@@ -1217,7 +1364,9 @@ function doTask(k) {
     commit(); showResident(done, true); return;
   }
   toast(`${taskNm(S.zone, k)} ✅`);
-  commit(); openPlace();
+  commit();
+  if (S.zone === 0 && !S.ui.reno) { S.ui.reno = 1; save(); showReno(k); return; }
+  openPlace();
 }
 
 // E2/I4: also called on resume and from the 1 s tick. D35: no window opens by itself, the badge shows it.
@@ -1226,8 +1375,11 @@ function daily() {
   if (S.lastDaily === d) return false;
   const first = !S.lastDaily;
   if (!first && passActive()) { // D17: up to X.passCatchUpDays missed days are paid out
-    const n = Math.max(1, Math.min(X.passCatchUpDays, daysBetween(S.lastDaily, d) || 1));
+    // With x-live (S.xl) only one day is paid here: x-live takes that day back and pays all owed days as a claim,
+    // so paying the catch-up days here as well would pay them twice.
+    const n = S.xl ? 1 : Math.max(1, Math.min(X.passCatchUpDays, daysBetween(S.lastDaily, d) || 1));
     S.gems += n * DATA.pass.dailyGems; econ('gems', 'pass', n * DATA.pass.dailyGems);
+    if (!S.xl) S.passPaid = (S.passPaid || 0) + n * DATA.pass.dailyGems; // D18
   }
   S.lastDaily = d;
   // D36: at most one task per kind.
@@ -1560,6 +1712,16 @@ $('strip').addEventListener('click', e => {
 });
 
 $('modal-body').addEventListener('click', e => {
+  if (e.target.closest('[data-xl="pass"]') && S.xl && S.xl.passPending > 0) S.passPaid = (S.passPaid || 0) + S.xl.passPending; // D18
+  const sv = e.target.closest('[data-sv]');
+  if (sv) {
+    const k = sv.dataset.sv, ta = $('modal-body').querySelector('textarea.code');
+    if (k === 'out' || k === 'in') openSaveCode(k);
+    if (k === 'copy' && ta) { ta.select(); try { navigator.clipboard.writeText(ta.value).then(() => toast(t('copied')), () => document.execCommand('copy')); } catch (err) { document.execCommand('copy'); } }
+    if (k === 'load' && ta) importSave(ta.value);
+    return;
+  }
+  if (e.target.closest('[data-reno]')) { openPlace(); return; }
   const m = e.target.closest('[data-money]');
   if (m) buyMoney(productById(m.dataset.money));
   const g = e.target.closest('[data-gem]');
@@ -1630,6 +1792,30 @@ function showWelcome() {
   $('btn-go').onclick = closeModal;
 }
 
+// F13: three short pictures on the very first start (boat, empty cafe, Finn waves), at most 12 s, tap or skip.
+function showIntro(done) {
+  const el = document.createElement('div');
+  if (!el.addEventListener || !document.body.appendChild) { done(); return; }
+  el.id = 'intro'; el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', t('introAria'));
+  const pics = [
+    `<div class="i-sea"><div class="i-boat"><img src="${src('amy_face')}" alt=""><svg viewBox="0 0 120 60" aria-hidden="true"><path d="M8 28h104l-14 24H22z" fill="#b8642a" stroke="#fff" stroke-width="3"/><path d="M60 26V2l30 22z" fill="#fff"/></svg></div></div>`,
+    `<div class="i-cafe">${art('place_0', '🏠')}</div>`,
+    `<div class="i-finn">${art('res_0', '👴')}<b class="i-wave">👋</b></div>`
+  ];
+  let k = -1, timer = 0;
+  const finish = () => { clearTimeout(timer); el.remove(); done(); };
+  const next = () => {
+    k++;
+    if (k >= pics.length) { finish(); return; }
+    el.innerHTML = `<div class="i-pic">${pics[k]}</div><p>${t('intro' + k)}</p><div class="i-dots">${pics.map((_, q) => `<i class="${q === k ? 'on' : ''}"></i>`).join('')}</div><button id="intro-skip">${t('introSkip')}</button>`;
+    clearTimeout(timer); timer = setTimeout(next, X.introSec * 1000);
+  };
+  el.addEventListener('click', e => { if (e.target.closest('#intro-skip')) finish(); else next(); });
+  document.body.appendChild(el);
+  next();
+}
+
+if ($('boosts') && $('boosts').insertAdjacentHTML && !document.getElementById('xboosts')) $('boosts').insertAdjacentHTML('afterend', '<div id="xboosts"></div>');
 load();
 S.board.forEach(c => { if (c && c.c) seen(c.c, c.l); });
 resume();
@@ -1639,8 +1825,10 @@ fillOrders();
 commit();
 if (S.tut === 0 && !S.metAmy) {
   S.metAmy = true; save();
-  showWelcome();
+  if (!S.ui.intro0) { S.ui.intro0 = 1; save(); showIntro(showWelcome); } else showWelcome();
 }
+// F42: time to the playable board, kept once in the funnel (debug panel with ?debug).
+if (window.performance && S.funnel && !S.funnel.bootMs) { S.funnel.bootMs = Math.round(performance.now()); save(); }
 setInterval(tick, 1000);
 setInterval(autoMergeTick, 700);
 window.__game = {
