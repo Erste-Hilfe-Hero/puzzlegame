@@ -39,12 +39,13 @@ export function boot(save, opts = {}) {
     createElement: () => new El(null), querySelectorAll: () => [], querySelector: () => null, addEventListener() {}, elementFromPoint: () => null
   };
   const ctx = {
-    TextEncoder, TextDecoder, btoa, atob, document, console, navigator: { language: opts.lang || 'en' }, location: { search: '' },
+    TextEncoder, TextDecoder, btoa, atob, document, console, navigator: { language: opts.lang || 'en' }, location: { search: opts.search || '' },
     localStorage: { getItem: k => (k in store ? store[k] : null), setItem: (k, v) => { store[k] = String(v); }, removeItem: k => { delete store[k]; } },
     matchMedia: () => ({ matches: false }), requestAnimationFrame: () => 0,
     setTimeout: () => 0, clearTimeout() {}, setInterval: () => 0, addEventListener() {}, __T: opts.T || T0
   };
   ctx.window = ctx;
+  if (opts.bridge) ctx.AndroidBilling = opts.bridge;
   vm.createContext(ctx);
   vm.runInContext('Date.now = () => globalThis.__T;', ctx);
   if (opts.seed !== undefined) { ctx.__seed = opts.seed >>> 0 || 1; vm.runInContext('Math.random = () => { let x = globalThis.__seed; x ^= x << 13; x ^= x >>> 17; x ^= x << 5; globalThis.__seed = x >>> 0; return globalThis.__seed / 4294967296; };', ctx); }

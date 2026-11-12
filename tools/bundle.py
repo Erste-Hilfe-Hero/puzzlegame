@@ -11,4 +11,7 @@ css = re.sub(r"url\('?fonts/([^')]+)'?\)", lambda m: "url(data:font/woff2;base64
 imgs = {f[:-4]: 'data:image/png;base64,' + base64.b64encode(open(os.path.join(w, 'img', f), 'rb').read()).decode() for f in sorted(os.listdir(os.path.join(w, 'img'))) if f.endswith('.png')}
 js = f"<script>\nwindow.IMG = {json.dumps(imgs)};\n</script>\n" + ''.join(f"<script>\n{r(f)}\n</script>\n" for f in _re.findall(r'<script src="([\w-]+\.js)"', html))
 body = html[html.index('<div id="scene"'):html.index('<script src="data.js">')]
-open(sys.argv[1], 'w', encoding='utf-8').write(f'<title>Amy\'s Tasty Island</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>\n{css}\n</style>\n{body}{js}')
+out = f'<title>Amy\'s Tasty Island</title>\n<meta name="claude:viewport-fit-sides" content="cover">\n<style>\n{css}\n</style>\n{body}{js}'
+# Literal img/NAME.png paths left in html/js/css (outside window.IMG) become data URIs too; tools/check-bundle.cjs checks it.
+out = re.sub(r'(?<![\w/])img/([\w-]+)\.png', lambda m: imgs.get(m.group(1), m.group(0)), out)
+open(sys.argv[1], 'w', encoding='utf-8').write(out)

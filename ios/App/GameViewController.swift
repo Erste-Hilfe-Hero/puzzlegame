@@ -11,7 +11,7 @@ import StoreKit
 class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private static let prefix = "com.nyrathen.tastyisland."
     private static let ids = ["gems_80", "gems_500", "gems_1200", "gems_2600", "gems_7000", "gems_15000", "starter", "pass"]
-    private static let messages = ["billing", "ack", "ready", "prices", "mirror"]
+    private static let messages = ["billing", "ack", "ready", "prices", "mirror", "haptic"]
     private var web: WKWebView!
     private let content = WKUserContentController()
     private var products: [String: Product] = [:]
@@ -19,6 +19,9 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
     private var pageReady = false
     private var unconfirmed: [UInt64: Transaction] = [:]
     private var updates: Task<Void, Never>?
+    // WKWebView has no navigator.vibrate; x-design.js posts "merge" / "deliver" here (plan I43).
+    private let tap = UIImpactFeedbackGenerator(style: .light)
+    private let success = UINotificationFeedbackGenerator()
 
     // Copy of the save in Application Support (part of the iCloud device backup); restored when localStorage is empty.
     private static var mirrorURL: URL {
@@ -189,6 +192,8 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
                 try? FileManager.default.createDirectory(at: Self.mirrorURL.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try? s.write(to: Self.mirrorURL, atomically: true, encoding: .utf8)
             }
+        case "haptic":
+            if (message.body as? String) == "deliver" { success.notificationOccurred(.success) } else { tap.impactOccurred() }
         default:
             break
         }

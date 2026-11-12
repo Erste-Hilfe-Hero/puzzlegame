@@ -1,7 +1,9 @@
 // Node tests for web/game.js core rules. Loads data.js, i18n.js, x-core.js and game.js into a vm context with a
 // minimal fake DOM. Run: node tools/test-game.mjs  (exit code 1 on failure)
 process.env.TZ = 'Europe/Berlin';
-import { FILES, T0, boot } from './vm-game.mjs';
+import { FILES, T0, boot, WEB } from './vm-game.mjs';
+import fs from 'node:fs';
+import path from 'node:path';
 import { check as checkTexts } from './check-texts.mjs';
 
 let pass = 0, fail = 0;
@@ -654,6 +656,106 @@ test('B11/B24 every island has 6 places, 6 tasks each, EN and DE names', () => {
   });
   const en = g.run('I18N.en'), dk = g.run('I18N.de');
   eq(Object.keys(en).filter(k => k.startsWith('xc') && !(k in dk)), []);
+});
+
+// ---------- I13 / I29 / I30: purchase safety and purchase matrix (web side of the native bridge) ----------
+function bridge(prices = true) {
+  const b = { calls: [], acks: [], buy(id) { b.calls.push('buy:' + id); }, ack(tx) { b.acks.push(tx); }, pageReady() {}, requestPrices() { b.calls.push('prices'); },
+    saveMirror() {}, loadMirror: () => '', exit() {} };
+  b.prices = prices;
+  return b;
+}
+function bootNative(save, b, ls) {
+  const g = boot(save, { bridge: b, ls });
+  if (b.prices) g.run('onNativePrices({ gems_80: "0,99 EUR", gems_500: "4,99 EUR", starter: "1,99 EUR", pass: "4,99 EUR" })');
+  return g;
+}
+const p80 = 'DATA.money.find(p => p.id === "gems_80")';
+
+test('I13 without bridge and without ?test=1 nothing is granted', () => {
+  const g = boot();
+  const gems = g.S().gems;
+  g.run(`buyMoney(${p80}); buyMoney(DATA.starter); buyMoney(DATA.pass)`);
+  eq(g.S().gems, gems); ok(!g.S().starterBought, 'no starter'); eq(g.S().passUntil || 0, 0);
+});
+
+test('I13 browser test build (?test=1) grants test purchases', () => {
+  const g = boot(null, { search: '?test=1' });
+  const gems = g.S().gems;
+  g.run(`buyMoney(${p80})`);
+  ok(g.S().gems > gems, 'test purchase granted');
+});
+
+test('I13 native app ignores ?test=1 and never grants without the store', () => {
+  const b = bridge(false);
+  const g = boot(null, { bridge: b, search: '?test=1' });
+  const gems = g.S().gems;
+  g.run(`buyMoney(${p80})`);
+  eq(g.S().gems, gems); eq(b.calls, ['prices'], 'asks for prices, no buy');
+});
+
+test('I13 native shells load index.html without a test flag', () => {
+  const root = path.join(WEB, '..');
+  const java = fs.readFileSync(path.join(root, 'android/app/src/main/java/com/nyrathen/tastyisland/MainActivity.java'), 'utf8');
+  const swift = fs.readFileSync(path.join(root, 'ios/App/GameViewController.swift'), 'utf8');
+  ok(!/test=1/.test(java) && !/test=1/.test(swift), 'no test flag in native shells');
+});
+
+test('I12 buy without loaded prices does not start the store flow', () => {
+  const b = bridge(false);
+  const g = bootNative(null, b);
+  g.run(`buyMoney(${p80})`);
+  eq(b.calls, ['prices']);
+  g.run('onNativePrices({ gems_80: "0,99 EUR" })');
+  g.run(`buyMoney(${p80})`);
+  eq(b.calls, ['prices', 'buy:gems_80']);
+});
+
+test('I29/I30 matrix: purchase grants once and acks', () => {
+  const b = bridge(), g = bootNative(null, b), gems = g.S().gems, add = g.run(`${p80}.gems`);
+  g.run(`buyMoney(${p80})`);
+  g.run('onNativePurchase("gems_80", "tok1")');
+  eq(g.S().gems, gems + add); eq(b.acks, ['tok1']);
+});
+
+test('I29/I30 matrix: cancel grants nothing', () => {
+  const b = bridge(), g = bootNative(null, b), gems = g.S().gems;
+  g.run(`buyMoney(${p80})`);
+  eq(g.S().gems, gems); eq(b.acks, []);
+});
+
+test('I29/I30 matrix: pending payment / Ask to Buy grants only on approval, once', () => {
+  const b = bridge(), g = bootNative(null, b), gems = g.S().gems, add = g.run(`${p80}.gems`);
+  g.run(`buyMoney(${p80}); onNativePurchasePending()`);
+  eq(g.S().gems, gems, 'nothing while pending');
+  g.run('onNativePurchase("gems_80", "tok2"); onNativePurchase("gems_80", "tok2")');
+  eq(g.S().gems, gems + add); eq(b.acks, ['tok2', 'tok2']);
+});
+
+test('I29/I30 matrix: app killed after the grant was saved, purchase re-delivered on start: no second grant', () => {
+  const b = bridge(), g = bootNative(null, b), add = g.run(`${p80}.gems`), gems = g.S().gems;
+  g.run('onNativePurchase("gems_80", "tok3")');
+  const saved = g.store['amy-tasty-v1'];
+  const b2 = bridge(), g2 = bootNative(saved, b2);
+  eq(g2.S().gems, gems + add, 'grant survived restart');
+  g2.run('onNativePurchase("gems_80", "tok3")');
+  eq(g2.S().gems, gems + add, 'not granted twice'); eq(b2.acks, ['tok3'], 'acked again so the store consumes it');
+});
+
+test('I29/I30 matrix: app killed before the grant was saved: re-delivered purchase grants exactly once', () => {
+  const b = bridge(), g = bootNative(null, b), add = g.run(`${p80}.gems`), gems = g.S().gems;
+  g.run('saveAll()');
+  const before = g.store['amy-tasty-v1'];
+  const g2 = bootNative(before, bridge());
+  g2.run('onNativePurchase("gems_80", "tok4"); onNativePurchase("gems_80", "tok4")');
+  eq(g2.S().gems, gems + add);
+});
+
+test('I29/I30 matrix: start with an unconsumed starter pack delivered on start and resume grants once', () => {
+  const b = bridge(), g = bootNative(null, b), gems = g.S().gems;
+  g.run('onNativePurchase("starter", "tok5"); onNativePurchase("starter", "tok5")');
+  ok(g.S().starterBought, 'starter granted'); eq(g.S().gems, gems + g.run('DATA.starter.gems'));
+  eq(b.acks, ['tok5', 'tok5']);
 });
 
 console.log(`\n${pass} passed, ${fail} failed`);
