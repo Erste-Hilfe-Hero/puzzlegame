@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Android 12+: cloud backup and device transfer carry only the save mirror (G6); the game restores from it
+     when the WebView storage is empty. Matches the privacy policy sentence on device backups (J1). -->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="file" path="save-mirror.json" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="file" path="save-mirror.json" />
+    </device-transfer>
+</data-extraction-rules>
