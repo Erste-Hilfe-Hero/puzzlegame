@@ -45,7 +45,7 @@
     seasonTiers: [10, 25, 40, 55, 70].concat([...Array(20).keys()].map(k => 70 + 39 * (k + 1)), [900, 960, 1020, 1080, 1140]),
     freeR: (n, s) => (n === 30 ? { cos: s.cos } : n % 5 === 0 ? { chest: 1 } : [{ gems: 5 }, { energy: 30 }, { gems: 3 }, { joker: 1 }][n % 5 - 1]),
     premR: n => (n === 30 ? { gems: 120, chest: 2 } : n % 5 === 0 ? { gems: 20, chest: 1 } : { gems: 8 }),
-    premium: { id: 'season_premium', price: '4,99 €' },
+    premium: { id: 'season_premium', gems: 400 },
     cosmetics: ['none', 'cherry', 'harbor', 'gold'],
     logMax: 300,
     nickBlock: ['fuck', 'shit', 'nazi', 'hitler', 'arsch', 'fick', 'hure', 'nigg', 'porn', 'cunt', 'bitch', 'fotze', 'wichs', 'sex'],
@@ -426,8 +426,8 @@
   function openSeason() { openModal(seasonHtml()); }
   function buyPremium() {
     const s = activeSeason(); if (!s || seasonState(s).prem) return;
-    if (NATIVE) { NATIVE.buy(XL.premium.id); return; }
-    toast(t('testBuy', { name: t('xl_premName') }));
+    if (S.gems < XL.premium.gems) { toast(t('noGems')); sfx('error'); return; }
+    S.gems -= XL.premium.gems;
     grantPremium();
   }
   function grantPremium() {
@@ -603,7 +603,7 @@
     const s = activeSeason();
     if (!s || !eventsOpen() || seasonState(s).prem) return;
     $('modal-body').insertAdjacentHTML('beforeend', emo(`<h3>${t('xl_premH')}</h3><div class="prod"><span class="pi">${s.icon}</span><div><b>${t('xl_premName')}</b><small>${t('xl_premDesc')}</small></div>
-      <button data-xl="prem">${nativePrices[XL.premium.id] || XL.premium.price}</button></div>`));
+      <button data-xl="prem">💎 ${XL.premium.gems}</button></div>`));
   };
   const _openSettings = openSettings;
   openSettings = function () {
@@ -614,8 +614,6 @@
     const links = $('modal-body').querySelector('.links');
     if (links) links.insertAdjacentHTML('beforebegin', html); else $('modal-body').insertAdjacentHTML('beforeend', html);
   };
-  const _onNativePurchase = window.onNativePurchase;
-  window.onNativePurchase = id => { if (id === XL.premium.id) { grantPremium(); toast(`✅ ${t('xl_premName')}`); } else _onNativePurchase(id); };
 
   // ---------- clicks in our windows ----------
   $('modal-body').addEventListener('click', e => {
