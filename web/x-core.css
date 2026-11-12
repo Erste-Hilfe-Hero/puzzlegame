@@ -1,0 +1,38 @@
+/* Styles for core gameplay states added in game.js (plan-500 A, D, F, I). */
+.cell.match { box-shadow: inset 0 0 0 3px #43c466, 0 0 0 2px #fff; background: #e2f7d6; }
+.cell.back > span { animation: xback .18s ease-out; }
+@keyframes xback { 0% { transform: scale(.8); } 60% { transform: scale(1.08); } 100% { transform: scale(1); } }
+.cell.hint > span { animation: xhint .8s ease-in-out infinite; }
+@keyframes xhint { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14) rotate(-4deg); } }
+.cell.shake { animation: xshake .26s linear; }
+@keyframes xshake { 25% { transform: translateX(-3px); } 75% { transform: translateX(3px); } }
+.cell.empty .gen { animation: none; filter: grayscale(.85) opacity(.7); }
+.cell b.gt { left: 50%; right: auto; transform: translateX(-50%); padding: 0 3px; background: #5a3217dd; }
+.cell.dw { background: repeating-linear-gradient(135deg, #e8c48a 0 6px, #dcb478 6px 12px); box-shadow: inset 0 0 0 2px #c79a5a; }
+.cell .drift { opacity: .38; filter: grayscale(.5) sepia(.3); }
+.need.got { opacity: .45; }
+.need.got::after { content: ''; position: absolute; inset: 0; border-radius: 10px; box-shadow: inset 0 0 0 2px var(--ok); }
+.need.near::before { content: '+'; position: absolute; left: -3px; top: -4px; width: 14px; height: 14px; display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #fff; background: var(--accent); border: 1.5px solid #fff; border-radius: 50%; }
+.need[data-part] { cursor: pointer; box-shadow: inset 0 0 0 2px var(--ok), 0 0 0 2px #fff; }
+.order.feast { border-color: #ffd15c; background: linear-gradient(#fff8dc, #ffe9a8); }
+.order .swap { position: absolute; right: -4px; top: -6px; width: 24px; height: 24px; min-width: 0; padding: 3px; border-radius: 50%; border: 2px solid #fff; background: #c9a36b; box-shadow: 0 2px 0 #8f6a3a; color: #fff; }
+.order .swap.free { background: linear-gradient(#7fe890, var(--ok)); box-shadow: 0 2px 0 var(--ok2); }
+.order .swap svg { width: 100%; height: 100%; display: block; }
+#btn-undo { height: 32px; padding: 0 12px; border: 2px solid #fff; border-radius: 16px; background: #fff; color: var(--wood2, #7a4520); font-weight: 700; box-shadow: 0 3px 0 #c9a36b; white-space: nowrap; }
+#info.goal { cursor: pointer; text-decoration: underline dotted; }
+#info .ic { width: 16px; height: 16px; vertical-align: -3px; }
+#info .fh { display: flex; gap: 6px; flex-wrap: wrap; }
+#info .fh button { height: 30px; padding: 0 10px; border: 2px solid #fff; border-radius: 15px; background: linear-gradient(#7fe890, var(--ok)); color: #fff; font-weight: 700; text-shadow: 0 1px 0 #0005; }
+#nav button.nav-off { visibility: hidden; pointer-events: none; }
+#btn-store i { width: auto; min-width: 16px; height: 16px; padding: 0 3px; font-size: 10px; font-style: normal; font-weight: 700; color: #fff; display: grid; place-items: center; }
+#btn-store i[hidden] { display: none; }
+#ghost img { width: 100%; height: 100%; }
+#combo { position: fixed; left: 50%; top: 40%; transform: translateX(-50%); z-index: 22; pointer-events: none; font-weight: 700; font-size: 22px; color: #fff; text-shadow: 0 2px 0 #b8501a, 0 0 8px #ff8a3d; }
+#combo.in { animation: xcombo 1.2s ease-out; }
+@keyframes xcombo { 0% { transform: translate(-50%, 10px) scale(.6); opacity: 0; } 20% { transform: translate(-50%, 0) scale(1.1); opacity: 1; } 100% { transform: translate(-50%, -20px) scale(1); opacity: 0; } }
+.prod button.armed { background: linear-gradient(#ff9a7a, #ff6f5a); box-shadow: 0 3px 0 #c8452f; }
+.day.miss { opacity: .5; }
+.welcome .wl { margin: 0 0 12px; }
+pre.econ { font-size: 10px; white-space: pre-wrap; background: #fff; border-radius: 8px; padding: 6px; }
+.sheet:focus { outline: none; }
+@media (prefers-reduced-motion: reduce) { .cell.hint > span, .cell.back > span, .cell.shake, #combo.in, .fly, .spark, .ring, .conf { animation: none; } }
