@@ -336,3 +336,5 @@ body[data-zone="5"] #board { border-color: #5e6670; background: repeating-linear
 body.rm *, body.rm *::before, body.rm *::after { animation: none !important; transition: none !important; }
 body.rm .spark, body.rm .ring, body.rm .conf, body.rm .xfly, body.rm .chest-open, body.rm #tut-hand, body.rm .fly { display: none; }
 @media (prefers-reduced-motion: reduce) { .cell.max::after, .prod.k-gems::after, .say .face img, .res-big img, .order.enter, .alb span.reveal, #lvlup, .lu-card, .lu-star, .cell.squash > .gen, .cell.shake { animation: none; } }
+.welcome .opt { background: var(--cell); color: var(--ink, #5a3a1a); text-shadow: none; box-shadow: none; border: 3px solid transparent; padding: 6px 12px; font-size: 15px; min-height: 40px; }
+.welcome .opt.on { background: #d8f7df; border-color: var(--ok); }
