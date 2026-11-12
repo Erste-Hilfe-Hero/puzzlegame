@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Amy's Tasty Island</title>
 <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="x-live.css">
@@ -50,14 +50,15 @@
     <button id="btn-album"><img data-ic="ui_album" alt=""><span></span><i hidden></i></button>
   </nav>
 </div>
-<div id="amy-pop" hidden><img src="img/amy_face.png" alt=""><span></span></div>
+<div id="amy-pop" role="status" aria-live="polite" hidden><img src="img/amy_face.png" alt=""><span></span></div>
 <div id="ghost" hidden></div>
-<div id="toast" hidden></div>
-<div id="modal" hidden><div class="sheet"><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg></button><div id="modal-body"></div></div></div>
+<div id="toast" role="status" aria-live="polite" hidden></div>
+<div id="modal" hidden><div class="sheet" role="dialog" aria-modal="true"><button class="close" id="modal-close" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3.5" stroke-linecap="round"/></svg></button><div id="modal-body"></div></div></div>
 <script src="data.js"></script>
 <script src="i18n.js"></script>
 <script src="x-native.js"></script>
 <script src="game.js"></script>
+<script src="x-design.js"></script>
 <script src="x-live.js"></script>
 </body>
 </html>
