@@ -345,3 +345,4 @@ body.rm .spark, body.rm .ring, body.rm .conf, body.rm .xfly, body.rm .chest-open
 .opts:has([data-xlang]) { flex-wrap: wrap; }
 .opts [data-xlang] { flex-basis: 100%; }
 .prod button.wait { font-size: 13px; }
+body:has(#modal:not([hidden])) #amy-pop, body:has(#intro) #amy-pop { display: none !important; }

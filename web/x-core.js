@@ -126,7 +126,7 @@ Object.assign(I18N.en, {
   genAria: '{gen}, tap for new items', emptyCell: 'Empty cell',
   outlook: 'All this awaits us: {n} places on the island!',
   before: 'Before', after: 'After', renoH: '{task}: done!', renoText: 'The {place} looks better already!', renoGo: 'Continue',
-  introAria: 'Story', intro0: 'Amy sails to Tasty Island.', intro1: 'The old café is empty and dusty.', intro2: 'Captain Finn waves: Welcome, Amy!', introSkip: 'Skip'
+  introAria: 'Story', intro0: 'Amy sails to Sunmelon Island.', intro1: 'The old café is empty and dusty.', intro2: 'Captain Finn waves: Welcome, Amy!', introSkip: 'Skip'
 });
 
 Object.assign(I18N.de, {
@@ -185,7 +185,7 @@ Object.assign(I18N.de, {
   genAria: '{gen}, tippen für neue Teile', emptyCell: 'Leeres Feld',
   outlook: 'Das alles wartet auf uns: {n} Orte auf der Insel!',
   before: 'Vorher', after: 'Nachher', renoH: '{task}: geschafft!', renoText: 'Das {place} sieht schon viel besser aus!', renoGo: 'Weiter',
-  introAria: 'Geschichte', intro0: 'Amy segelt zur Tasty Island.', intro1: 'Das alte Café ist leer und staubig.', intro2: 'Kapitän Finn winkt: Willkommen, Amy!', introSkip: 'Überspringen'
+  introAria: 'Geschichte', intro0: 'Amy segelt zur Sonnenmelonen-Insel.', intro1: 'Das alte Café ist leer und staubig.', intro2: 'Kapitän Finn winkt: Willkommen, Amy!', introSkip: 'Überspringen'
 });
 
 Object.assign(I18N.de.products, {
