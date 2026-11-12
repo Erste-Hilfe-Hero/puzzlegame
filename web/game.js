@@ -300,9 +300,29 @@ function goldenFix() {
 }
 
 const NATIVE = window.AndroidBilling || null;
+// Free test purchases only in the browser build and only with ?test=1, so a missing bridge never gives free gems.
+const TEST_BUY = !NATIVE && /[?&]test=1(&|$)/.test(location.search);
 let nativePrices = {};
 const productById = id => (id === 'starter' ? DATA.starter : id === 'pass' ? DATA.pass : DATA.money.find(p => p.id === id));
-const priceOf = p => nativePrices[p.id] || p.price;
+const priceOf = p => (NATIVE ? nativePrices[p.id] || t('nxPriceWait') : p.price);
+
+// Restore from the native save mirror when the WebView storage was wiped (runs before load()).
+if (NATIVE) {
+  try {
+    if (!localStorage.getItem(SAVE_KEY)) {
+      const m = NATIVE.loadMirror();
+      if (m) { JSON.parse(m); localStorage.setItem(SAVE_KEY, m); }
+    }
+  } catch (e) { /* no usable mirror */ }
+}
+
+let mirrored = '';
+function nativeMirror() {
+  if (!NATIVE || !S) return;
+  const raw = JSON.stringify(S);
+  if (raw !== mirrored) { NATIVE.saveMirror(raw); mirrored = raw; }
+}
+function saveAll() { if (S) { save(); nativeMirror(); } }
 
 function grantMoney(p) {
   if (p.id === 'starter') {
@@ -320,15 +340,45 @@ function grantMoney(p) {
 
 function buyMoney(p) {
   if (p.id === 'starter' && S.starterBought) return;
-  if (NATIVE) { NATIVE.buy(p.id); return; }
-  // Browser test version: no payment.
+  if (NATIVE) {
+    if (!nativePrices[p.id]) { toast(t('nxOffline')); NATIVE.requestPrices(); return; }
+    NATIVE.buy(p.id);
+    return;
+  }
+  if (!TEST_BUY) { toast(t('nxAppOnly')); return; }
   toast(t('testBuy', { name: pName(p) }));
   grantMoney(p);
 }
 
-window.onNativePurchase = id => { const p = productById(id); if (p) { grantMoney(p); toast(`✅ ${pName(p)}`); } };
-window.onNativePrices = map => { nativePrices = map || {}; };
-window.onNativePurchaseError = code => toast(t('buyError', { code }));
+// The store keeps a purchase open until ack(tx); the grant is saved (local + mirror) before that.
+// Processed ids (last 50) live in the save, so a re-delivered purchase is acknowledged but not granted twice.
+window.onNativePurchase = (id, tx) => {
+  const p = productById(id);
+  if (!p) return;
+  const done = S.nativeTx = S.nativeTx || [];
+  if (!done.includes(tx)) {
+    done.push(tx);
+    if (done.length > 50) done.splice(0, done.length - 50);
+    grantMoney(p);
+    toast(`✅ ${pName(p)}`);
+  }
+  saveAll();
+  NATIVE.ack(tx);
+};
+window.onNativePrices = map => {
+  nativePrices = map || {};
+  if (!$('modal').hidden && $('modal-body').querySelector('[data-money]')) openShop();
+};
+window.onNativePurchasePending = () => toast(t('nxPending'));
+const NX_ERR = { '-100': 'nxErrNotLoaded', '-3': 'nxErrService', '-1': 'nxErrService', 2: 'nxErrService', 3: 'nxErrUnavailable', 7: 'nxErrOwned', 12: 'nxErrNetwork' };
+window.onNativePurchaseError = code => toast(t(NX_ERR[code] || 'buyError', { code }));
+window.onNativePause = saveAll;
+addEventListener('pagehide', saveAll);
+document.addEventListener('visibilitychange', () => { if (document.hidden) saveAll(); });
+if (NATIVE) {
+  setInterval(nativeMirror, 5000);
+  addEventListener('load', () => NATIVE.pageReady());
+}
 window.onNativeBack = () => { if (!$('modal').hidden) closeModal(); else if (NATIVE) NATIVE.exit(); };
 
 function buyGem(item) {
