@@ -1,0 +1,41 @@
+# Rollhaven: unsigned iOS archive on a free GitHub macOS runner (repo is public). Signing and App Store upload happen
+# on the Contabo host with the account's keys. Trigger: commit message containing "run:rollhaven-ios", or manual.
+name: Rollhaven iOS build
+on:
+  push:
+    branches: [main, claude/project-thread-l5qogd]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:rollhaven-ios')
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Xcode 26 (App Store needs the iOS 26 SDK)
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          echo "xcode: $X"; ls -d /Applications/Xcode*.app
+          [ -n "$X" ] && sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Generate project
+        run: brew install xcodegen && cd rollhaven/ios && xcodegen generate
+      - name: Archive (unsigned)
+        run: |
+          cd rollhaven/ios
+          xcodebuild -project Rollhaven.xcodeproj -scheme Rollhaven -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/rh.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
+          cd $RUNNER_TEMP/rh.xcarchive/Products/Applications && ditto -c -k --keepParent Rollhaven.app $RUNNER_TEMP/Rollhaven-unsigned.zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rollhaven-ios-unsigned-${{ github.run_number }}
+          path: ${{ runner.temp }}/Rollhaven-unsigned.zip
+          retention-days: 30
+      - name: Push unsigned app to branch rollhaven-ios-out/<run> (for the signing host)
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../Rollhaven-unsigned.zip .
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "rollhaven ios unsigned ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/rollhaven-ios-out/${{ github.run_number }}
