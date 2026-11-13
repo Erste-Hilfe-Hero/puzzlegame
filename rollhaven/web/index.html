@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0d2a3f">
+<title>Rollhaven</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <div class="pill" id="coinsPill"><span class="ico">&#x1FA99;</span><b id="coins">0</b></div>
+    <div class="pill" id="shieldPill"><span class="ico">&#x1F6E1;</span><b id="shields">0</b>/3</div>
+    <button class="pill btn" id="shopBtn"><span class="ico">&#x1F48E;</span><span data-t="shop">Shop</span></button>
+  </header>
+
+  <div id="harborName"></div>
+  <div id="boardWrap">
+    <div id="board"></div>
+    <div id="bay">
+      <div id="skyline"></div>
+      <div id="dice"><div class="die" id="d1">1</div><div class="die" id="d2">1</div></div>
+      <div id="msg"></div>
+    </div>
+  </div>
+
+  <footer id="controls">
+    <button class="side btn" id="buildBtn"><span class="ico">&#x1F3D7;</span><span data-t="build">Build</span></button>
+    <div id="rollCol">
+      <button id="rollBtn" class="btn"><span data-t="roll">ROLL</span><small id="diceLeft"></small></button>
+      <div id="regen"></div>
+    </div>
+    <button class="side btn" id="multBtn"><span class="ico">&#x2716;</span><b id="mult">x1</b></button>
+  </footer>
+</div>
+
+<div id="modal" class="hidden"><div id="sheet"></div></div>
+<div id="toast"></div>
+<script src="game.js"></script>
+</body>
+</html>
