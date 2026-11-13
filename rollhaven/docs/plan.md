@@ -31,6 +31,10 @@ AppMagic Oktober 2026 weltweit: MONOPOLY GO! 72,3 Mio. $ Monatsumsatz (Platz 4 w
 
 Risiko ehrlich: Das Genre lebt von taeglichen Events und vielen Spielern. Ohne Werbebudget waechst es langsam. Darum zuerst Kern + Events, dann messen.
 
+## Plattform
+
+**Nur iOS** (Ali 13.11.2026 11:36: "Lets go nur fuer iOS nicht Android"). Ausnahme von der iOS+Android-Paar-Regel, gilt nur fuer Rollhaven. Kein Android-Build, kein Play-Eintrag.
+
 ## Spielidee (eigen, keine Kopie)
 
 - **Welt:** Rollhaven, ein Archipel aus Laternen-Haefen. Jeder Hafen = ein Brett mit 24 Feldern rund um die Bucht.
@@ -58,13 +62,13 @@ Risiko ehrlich: Das Genre lebt von taeglichen Events und vielen Spielern. Ohne W
 | 3. Inhalt | 20 Haefen mit eigenem Thema, Kartenalbum 20 Sets, Tagesbelohnung | 50 |
 | 4. Server | Konto, Speichern auf Server, echte Ueberfaelle, Freunde, Rangliste | 50 |
 | 5. Events | Turniere, Laternenfest-Woche, Partner-Event, Saisonpass | 50 |
-| 6. Shop | Play Billing + StoreKit 2 (von Amy), Preise, Kaufwiederherstellung | 30 |
-| 7. Store | Icon, Screenshots, Texte EN/DE + 12 Sprachen, Datenschutz, Android + iOS als Paar | 50 |
+| 6. Shop | StoreKit 2 (von Amy), Preise, Kaufwiederherstellung | 30 |
+| 7. Store | Icon, Screenshots, Texte EN/DE + 12 Sprachen, Datenschutz, nur iOS | 50 |
 
-Reihenfolge: Phase 1 heute, dann 2 und 3, dann Store-Testversion (Android intern + iOS TestFlight), dann 4-6.
+Reihenfolge: Phase 1 heute, dann 2 und 3, dann iOS TestFlight, dann 4-6.
 
 ## Technik
 
 - Code: Repo puzzlegame, Ordner `rollhaven/` (Branch claude/project-thread-l5qogd), bis ein eigenes Repo da ist.
-- HTML5/JS, Android-WebView + iOS-WKWebView wie Amy's, Paket com.nyrathen.rollhaven.
+- HTML5/JS in iOS-WKWebView mit StoreKit 2 wie Amy's, Paket com.nyrathen.rollhaven.
 - Web-Version spaeter unter play.nyrathen.com/rollhaven/.
