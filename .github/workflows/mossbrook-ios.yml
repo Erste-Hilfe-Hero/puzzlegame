@@ -27,7 +27,7 @@ jobs:
           xcodebuild -project MossbrookSolitaire.xcodeproj -scheme MossbrookSolitaire -configuration Release \
             -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/mb.xcarchive \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
-          cd $RUNNER_TEMP/mb.xcarchive/Products/Applications && ditto -c -k --keepParent MossbrookSolitaire.app $RUNNER_TEMP/Mossbrook-unsigned.zip
+          cd $RUNNER_TEMP/mb.xcarchive/Products/Applications && test -f MossbrookSolitaire.app/web/index.html && grep -q "subdirectory: \"web\"" $GITHUB_WORKSPACE/mossbrook/ios/App/GameViewController.swift && ditto -c -k --keepParent MossbrookSolitaire.app $RUNNER_TEMP/Mossbrook-unsigned.zip
       - uses: actions/upload-artifact@v4
         with:
           name: mossbrook-ios-unsigned-${{ github.run_number }}

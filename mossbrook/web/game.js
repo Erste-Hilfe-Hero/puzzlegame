@@ -63,7 +63,7 @@ const T = {
 const LANG = /^de/i.test(navigator.language || '') ? 'de' : 'en';
 function t(k, ...a) { let s = T[LANG][k] ?? T.en[k] ?? k; a.forEach((v, i) => { s = s.replace('{' + i + '}', v); }); return s; }
 
-const VERSION = '0.3.0';
+const VERSION = '0.3.1';
 const LIFE_MS = 20 * 60 * 1000, MAX_LIVES = 5;
 const TASK_KEYS = ['path', 'bridge', 'well', 'garden', 'mill', 'bakery', 'lanterns', 'cottage'];
 const TASK_COST = [1, 2, 2, 2, 3, 3, 3, 4];

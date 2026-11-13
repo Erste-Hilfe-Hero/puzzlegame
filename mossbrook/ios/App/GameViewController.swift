@@ -58,7 +58,8 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
         pageReady = false
         content.removeAllUserScripts()
         content.addUserScript(WKUserScript(source: Self.bridgeScript(), injectionTime: .atDocumentStart, forMainFrameOnly: true))
-        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
+        // the folder reference keeps its disk name ("web"); XcodeGen ignores name: www for folders
+        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web") ?? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
     }
