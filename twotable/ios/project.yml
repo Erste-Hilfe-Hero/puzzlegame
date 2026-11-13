@@ -1,10 +1,10 @@
-name: Popwick
+name: TwoTable
 options:
   bundleIdPrefix: com.nyrathen
   deploymentTarget:
     iOS: "16.0"
 targets:
-  Popwick:
+  TwoTable:
     type: application
     platform: iOS
     sources:
@@ -16,18 +16,18 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: "Popwick"
+        CFBundleDisplayName: "Two at the Table"
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         UILaunchScreen: {}
         UIRequiresFullScreen: true
-        UISupportedInterfaceOrientations: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight, UIInterfaceOrientationPortrait]
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
         ITSAppUsesNonExemptEncryption: false
         UIStatusBarHidden: true
         UIViewControllerBasedStatusBarAppearance: false
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.nyrathen.popwick
+        PRODUCT_BUNDLE_IDENTIFIER: com.nyrathen.twotable
         CURRENT_PROJECT_VERSION: "1"
         MARKETING_VERSION: "1.0.0"
         TARGETED_DEVICE_FAMILY: "1"
