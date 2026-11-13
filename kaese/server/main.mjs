@@ -120,6 +120,7 @@ function api(route, b, res, ip) {
   if (route === 'health') return send(res, 200, { ok: true, lines: S.lines.length });
   if (limited(ip)) return send(res, 429, { error: 'rate' });
   const lang = b.lang === 'en' ? 'en' : 'de';
+  if (route.startsWith('admin/')) return admin(route.slice(6), b, res);
   if (route === 'lines') return send(res, 200, list(S, b.dev, lang, b.sort, String(b.blocked || '').split(',').filter(Boolean)));
   let r;
   if (route === 'post') r = post(S, b.dev, lang, b.text);
@@ -132,7 +133,21 @@ function api(route, b, res, ip) {
   send(res, r.error ? 400 : 200, r);
 }
 
+// moderator actions (reports reviewed within 24 h): token is created in DATA/admin-token on first start
+let TOKEN = '';
+function admin(r, b, res) {
+  if (!TOKEN || b.token !== TOKEN) return send(res, 403, { error: 'token' });
+  if (r === 'reports') { let t = ''; try { t = fs.readFileSync(path.join(DATA, 'reports.jsonl'), 'utf8'); } catch {} return send(res, 200, { reports: t.trim().split('\n').filter(Boolean).slice(-200).map(x => JSON.parse(x)) }); }
+  const l = S.lines.find(x => x.id === +b.id);
+  if (r === 'hide' && l) { l.hidden = true; dirty = true; return send(res, 200, { ok: true }); }
+  if (r === 'ban' && l) { if (!S.banned.includes(l.author)) S.banned.push(l.author); S.lines.forEach(x => { if (x.author === l.author) x.hidden = true; }); dirty = true; return send(res, 200, { ok: true }); }
+  send(res, 404, { error: 'admin' });
+}
+
 export function start() {
+  fs.mkdirSync(DATA, { recursive: true });
+  const tf = path.join(DATA, 'admin-token');
+  try { TOKEN = fs.readFileSync(tf, 'utf8').trim(); } catch { TOKEN = crypto.randomBytes(24).toString('hex'); fs.writeFileSync(tf, TOKEN, { mode: 0o600 }); }
   const srv = http.createServer((req, res) => {
     const u = new URL(req.url, 'http://x');
     const ip = String(req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
