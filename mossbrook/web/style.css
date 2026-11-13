@@ -172,3 +172,12 @@ button { font-family: inherit; cursor: pointer; border: 0; }
   background: repeating-conic-gradient(rgba(255,210,63,.18) 0 10deg, transparent 10deg 20deg); border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%); mask: radial-gradient(circle, #000 20%, transparent 65%); animation: spin 8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 #board { isolation: isolate; z-index: 1; }
+.brow { display: flex; gap: 10px; }
+.brow .big { flex: 1; font-size: 21px; padding: 14px 6px; }
+#oppBar { display: flex; align-items: center; gap: 8px; margin: 4px 10px 0; padding: 5px 10px; border-radius: 12px; background: rgba(6,10,35,.85); border: 1.5px solid var(--neon2); box-shadow: 0 0 10px rgba(255,79,216,.35); font-size: 13px; font-weight: 600; }
+#oppBar .on { max-width: 30%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--neon2); }
+#oppBar .ob { flex: 1; height: 8px; border-radius: 4px; background: rgba(255,255,255,.12); overflow: hidden; }
+#oppBar .ob div { height: 100%; background: linear-gradient(90deg, var(--neon2), #ff9f43); transition: width .5s; }
+#oppBar .dt { color: var(--gold); font-variant-numeric: tabular-nums; }
+.spin { width: 44px; height: 44px; margin: 10px auto; border-radius: 50%; border: 4px solid rgba(62,242,255,.25); border-top-color: var(--neon); animation: spin 1s linear infinite; }
+.settings input:not([type=checkbox]) { width: 50%; font: inherit; font-size: 15px; padding: 6px 8px; border-radius: 8px; border: 1.5px solid rgba(62,242,255,.5); background: rgba(255,255,255,.08); color: #fff; }

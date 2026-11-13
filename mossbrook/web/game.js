@@ -295,7 +295,7 @@ const LAYOUTS = [
   // tower + wings (27)
   () => rowsToCards([[3], [2.5, 3.5], [0, 1, 2, 3, 4, 5, 6], [0.5, 1.5, 2.5, 3.5, 4.5, 5.5], range(0, 6), [3]])
 ];
-function genLevel(n) {
+function genLevel(n, forceTier) {
   const rng = mulberry(n * 7919 + 17);
   const ri = (a, b) => a + Math.floor(rng() * (b - a + 1));
   const li = n === 1 ? 0 : n === 2 ? 1 : n === 3 ? 2 : (n * 5 + Math.floor(n / 7)) % LAYOUTS.length;
@@ -308,8 +308,8 @@ function genLevel(n) {
     const pick = av[Math.floor(rng() * av.length)];
     gone.add(pick.id); order.push(pick.id);
   }
-  const hard = n > 4 && n % 5 === 0;
-  const tier = Math.min(4, Math.floor((n - 1) / 8));
+  const hard = forceTier == null && n > 4 && n % 5 === 0;
+  const tier = forceTier ?? Math.min(4, Math.floor((n - 1) / 8));
   const minRun = [4, 3, 3, 2, 2][tier], maxRun = [8, 7, 6, 6, 5][tier];
   let spare = Math.max(1, [10, 7, 5, 4, 3][tier] - (hard ? 2 : 0)) + (n <= 3 ? 4 : 0);
   const stock = [];
@@ -694,4 +694,4 @@ showVillage();
 if (window.AndroidBilling && AndroidBilling.pageReady) { try { AndroidBilling.pageReady(); } catch (e) {} }
 
 // test hook (node/playwright)
-window.__mb = { S: () => S, G: () => G, genLevel, fits, startLevel, tapCard, drawCard, playable, isUp, save };
+window.__mb = { S: () => S, G: () => G, setG: g => { G = g; }, genLevel, fits, startLevel, tapCard, drawCard, playable, isUp, save };
