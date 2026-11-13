@@ -3,7 +3,14 @@
   // Two players face to face over one unfolded phone: player 0 sits at the left edge, player 1 at the right edge.
   // Text for a player is rotated toward their edge. The fold runs down the middle (x = 710).
   var W = 1420, H = 1000, MID = 710;
-  var PC = ["#ef5b3c", "#3c8cf0"], PD = ["#a8341c", "#1f5aa8"], PNAME = ["Red", "Blue"];
+  var DE = /^de/i.test(navigator.language || "");
+  var TR = { "Your turn": "Du bist dran", "Wait...": "Warte...", "You win!": "Gewonnen!", "You lose": "Verloren", "Draw!": "Unentschieden!",
+    "Wins": "Siege", "Tap for a rematch": "Tippen f\u00fcr Revanche", "First to ": "Wer zuerst ", "You must capture!": "Du musst schlagen!",
+    "Check!": "Schach!", "Roll": "W\u00fcrfeln", "No moves": "Kein Zug m\u00f6glich", "No more moves": "Keine Z\u00fcge mehr", "Off ": "Raus ",
+    "Sit face to face. Pick a game.": "Setzt euch gegen\u00fcber. W\u00e4hlt ein Spiel.", "Red": "Rot", "Blue": "Blau",
+    "Four in a Row": "Vier gewinnt", "Checkers": "Dame", "Dots & Boxes": "K\u00e4sek\u00e4stchen", "Chess": "Schach" };
+  function L(s) { return DE && TR[s] ? TR[s] : s; }
+  var PC = ["#ef5b3c", "#3c8cf0"], PD = ["#a8341c", "#1f5aa8"], PNAME = [L("Red"), L("Blue")];
   var cv = document.getElementById("c"), ctx = cv.getContext("2d");
   var dpr = 1, scale = 1, ox = 0, oy = 0, cw = 0, ch = 0, t = 0;
   var state = "menu", game = null, gameName = "", starter = 0;
@@ -64,8 +71,8 @@
   function turnGlow(p) {
     var x = p === 0 ? -ox / scale : W + ox / scale - 14, a = 0.55 + 0.35 * Math.sin(t * 5);
     ctx.fillStyle = PC[p]; ctx.globalAlpha = a; ctx.fillRect(x, 0, 14, H); ctx.globalAlpha = 1;
-    ptext(p, "Your turn", p === 0 ? 46 : W - 46, H / 2 + 230, 26, PC[p]);
-    ptext(1 - p, "Wait...", p === 0 ? W - 46 : 46, H / 2 + 230, 22, "rgba(255,255,255,0.45)", "normal");
+    ptext(p, L("Your turn"), p === 0 ? 46 : W - 46, H / 2 + 230, 26, PC[p]);
+    ptext(1 - p, L("Wait..."), p === 0 ? W - 46 : 46, H / 2 + 230, 22, "rgba(255,255,255,0.45)", "normal");
   }
 
   // ---------- result overlay ----------
@@ -80,11 +87,11 @@
     if (!result) return;
     ctx.fillStyle = "rgba(0,0,0," + Math.min(0.55, result.t) + ")"; ctx.fillRect(0, 0, W, H);
     for (var p = 0; p < 2; p++) {
-      var x = p === 0 ? 300 : W - 300, msg = result.winner === -1 ? "Draw!" : result.winner === p ? "You win!" : "You lose";
+      var x = p === 0 ? 300 : W - 300, msg = result.winner === -1 ? L("Draw!") : result.winner === p ? L("You win!") : L("You lose");
       ptext(p, msg, x, H / 2, 86, result.winner === p ? PC[p] : "#fff");
       var w = wins[gameName] || [0, 0];
-      ptext(p, "Wins  " + w[p] + " : " + w[1 - p], x + (p === 0 ? -100 : 100), H / 2, 34, "#fff", "normal");
-      if (result.t > 0.8) ptext(p, "Tap for a rematch", x + (p === 0 ? -160 : 160), H / 2, 28, "rgba(255,255,255,0.75)", "normal");
+      ptext(p, L("Wins") + "  " + w[p] + " : " + w[1 - p], x + (p === 0 ? -100 : 100), H / 2, 34, "#fff", "normal");
+      if (result.t > 0.8) ptext(p, L("Tap for a rematch"), x + (p === 0 ? -160 : 160), H / 2, 28, "rgba(255,255,255,0.75)", "normal");
     }
   }
 
@@ -161,7 +168,7 @@
         });
         for (var p = 0; p < 2; p++) {
           ptext(p, String(score[p]), p === 0 ? MID - 90 : MID + 90, 500, 110, p === 0 ? "rgba(239,91,60,0.28)" : "rgba(60,140,240,0.28)");
-          ptext(p, "First to " + TO, p === 0 ? 20 : W - 20, 500, 22, "rgba(255,255,255,0.7)", "normal");
+          ptext(p, L("First to ") + TO, p === 0 ? 20 : W - 20, 500, 22, "rgba(255,255,255,0.7)", "normal");
         }
         if (flash > 0) { ctx.fillStyle = "rgba(255,255,255," + flash * 0.4 + ")"; ctx.fillRect(0, 0, W, H); }
       },
@@ -298,7 +305,7 @@
         }
         hint.forEach(function (m) { circle(x0 + m[1] * S + S / 2, y0 + m[0] * S + S / 2, 16, "rgba(255,255,255,0.75)"); });
         scoreSide(0, PNAME[0] + "  " + count(0)); scoreSide(1, PNAME[1] + "  " + count(1));
-        if (!result && anyCap(turn)) ptext(turn, "You must capture!", turn === 0 ? 76 : W - 76, H / 2 + 230, 22, "#ffd84a");
+        if (!result && anyCap(turn)) ptext(turn, L("You must capture!"), turn === 0 ? 76 : W - 76, H / 2 + 230, 22, "#ffd84a");
       },
       legal: function () { return allMoves(turn); }, playMove: function (mv) { apply(mv[0], mv[1], mv[2]); }, turn: function () { return turn; }
     };
@@ -474,7 +481,7 @@
         if (sel) legal(sel[0], sel[1]).forEach(function (m) { circle(x0 + m[1] * S + S / 2, y0 + m[0] * S + S / 2, b[m[0]][m[1]] ? 48 : 16, b[m[0]][m[1]] ? "rgba(255,60,60,0.3)" : "rgba(0,0,0,0.3)"); });
         for (var p = 0; p < 2; p++) {
           scoreSide(p, PNAME[p]);
-          if (!result && turn === p && inCheck(b, p)) ptext(p, "Check!", p === 0 ? 76 : W - 76, H / 2 + 230, 26, "#ff6b6b");
+          if (!result && turn === p && inCheck(b, p)) ptext(p, L("Check!"), p === 0 ? 76 : W - 76, H / 2 + 230, 26, "#ff6b6b");
           var cap = captured[p].map(function (t) { return GLYPH[t]; }).join("");
           if (cap) ptext(p, cap, p === 0 ? 120 : W - 120, H / 2, 34, "rgba(255,255,255,0.8)", "normal");
         }
@@ -553,14 +560,14 @@
     function doRoll() {
       var a = 1 + Math.floor(Math.random() * 6), c = 1 + Math.floor(Math.random() * 6);
       dice = a === c ? [a, a, a, a] : [a, c]; shown = [a, c]; rolled = true; roll = 0.5; sfx.drop();
-      if (!legalNow().length) { msg = "No moves"; msgT = window.tt.fast ? 0.02 : 1.4; }
+      if (!legalNow().length) { msg = L("No moves"); msgT = window.tt.fast ? 0.02 : 1.4; }
     }
     function endTurn() { turn = 1 - turn; rolled = false; dice = []; sel = null; }
     function play(m) {
       var st = applyTo(snap(), turn, m); pts = st.pts; bar = st.bar; off = st.off;
       dice.splice(dice.indexOf(m[2]), 1); sel = null; sfx.tap();
       if (off[turn] === 15) { finish(turn); return; }
-      if (!dice.length || !legalNow().length) { if (dice.length) { msg = "No more moves"; msgT = window.tt.fast ? 0.02 : 1.2; } else endTurn(); }
+      if (!dice.length || !legalNow().length) { if (dice.length) { msg = L("No more moves"); msgT = window.tt.fast ? 0.02 : 1.2; } else endTurn(); }
     }
     // geometry
     function pointBox(s) {
@@ -583,12 +590,12 @@
         if (result) return;
         if (!rolled) { var rb = rollBtn(turn); if (Math.hypot(pt.x - rb.x, pt.y - rb.y) < 90) doRoll(); return; }
         if (msgT > 0) return;
-        var h = hit(pt), L = legalNow();
+        var h = hit(pt), LG = legalNow();
         if (sel != null) {
-          var mv = L.filter(function (m) { return m[0] === sel && m[1] === h; }).sort(function (a, c) { return a[2] - c[2]; })[0];
+          var mv = LG.filter(function (m) { return m[0] === sel && m[1] === h; }).sort(function (a, c) { return a[2] - c[2]; })[0];
           if (mv) { play(mv); return; }
         }
-        if (h != null && L.some(function (m) { return m[0] === h; })) { sel = h; sfx.tap(); } else sel = null;
+        if (h != null && LG.some(function (m) { return m[0] === h; })) { sel = h; sfx.tap(); } else sel = null;
       },
       move: function () {}, up: function () {},
       update: function (dt) {
@@ -601,7 +608,7 @@
         rr(BX0 - 20, BY0 - 20, BX1 - BX0 + 40, BY1 - BY0 + 40, 20); ctx.fillStyle = "#5a3920"; ctx.fill();
         ctx.fillStyle = "#e9dcc0"; ctx.fillRect(BX0, BY0, BX1 - BX0, BY1 - BY0);
         ctx.fillStyle = "#5a3920"; ctx.fillRect(BX0, BAR0, BX1 - BX0, BAR1 - BAR0);
-        var L = legalNow(), targets = sel != null ? L.filter(function (m) { return m[0] === sel; }).map(function (m) { return m[1]; }) : [];
+        var LG = legalNow(), targets = sel != null ? LG.filter(function (m) { return m[0] === sel; }).map(function (m) { return m[1]; }) : [];
         for (var s = 1; s <= 24; s++) {
           var pb = pointBox(s), tip = pb.left ? pb.x + LEN : pb.x - LEN;
           ctx.beginPath(); ctx.moveTo(pb.x, pb.y - PH / 2 + 3); ctx.lineTo(tip, pb.y); ctx.lineTo(pb.x, pb.y + PH / 2 - 3); ctx.closePath();
@@ -620,10 +627,10 @@
           var tx = p === 0 ? 75 : W - 75;
           rr(tx - 45, 80, 90, 300, 16); ctx.fillStyle = targets.indexOf("off") >= 0 && turn === p ? "rgba(255,225,77,0.5)" : "rgba(0,0,0,0.25)"; ctx.fill();
           for (var k = 0; k < off[p]; k++) { ctx.fillStyle = PC[p]; ctx.fillRect(tx - 34, 365 - k * 18, 68, 13); }
-          ptext(p, "Off " + off[p], tx, 430, 24, "#fff");
+          ptext(p, L("Off ") + off[p], tx, 430, 24, "#fff");
         }
         if (!result && !rolled) {
-          var rb = rollBtn(turn); circle(rb.x, rb.y, 80, PC[turn]); circle(rb.x, rb.y, 70, PD[turn]); ptext(turn, "Roll", rb.x, rb.y, 40, "#fff");
+          var rb = rollBtn(turn); circle(rb.x, rb.y, 80, PC[turn]); circle(rb.x, rb.y, 70, PD[turn]); ptext(turn, L("Roll"), rb.x, rb.y, 40, "#fff");
         }
         if (rolled && shown.length) {
           var cx = turn === 0 ? 420 : W - 420;
@@ -670,15 +677,15 @@
     table();
     for (var p = 0; p < 2; p++) {
       ptext(p, "Two at the Table", p === 0 ? 120 : W - 120, H / 2, 64, "#fff");
-      ptext(p, "Sit face to face. Pick a game.", p === 0 ? 195 : W - 195, H / 2, 26, "rgba(255,255,255,0.75)", "normal");
+      ptext(p, L("Sit face to face. Pick a game."), p === 0 ? 195 : W - 195, H / 2, 26, "rgba(255,255,255,0.75)", "normal");
     }
     tiles().forEach(function (tl) {
       ctx.fillStyle = "rgba(0,0,0,0.25)"; rr(tl.x + 6, tl.y + 8, tl.w, tl.h, 26); ctx.fill();
       rr(tl.x, tl.y, tl.w, tl.h, 26); ctx.fillStyle = tl.g.soon ? "#2a4a3a" : "#fbf7ee"; ctx.fill();
       ctx.save(); if (tl.g.soon) ctx.globalAlpha = 0.45; icon(tl.g.id, tl.x + tl.w / 2, tl.y + tl.h / 2); ctx.restore();
       var c = tl.g.soon ? "rgba(255,255,255,0.7)" : "#24352c";
-      ptext(0, tl.g.name, tl.x + 32, tl.y + tl.h / 2, 26, c);
-      ptext(1, tl.g.name, tl.x + tl.w - 32, tl.y + tl.h / 2, 26, c);
+      ptext(0, L(tl.g.name), tl.x + 32, tl.y + tl.h / 2, 26, c);
+      ptext(1, L(tl.g.name), tl.x + tl.w - 32, tl.y + tl.h / 2, 26, c);
       if (tl.g.soon) text("SOON", tl.x + tl.w / 2, tl.y + tl.h - 40, 24, "#ffd84a");
       var w = wins[tl.g.id];
       if (w) { text(w[0] + " : " + w[1], tl.x + tl.w / 2, tl.y + 40, 24, "#7a8a80"); }
