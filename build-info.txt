@@ -1,0 +1,1 @@
+xcode=Xcode 27.2 flags=DUO_HINGE
