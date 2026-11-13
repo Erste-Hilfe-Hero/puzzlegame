@@ -6,9 +6,10 @@
 
   var S = load();
   function load() {
-    var d = { lang: null, fav: [], pro: false, gen: { day: '', n: 0 }, seen: {} };
+    var d = { lang: null, fav: [], pro: false, gen: { day: '', n: 0 }, seen: {}, dev: '', blocked: [], terms: false };
     try { var s = JSON.parse(localStorage.getItem('kl') || '{}'); for (var k in s) d[k] = s[k]; } catch (e) {}
     if (!d.lang) d.lang = /^de/i.test(navigator.language || '') ? 'de' : 'en';
+    if (!d.dev) { var a = new Uint8Array(16); (window.crypto || {}).getRandomValues ? crypto.getRandomValues(a) : a.forEach(function (_, i) { a[i] = Math.random() * 256; }); d.dev = Array.prototype.map.call(a, function (x) { return ('0' + x.toString(16)).slice(-2); }).join(''); }
     return d;
   }
   function save() { try { localStorage.setItem('kl', JSON.stringify(S)); } catch (e) {} }
@@ -27,7 +28,15 @@
       noFavs: 'Noch keine Favoriten. Tippe beim Spruch auf das Herz.', lang: 'Sprache', privacy: 'Datenschutz', support: 'Hilfe & Kontakt',
       random: 'Zufälliger Spruch', editTitle: 'Spruch anpassen', done: 'Fertig', delete: 'Löschen',
       note: 'Käse legen ist zum Spaß gedacht. Sei nett, respektiere ein Nein und hab Humor.',
-      swipe: 'Wischen für den nächsten Spruch', free: 'gratis', locked: 'Pro' },
+      swipe: 'Wischen für den nächsten Spruch', free: 'gratis', locked: 'Pro',
+      comm: 'Community', top: 'Top', week: 'Woche', newest: 'Neu', postLine: 'Spruch posten', you: 'Du postest als',
+      loading: 'Lädt ...', offline: 'Keine Verbindung. Zieh nach unten oder versuch es gleich nochmal.', retry: 'Nochmal laden', noComm: 'Noch keine Sprüche. Sei die erste Person!',
+      report: 'Melden', block: 'Nutzer blockieren', blocked: 'Nutzer blockiert. Du siehst seine Sprüche nicht mehr.', reported: 'Danke! Wir prüfen den Spruch.',
+      reportWhy: 'Warum meldest du den Spruch?', reasons: [['hate', 'Beleidigend oder hasserfüllt'], ['sexual', 'Sexuell oder anstößig'], ['spam', 'Spam oder Werbung'], ['other', 'Etwas anderes']],
+      cancel: 'Abbrechen', send: 'Posten', posted: 'Gepostet! Jetzt können alle bewerten.', ownVote: 'Eigene Sprüche kannst du nicht bewerten.',
+      termsTitle: 'Community-Regeln', termsText: 'Bevor du postest: Keine Beleidigungen, kein Hass, nichts Sexuelles, keine Kontaktdaten, keine Werbung. Für anstößige Inhalte gilt null Toleranz: Sie werden entfernt und Nutzer gesperrt. Du kannst jeden Spruch melden und Nutzer blockieren. Mit dem Posten akzeptierst du die Nutzungsbedingungen.',
+      termsLink: 'Nutzungsbedingungen lesen', agree: 'Ich stimme zu', terms: 'Nutzungsbedingungen', unblock: 'Blockierte Nutzer freigeben',
+      err: { filter: 'Dein Spruch enthält Wörter, Links oder Kontaktdaten, die nicht erlaubt sind.', limit: 'Du hast heute schon 5 Sprüche gepostet. Morgen geht es weiter.', dupe: 'Den Spruch gibt es schon.', banned: 'Du kannst nicht mehr posten.', short: 'Der Spruch ist zu kurz.', net: 'Keine Verbindung. Bitte später nochmal.' } },
     en: { app: 'Käse legen', discover: 'Discover', gen: 'Generator', favs: 'Favorites', more: 'More', daily: 'Line of the day',
       cats: 'Categories', lines: 'lines', copy: 'Copy', share: 'Share', edit: 'Edit', card: 'Image', fav: 'Save',
       next: 'Next', prev: 'Back', copied: 'Copied. Good luck!', saved: 'Saved', removed: 'Removed',
@@ -41,7 +50,15 @@
       noFavs: 'No favorites yet. Tap the heart on a line.', lang: 'Language', privacy: 'Privacy policy', support: 'Help & contact',
       random: 'Random line', editTitle: 'Edit line', done: 'Done', delete: 'Delete',
       note: 'Käse legen is meant for fun. Be kind, respect a no and keep your humor.',
-      swipe: 'Swipe for the next line', free: 'free', locked: 'Pro' }
+      swipe: 'Swipe for the next line', free: 'free', locked: 'Pro',
+      comm: 'Community', top: 'Top', week: 'Week', newest: 'New', postLine: 'Post a line', you: 'You post as',
+      loading: 'Loading ...', offline: 'No connection. Please try again in a moment.', retry: 'Reload', noComm: 'No lines yet. Be the first!',
+      report: 'Report', block: 'Block user', blocked: 'User blocked. You will not see their lines anymore.', reported: 'Thanks! We will review this line.',
+      reportWhy: 'Why are you reporting this line?', reasons: [['hate', 'Offensive or hateful'], ['sexual', 'Sexual or inappropriate'], ['spam', 'Spam or advertising'], ['other', 'Something else']],
+      cancel: 'Cancel', send: 'Post', posted: 'Posted! Now everyone can vote.', ownVote: 'You cannot vote on your own lines.',
+      termsTitle: 'Community rules', termsText: 'Before you post: no insults, no hate, nothing sexual, no contact details, no ads. There is zero tolerance for objectionable content: it is removed and users are banned. You can report any line and block users. By posting you accept the terms of use.',
+      termsLink: 'Read the terms of use', agree: 'I agree', terms: 'Terms of use', unblock: 'Unblock all users',
+      err: { filter: 'Your line contains words, links or contact details that are not allowed.', limit: 'You already posted 5 lines today. Come back tomorrow.', dupe: 'This line already exists.', banned: 'You can no longer post.', short: 'The line is too short.', net: 'No connection. Please try later.' } }
   };
   function t(k) { return T[S.lang][k]; }
   function cats() { return window.KL_LINES[S.lang]; }
@@ -59,7 +76,8 @@
     share: '<path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/>',
     edit: '<path d="M4 20h4L19 9l-4-4L4 16z"/>', image: '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-9 9"/>',
     back: '<path d="M15 5l-7 7 7 7"/>', next: '<path d="M9 5l7 7-7 7"/>', dice: '<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M9 9h.01M15 15h.01M15 9h.01M9 15h.01M12 12h.01"/>',
-    home: '<path d="M4 11l8-7 8 7v9H4z"/>', wand: '<path d="M4 20L16 8M14 4v3M18 6h3M19 10v2M12 2h0"/>', dots: '<path d="M5 12h.01M12 12h.01M19 12h.01"/>'
+    home: '<path d="M4 11l8-7 8 7v9H4z"/>', up: '<path d="M12 5l7 8h-4v6H9v-6H5z"/>', down: '<path d="M12 19l-7-8h4V5h6v6h4z"/>',
+    trophy: '<path d="M8 4h8v5a4 4 0 0 1-8 0z"/><path d="M8 6H5a3 3 0 0 0 3 4M16 6h3a3 3 0 0 1-3 4M12 13v4M8 20h8"/>', plus: '<path d="M12 5v14M5 12h14"/>', flag: '<path d="M5 21V4h11l-2 4 2 4H5"/>', ban: '<circle cx="12" cy="12" r="9"/><path d="M6 6l12 12"/>', wand: '<path d="M4 20L16 8M14 4v3M18 6h3M19 10v2M12 2h0"/>', dots: '<path d="M5 12h.01M12 12h.01M19 12h.01"/>'
   };
   function ic(n, fillHeart) {
     return '<svg viewBox="0 0 24 24" fill="' + (fillHeart ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + I[n] + '</svg>';
@@ -150,12 +168,13 @@
     if (tab === 'discover') renderHome(v);
     else if (tab === 'gen') renderGen(v);
     else if (tab === 'favs') renderFavs(v);
+    else if (tab === 'comm') renderComm(v);
     else renderMore(v);
     renderTabs();
   }
 
   function renderTabs() {
-    var tabs = [['discover', 'home'], ['gen', 'wand'], ['favs', 'heart'], ['more', 'dots']];
+    var tabs = [['discover', 'home'], ['gen', 'wand'], ['comm', 'trophy'], ['favs', 'heart'], ['more', 'dots']];
     $('tabs').style.display = deck ? 'none' : 'flex';
     $('tabs').innerHTML = tabs.map(function (x) { return '<button data-tab="' + x[0] + '" class="' + (tab === x[0] ? 'on' : '') + '">' + ic(x[1]) + t(x[0]) + '</button>'; }).join('');
   }
@@ -263,8 +282,83 @@
       '<button class="item" data-lang="1">' + t('lang') + '<span>' + (S.lang === 'de' ? 'Deutsch' : 'English') + '</span></button>' +
       '<button class="item" data-restore="1">' + t('restore') + '<span></span></button>' +
       '<button class="item" data-open="privacy.html">' + t('privacy') + '<span></span></button>' +
+      '<button class="item" data-open="terms.html">' + t('terms') + '<span></span></button>' +
+      (S.blocked.length ? '<button class="item" data-unblock="1">' + t('unblock') + '<span>' + S.blocked.length + '</span></button>' : '') +
       '<button class="item" data-open="mailto:lords.azz6@gmail.com">' + t('support') + '<span></span></button></div>' +
       '<p class="note">' + t('note') + '<br>v1.0</p>';
+  }
+
+  // ---- community ----
+  var API = /^http/.test(location.protocol) && location.pathname.indexOf('/kaese') === 0 ? '/kaese/api/' : 'https://play.nyrathen.com/kaese/api/';
+  var C = { sort: 'top', lines: null, err: false, me: null, busy: false, key: '' };
+  function call(route, body) {
+    var opt = body ? { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(Object.assign({ dev: S.dev, lang: S.lang }, body)) } : undefined;
+    return fetch(API + route, opt).then(function (r) { return r.json(); });
+  }
+  function loadComm() {
+    var key = S.lang + C.sort; C.key = key; C.busy = true; C.err = false;
+    call('lines?dev=' + S.dev + '&lang=' + S.lang + '&sort=' + C.sort + '&blocked=' + S.blocked.join(',')).then(function (r) {
+      if (C.key !== key) return; C.lines = r.lines || []; C.me = r.me; C.busy = false; if (tab === 'comm' && !deck) render();
+    }).catch(function () { if (C.key !== key) return; C.busy = false; C.err = true; if (tab === 'comm' && !deck) render(); });
+  }
+  function renderComm(v) {
+    var sorts = [['top', t('top')], ['week', t('week')], ['new', t('newest')]];
+    var h = '<div class="seg">' + sorts.map(function (x) { return '<button data-csort="' + x[0] + '" class="' + (C.sort === x[0] ? 'on' : '') + '">' + x[1] + '</button>'; }).join('') + '</div>' +
+      '<div style="height:10px"></div><button class="btn big" data-cpost="1">' + ic('plus') + t('postLine') + '</button>';
+    if (C.me) h += '<p class="note" style="margin-top:8px">' + t('you') + ' <b>' + esc(C.me.nick) + '</b></p>';
+    if (C.err) h += '<div class="empty"><p>' + t('offline') + '</p><button class="btn" data-creload="1">' + t('retry') + '</button></div>';
+    else if (!C.lines) h += '<div class="empty">' + t('loading') + '</div>';
+    else if (!C.lines.length) h += '<div class="empty">' + t('noComm') + '</div>';
+    else h += C.lines.map(function (l, i) {
+      var mine = C.me && l.author === C.me.author;
+      return '<div class="fav comm"><div class="rank">' + (C.sort === 'new' ? '' : '#' + (i + 1)) + '</div><p>' + esc(l.text) + '</p>' +
+        '<div class="meta">' + esc(l.nick) + (mine ? ' · ★' : '') + '</div><div class="row">' +
+        '<button class="btn vote' + (l.my > 0 ? ' on' : '') + '" data-vote="' + l.id + ':1">' + ic('up') + '</button><b class="score">' + l.score + '</b>' +
+        '<button class="btn vote' + (l.my < 0 ? ' on' : '') + '" data-vote="' + l.id + ':-1">' + ic('down') + '</button>' +
+        '<button class="btn" data-copy="' + esc(l.text) + '">' + ic('copy') + '</button>' +
+        '<button class="btn" data-share="' + esc(l.text) + '">' + ic('share') + '</button>' +
+        (mine ? '' : '<button class="btn" data-cmenu="' + l.id + '">' + ic('flag') + '</button>') + '</div></div>';
+    }).join('');
+    v.innerHTML = h;
+    if (!C.lines && !C.busy && !C.err) loadComm();
+  }
+  function findLine(id) { return (C.lines || []).filter(function (l) { return l.id === +id; })[0]; }
+  function commMenu(id) {
+    var l = findLine(id); if (!l) return;
+    $('sheetBox').innerHTML = '<p style="font-weight:700;font-size:17px">' + esc(l.text) + '</p>' +
+      '<div class="label">' + t('reportWhy') + '</div><div class="list">' +
+      t('reasons').map(function (r) { return '<button class="item l" data-creport="' + id + ':' + r[0] + '">' + ic('flag').replace('<svg', '<svg width="20" height="20"') + esc(r[1]) + '</button>'; }).join('') +
+      '<button class="item" data-cblock="' + esc(l.author) + '" style="color:var(--tomato)">' + t('block') + '<span></span></button></div>' +
+      '<button class="btn big" data-sheetclose="1" style="background:var(--card);color:var(--ink)">' + t('cancel') + '</button>';
+    $('sheet').classList.remove('hidden');
+  }
+  function postSheet() {
+    if (!S.terms) {
+      $('sheetBox').innerHTML = '<h3>' + t('termsTitle') + '</h3><p style="line-height:1.5">' + t('termsText') + '</p>' +
+        '<button class="btn ghost" data-open="terms.html">' + t('termsLink') + '</button><div style="height:10px"></div>' +
+        '<button class="btn big" data-cagree="1">' + t('agree') + '</button><div style="height:8px"></div><button class="btn big" data-sheetclose="1" style="background:var(--card);color:var(--ink)">' + t('cancel') + '</button>';
+    } else {
+      $('sheetBox').innerHTML = '<h3>' + t('postLine') + '</h3><textarea id="cp" maxlength="200"></textarea><p id="cperr" class="note" style="color:var(--tomato)"></p>' +
+        '<button class="btn big" data-csend="1">' + t('send') + '</button><div style="height:8px"></div><button class="btn big" data-sheetclose="1" style="background:var(--card);color:var(--ink)">' + t('cancel') + '</button>';
+    }
+    $('sheet').classList.remove('hidden');
+    var ta = $('cp'); if (ta) ta.focus();
+  }
+  function sendPost() {
+    var ta = $('cp'), txt = ta.value.trim(), e = $('cperr'), E = t('err');
+    if (txt.length < 8) { e.textContent = E.short; return; }
+    e.textContent = t('loading');
+    call('post', { text: txt }).then(function (r) {
+      if (r.error) { e.textContent = E[r.why === 'short' ? 'short' : r.error] || E.filter; return; }
+      closeSheet(); toast(t('posted')); C.sort = 'new'; C.lines = null; render();
+    }).catch(function () { e.textContent = E.net; });
+  }
+  function doVote(id, v) {
+    var l = findLine(id); if (!l) return;
+    if (C.me && l.author === C.me.author) return toast(t('ownVote'));
+    var nv = l.my === v ? 0 : v; haptic();
+    l.score += nv - l.my; l.my = nv; render();
+    call('vote', { id: id, v: nv }).then(function (r) { if (r.line) { l.score = r.line.score; l.my = r.line.my; render(); } }).catch(function () {});
   }
 
   var price = '';
@@ -316,7 +410,17 @@
     }
     if (d.g) { var kv = d.g.split(':'); G[kv[0]] = kv[1]; haptic(); return render(); }
     if (d.gen) return generate();
-    if (d.lang) { S.lang = S.lang === 'de' ? 'en' : 'de'; document.documentElement.lang = S.lang; G.out = null; save(); return render(); }
+    if (d.csort) { C.sort = d.csort; C.lines = null; haptic(); return render(); }
+    if (d.creload) { C.lines = null; C.err = false; return render(); }
+    if (d.cpost) return postSheet();
+    if (d.cagree) { S.terms = true; save(); return postSheet(); }
+    if (d.csend) return sendPost();
+    if (d.vote) { var vv = d.vote.split(':'); return doVote(+vv[0], +vv[1]); }
+    if (d.cmenu) return commMenu(d.cmenu);
+    if (d.creport) { var rr = d.creport.split(':'); call('report', { id: +rr[0], reason: rr[1] }).catch(function () {}); C.lines = (C.lines || []).filter(function (l) { return l.id !== +rr[0]; }); closeSheet(); toast(t('reported')); return render(); }
+    if (d.cblock) { if (S.blocked.indexOf(d.cblock) < 0) S.blocked.push(d.cblock); save(); C.lines = (C.lines || []).filter(function (l) { return l.author !== d.cblock; }); closeSheet(); toast(t('blocked')); return render(); }
+    if (d.unblock) { S.blocked = []; save(); C.lines = null; return render(); }
+    if (d.lang) { S.lang = S.lang === 'de' ? 'en' : 'de'; document.documentElement.lang = S.lang; G.out = null; C.lines = null; save(); return render(); }
     if (d.buy) { if (native) post('buy', 'pro'); else toast(t('buyErr')); return; }
     if (d.restore) { if (native) post('restore'); return; }
     if (d.open) { if (native) post('open', d.open); else window.open(d.open, '_blank'); return; }
@@ -334,7 +438,7 @@
     price: function (p) { price = p; },
     toast: function (k) { toast(T[S.lang][k] || k); }
   };
-  window.kl = { state: function () { return S; }, setPro: setPro, open: openDeck, generate: generate, renderCard: renderCard, tab: function (x) { tab = x; deck = null; render(); } };
+  window.kl = { comm: C, state: function () { return S; }, setPro: setPro, open: openDeck, generate: generate, renderCard: renderCard, tab: function (x) { tab = x; deck = null; render(); } };
 
   document.documentElement.lang = S.lang;
   render();
