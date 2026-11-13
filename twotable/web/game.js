@@ -50,10 +50,10 @@
     ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillStyle = color || "#fff"; ctx.fillText(s, x, y);
   }
   function table() {
-    ctx.fillStyle = "#1b2a22"; ctx.fillRect(-ox / scale, -oy / scale, cw / scale, ch / scale);
-    var g = ctx.createRadialGradient(MID, H / 2, 100, MID, H / 2, 900);
+    // felt covers the whole screen, also outside the 1420x1000 play area on wider phones
+    var g = ctx.createRadialGradient(MID, H / 2, 100, MID, H / 2, Math.max(900, cw / scale * 0.7));
     g.addColorStop(0, "#2f6b4c"); g.addColorStop(1, "#173a2a");
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = g; ctx.fillRect(-ox / scale, -oy / scale, cw / scale, ch / scale);
   }
   function homeButton() {
     circle(MID, 34, 24, "rgba(0,0,0,0.35)");
@@ -62,7 +62,7 @@
   }
   function scoreSide(p, s) { ptext(p, s, p === 0 ? 22 : W - 22, H / 2, 30, "#fff"); }
   function turnGlow(p) {
-    var x = p === 0 ? 0 : W - 14, a = 0.55 + 0.35 * Math.sin(t * 5);
+    var x = p === 0 ? -ox / scale : W + ox / scale - 14, a = 0.55 + 0.35 * Math.sin(t * 5);
     ctx.fillStyle = PC[p]; ctx.globalAlpha = a; ctx.fillRect(x, 0, 14, H); ctx.globalAlpha = 1;
     ptext(p, "Your turn", p === 0 ? 46 : W - 46, H / 2 + 230, 26, PC[p]);
     ptext(1 - p, "Wait...", p === 0 ? W - 46 : 46, H / 2 + 230, 22, "rgba(255,255,255,0.45)", "normal");
