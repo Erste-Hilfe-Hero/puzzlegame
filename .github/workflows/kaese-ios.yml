@@ -1,0 +1,49 @@
+# Käse legen (pickup lines app): web smoke test, then unsigned iOS archive on a free GitHub macOS runner (public repo).
+# Signing and App Store upload happen on the Contabo host. Trigger: commit message containing "run:kaese-ios", or manual.
+name: Kaese legen iOS build
+on:
+  push:
+    branches: [main, claude/project-thread-g30yde]
+    paths: ['kaese/**', '.github/workflows/kaese-ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright && npx playwright install --with-deps chromium
+      - run: node kaese/tools/test.mjs kaese/web
+  build:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:kaese-ios')
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1); echo "xcode: $X"; sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Generate project
+        run: brew install xcodegen && cd kaese/ios && xcodegen generate
+      - name: Archive (unsigned)
+        run: |
+          cd kaese/ios
+          xcodebuild -project KaeseLegen.xcodeproj -scheme KaeseLegen -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/kl.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
+          cd $RUNNER_TEMP/kl.xcarchive/Products/Applications
+          # the Swift side loads web/index.html; fail the build if the bundle path differs (blank screen otherwise)
+          test -f KaeseLegen.app/web/index.html && test -f KaeseLegen.app/web/app.js && test -f KaeseLegen.app/web/lines.js
+          ditto -c -k --keepParent KaeseLegen.app $RUNNER_TEMP/KaeseLegen-unsigned.zip
+      - name: Push unsigned app to branch kaese-ios-out/<run> (for the signing host)
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../KaeseLegen-unsigned.zip .
+          echo "xcode=$(xcodebuild -version | head -1) sha=${{ github.sha }}" > build-info.txt
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "kaese ios unsigned ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/kaese-ios-out/${{ github.run_number }}

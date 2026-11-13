@@ -1,0 +1,37 @@
+name: KaeseLegen
+options:
+  bundleIdPrefix: com.nyrathen
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  KaeseLegen:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      - path: ../web
+        type: folder
+        buildPhase: resources
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: "Käse legen"
+        CFBundleShortVersionString: "1.0.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleDevelopmentRegion: de
+        CFBundleLocalizations: [de, en]
+        UILaunchScreen:
+          UIColorName: LaunchBg
+        UIRequiresFullScreen: true
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
+        ITSAppUsesNonExemptEncryption: false
+        NSPhotoLibraryAddUsageDescription: "Damit du Spruch-Bilder in deinen Fotos speichern kannst."
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nyrathen.kaeselegen
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "1.0.0"
+        TARGETED_DEVICE_FAMILY: "1"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: "NO"
