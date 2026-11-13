@@ -1,0 +1,29 @@
+# One-off probe: which UIRequiredDeviceCapabilities values / foldable keys exist in the Xcode 27 iOS SDK. Trigger: commit message "run:twotable-sdkprobe".
+name: Two at the Table SDK probe
+on:
+  push:
+    branches: [claude/project-thread-wly2tk]
+permissions:
+  contents: write
+jobs:
+  probe:
+    if: contains(github.event.head_commit.message, 'run:twotable-sdkprobe')
+    runs-on: xcode-27
+    timeout-minutes: 20
+    steps:
+      - name: Probe
+        run: |
+          set +e
+          X=$(xcode-select -p); echo "xcode $X"; xcodebuild -version
+          SDK=$(xcrun --sdk iphoneos --show-sdk-path); echo "sdk $SDK"
+          {
+          echo "== headers with fold/hinge"; grep -rliE 'hinge|foldable|foldState' "$SDK/System/Library/Frameworks" 2>/dev/null | head -40
+          echo "== UIDevice / capability strings"; grep -rhoE '"[a-z0-9-]*(fold|hinge|duo)[a-z0-9-]*"' "$SDK/System/Library/Frameworks" 2>/dev/null | sort -u | head -40
+          echo "== UIKit symbols"; grep -rhoE '\b[A-Za-z]*(Hinge|Foldable|Fold[A-Z])[A-Za-z]*\b' "$SDK/System/Library/Frameworks/UIKit.framework/Headers" "$SDK/System/Library/Frameworks/SwiftUI.framework" 2>/dev/null | sort -u | head -60
+          echo "== Info.plist schema capability values"; for f in $(find "$X/.." -name '*.xcspec' -o -name '*InfoPlist*' 2>/dev/null | head -200); do grep -l 'UIRequiredDeviceCapabilities' "$f" 2>/dev/null; done | head
+          grep -rhoE '(arm64|armv7|gamekit|telephony|wifi|nfc|metal|arkit|iphone-ipad-minimum-performance-a12|[a-z0-9-]*fold[a-z0-9-]*|[a-z0-9-]*hinge[a-z0-9-]*)' $(find "$X/.." -path '*IDEKit*' -name '*.plist' 2>/dev/null | head -50) 2>/dev/null | sort | uniq -c | sort -rn | head -40
+          } > probe.txt 2>&1
+          cat probe.txt
+      - name: Push output
+        run: |
+          mkdir out && cp probe.txt out/ && cd out && git init -q -b main && git config user.name bot && git config user.email bot@x.invalid && git add -A && git commit -qm probe && git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" HEAD:refs/heads/twotable-probe-out/${{ github.run_number }}
