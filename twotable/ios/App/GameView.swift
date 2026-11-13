@@ -30,7 +30,9 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
     }
 
     private func load() {
-        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
+        // the folder reference keeps its on-disk name (web/), not the group name
+        if let url = Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "web")
+            ?? Bundle.main.url(forResource: "index", withExtension: "html", subdirectory: "www") {
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
     }

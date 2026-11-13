@@ -31,7 +31,7 @@ jobs:
             -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/tt.xcarchive \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS="$FLAGS" archive | tail -40
-          cd $RUNNER_TEMP/tt.xcarchive/Products/Applications && ditto -c -k --keepParent TwoTable.app $RUNNER_TEMP/TwoTable-unsigned.zip
+          cd $RUNNER_TEMP/tt.xcarchive/Products/Applications && test -f TwoTable.app/web/index.html && test -f TwoTable.app/web/game.js && ditto -c -k --keepParent TwoTable.app $RUNNER_TEMP/TwoTable-unsigned.zip
       - name: Push unsigned app to branch twotable-ios-out/<run> (for the signing host)
         run: |
           mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../TwoTable-unsigned.zip .
