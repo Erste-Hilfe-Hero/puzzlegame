@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#1f3b2d">
+<title>Mossbrook Solitaire</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <button id="btnHome" class="iconbtn" aria-label="Home">&#8962;</button>
+    <div class="pill" id="pLives"><span class="ic heart"></span><b id="lives">5</b><small id="livesT"></small></div>
+    <div class="pill" id="pStars"><span class="ic star"></span><b id="stars">0</b></div>
+    <div class="pill" id="pCoins"><span class="ic coin"></span><b id="coins">0</b><button id="btnShopTop" class="plus">+</button></div>
+  </header>
+
+  <section id="village" class="screen">
+    <div id="vTitle"></div>
+    <div id="scene"></div>
+    <div id="tasks"></div>
+    <div id="vBottom">
+      <button id="btnPlay" class="big green"></button>
+    </div>
+  </section>
+
+  <section id="game" class="screen hidden">
+    <div id="gHead"><span id="gLevel"></span><span id="gGoal"></span></div>
+    <div id="board"></div>
+    <div id="streak"><div id="streakFill"></div><span id="streakTxt"></span></div>
+    <div id="gBottom">
+      <button id="btnJoker" class="booster"><span class="bic">&#10033;</span><small id="jokerN">0</small></button>
+      <div id="stockCount"></div>
+      <button id="btnUndo" class="booster"><span class="bic">&#8630;</span><small id="undoN">0</small></button>
+    </div>
+  </section>
+
+  <div id="modal" class="hidden"><div id="mbox"></div></div>
+  <div id="toast"></div>
+</div>
+<script src="game.js"></script>
+</body>
+</html>
