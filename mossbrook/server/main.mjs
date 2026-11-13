@@ -126,7 +126,10 @@ export function board(st, id) {
 
 // ---------- HTTP ----------
 function send(res, code, obj) {
-  res.writeHead(code, { 'content-type': 'application/json', 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type', 'cache-control': 'no-store' });
+  const h = { 'content-type': 'application/json', 'cache-control': 'no-store' };
+  // behind the play.nyrathen.com proxy Caddy adds the CORS headers; a second copy would break them
+  if (process.env.CORS !== '0') Object.assign(h, { 'access-control-allow-origin': '*', 'access-control-allow-headers': 'content-type' });
+  res.writeHead(code, h);
   res.end(JSON.stringify(obj));
 }
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json' };
