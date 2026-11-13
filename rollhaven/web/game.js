@@ -52,8 +52,8 @@ const DAILY = [10, 15, 20, 25, 30, 40, 75];
 const TUT = { en: ['Tap ROLL. Your lantern walks around the bay.', 'Build landmarks with coins. Finish all 5 to sail to the next harbor.', 'More dice? Raise the multiplier for bigger wins.'],
   de: ['Tippe auf WÜRFELN. Deine Laterne läuft um die Bucht.', 'Baue Wahrzeichen mit Münzen. Alle 5 fertig = nächster Hafen.', 'Viele Würfel? Erhöhe den Multiplikator für mehr Gewinn.'] }[LANG];
 Object.assign(T, LANG === 'de'
-  ? { album: 'Album', card: 'Neue Karte!', setDone: 'Set komplett! +', daily: 'Tagesbelohnung', day: 'Tag', claim: 'Abholen', dup: 'doppelt' }
-  : { album: 'Album', card: 'New card!', setDone: 'Set complete! +', daily: 'Daily reward', day: 'Day', claim: 'Claim', dup: 'duplicate' });
+  ? { storeWait: 'Store lädt noch, bitte gleich nochmal.', pending: 'Zahlung wird bearbeitet.', buyError: 'Kauf nicht möglich. Bitte später nochmal.', shopNative: 'Käufe über deinen Apple-Account.', album: 'Album', card: 'Neue Karte!', setDone: 'Set komplett! +', daily: 'Tagesbelohnung', day: 'Tag', claim: 'Abholen', dup: 'doppelt' }
+  : { storeWait: 'Store is loading, please try again.', pending: 'Payment is being processed.', buyError: 'Purchase not possible. Please try later.', shopNative: 'Purchases via your Apple account.', album: 'Album', card: 'New card!', setDone: 'Set complete! +', daily: 'Daily reward', day: 'Day', claim: 'Claim', dup: 'duplicate' });
 
 // Tiny synth sounds (no audio files).
 let AC = null;
@@ -83,6 +83,9 @@ const MAX_DICE = 50, REGEN_MS = 3 * 60 * 1000, MAX_SHIELDS = 3;
 const SHOP = [
   ['🎲', 25, '0,99 €'], ['🎲', 150, '4,99 €'], ['🎲', 350, '9,99 €'], ['🎲', 800, '19,99 €'], ['🎲', 2200, '49,99 €'], ['🎲', 5000, '99,99 €']
 ];
+// iOS app: WKWebView bridge from ios/App/GameViewController.swift (StoreKit 2). Product ids dice_<n> and starter.
+const NATIVE = window.AndroidBilling || null;
+let nativePrices = {};
 
 const $ = id => document.getElementById(id);
 const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(1) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(1) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'K' : String(Math.floor(n));
@@ -96,9 +99,11 @@ function fresh() {
 }
 function load() {
   try { const s = JSON.parse(localStorage.getItem('rh1')); if (s && s.lm) return Object.assign(fresh(), s); } catch (e) {}
+  try { const m = window.AndroidBilling && JSON.parse(window.AndroidBilling.loadMirror() || 'null'); if (m && m.lm) return Object.assign(fresh(), m); } catch (e) {}
   return fresh();
 }
 function save() { try { localStorage.setItem('rh1', JSON.stringify(S)); } catch (e) {} }
+function mirror() { if (NATIVE) try { NATIVE.saveMirror(JSON.stringify(S)); } catch (e) {} }
 
 const base = () => Math.round(100 * Math.pow(1.6, S.harbor));
 const harbor = () => { const h = HARBORS[S.harbor % HARBORS.length]; const n = Math.floor(S.harbor / HARBORS.length); return { ...h, name: h[LANG] + (n ? ' ' + 'I'.repeat(Math.min(n + 1, 3)) : '') }; };
@@ -159,7 +164,9 @@ function regen() {
 
 function msg(t) { $('msg').textContent = t; }
 function toast(t) { const e = $('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(toast.h); toast.h = setTimeout(() => e.classList.remove('on'), 1600); }
-function vibrate(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
+function vibrate(ms) {
+  try { const h = window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.haptic; if (h) h.postMessage(Array.isArray(ms) || ms >= 60 ? 'deliver' : 'tap'); else if (navigator.vibrate) navigator.vibrate(ms); } catch (e) {}
+}
 function addCoins(n) {
   S.coins += n; SFX.coin();
   const from = $('token').getBoundingClientRect(), to = $('coins').getBoundingClientRect();
@@ -302,16 +309,44 @@ function openMult() {
   $('sheet').querySelectorAll('[data-m]').forEach(b => b.onclick = () => { S.mult = +b.dataset.m; save(); close(); });
 }
 
+const PRODUCTS = { starter: { dice: 100, shields: MAX_SHIELDS, coins: 50 } };
+SHOP.forEach(p => PRODUCTS['dice_' + p[1]] = { dice: p[1] });
+function grant(id) {
+  const p = PRODUCTS[id];
+  if (!p) return false;
+  if (id === 'starter') S.starter = true;
+  S.dice += p.dice || 0;
+  if (p.shields) S.shields = p.shields;
+  if (p.coins) S.coins += base() * p.coins;
+  save(); mirror(); render(); SFX.build(); vibrate(80);
+  toast(`🎲 +${p.dice}`);
+  return true;
+}
+function buy(id) {
+  if (NATIVE) {
+    if (!nativePrices[id]) { toast(T.storeWait); NATIVE.requestPrices(); return; }
+    NATIVE.buy(id); return;
+  }
+  grant(id); close();
+}
+function price(id, fallback) { return nativePrices[id] || fallback; }
+window.onNativePurchase = (id, tx) => {
+  S.tx = S.tx || [];
+  if (!S.tx.includes(tx)) { S.tx.push(tx); if (S.tx.length > 50) S.tx.splice(0, S.tx.length - 50); grant(id); close(); }
+  save(); mirror(); NATIVE.ack(tx);
+};
+window.onNativePrices = map => { nativePrices = map || {}; if (!$('modal').classList.contains('hidden') && $('sheet').querySelector('[data-s]')) openShop(); };
+window.onNativePurchasePending = () => toast(T.pending);
+window.onNativePurchaseError = () => toast(T.buyError);
+window.onNativePause = () => { save(); mirror(); };
+if (NATIVE) { addEventListener('load', () => NATIVE.pageReady()); setInterval(mirror, 10000); }
+
 function openShop() {
   const rows = [];
-  if (!S.starter) rows.push(`<div class="row"><div class="big">🎁</div><div class="info"><b>${T.starter}</b><small>100 ${T.dice} + 3 🛡️ + 🪙 ${fmt(base() * 50)}</small></div><button class="buy btn" data-s="starter">1,99 €</button></div>`);
-  SHOP.forEach((p, i) => rows.push(`<div class="row"><div class="big">${p[0]}</div><div class="info"><b>${p[1]} ${T.dice}</b></div><button class="buy btn" data-s="${i}">${p[2]}</button></div>`));
-  open(`<h2>${T.shopTitle}<button class="x btn">✕</button></h2>${rows.join('')}<p class="note">${T.shopNote}</p>`);
-  $('sheet').querySelectorAll('[data-s]').forEach(b => b.onclick = () => {
-    if (b.dataset.s === 'starter') { S.starter = true; S.dice += 100; S.shields = MAX_SHIELDS; S.coins += base() * 50; }
-    else S.dice += SHOP[+b.dataset.s][1];
-    save(); close(); toast('🎲 +');
-  });
+  if (!S.starter) rows.push(`<div class="row"><div class="big">🎁</div><div class="info"><b>${T.starter}</b><small>100 ${T.dice} + 3 🛡️ + 🪙 ${fmt(base() * 50)}</small></div><button class="buy btn" data-s="starter">${price('starter', '1,99 €')}</button></div>`);
+  SHOP.forEach(p => rows.push(`<div class="row"><div class="big">${p[0]}</div><div class="info"><b>${p[1]} ${T.dice}</b></div><button class="buy btn" data-s="dice_${p[1]}">${price('dice_' + p[1], p[2])}</button></div>`));
+  open(`<h2>${T.shopTitle}<button class="x btn">✕</button></h2>${rows.join('')}<p class="note">${NATIVE ? T.shopNative : T.shopNote}</p>`);
+  $('sheet').querySelectorAll('[data-s]').forEach(b => b.onclick = () => buy(b.dataset.s));
 }
 
 $('rollBtn').onclick = roll;

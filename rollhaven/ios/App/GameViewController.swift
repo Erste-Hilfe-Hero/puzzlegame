@@ -10,7 +10,7 @@ import StoreKit
 // Refunded (revoked) transactions are finished without a grant; gems are not taken back (no server, plan J27).
 class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private static let prefix = "com.nyrathen.rollhaven."
-    private static let ids = ["gems_80", "gems_500", "gems_1200", "gems_2600", "gems_7000", "gems_15000", "starter", "pass"]
+    private static let ids = ["dice_25", "dice_150", "dice_350", "dice_800", "dice_2200", "dice_5000", "starter"]
     private static let messages = ["billing", "ack", "ready", "prices", "mirror", "haptic"]
     private var web: WKWebView!
     private let content = WKUserContentController()
