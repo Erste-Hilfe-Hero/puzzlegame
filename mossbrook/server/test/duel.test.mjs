@@ -60,3 +60,10 @@ test('ghost match settles right away when the real player is done', () => {
   progress(st, m, 'a', 4, 80, true, m.start + 30000);
   assert.ok(m.result && m.result.winner);
 });
+
+test('player names only allow generated names', async () => {
+  const { clean } = await import('../main.mjs');
+  assert.equal(clean('Swift Fox 42'), 'Swift Fox 42');
+  assert.match(clean('bad word'), /^Player \d{2}$/);
+  assert.match(clean('Swift Dragon 42'), /^Player \d{2}$/);
+});

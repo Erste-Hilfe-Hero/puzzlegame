@@ -27,7 +27,10 @@ function persist() {
   fs.renameSync(f + '.tmp', f);
 }
 
-const clean = s => String(s || '').replace(/[^\p{L}\p{N} _.-]/gu, '').trim().slice(0, 16) || 'Player';
+// names are generated on the device (adjective + animal + number); anything else is replaced, so no free text reaches other players
+const ADJ = ['Swift', 'Lucky', 'Clever', 'Brave', 'Quiet', 'Merry', 'Bold', 'Mossy', 'Sunny', 'Misty'];
+const ANIMALS = ['Fox', 'Badger', 'Owl', 'Otter', 'Wren', 'Hare', 'Heron', 'Mole'];
+export const clean = s => { const m = /^([A-Z][a-z]+) ([A-Z][a-z]+) (\d{2})$/.exec(String(s || '')); return m && ADJ.includes(m[1]) && ANIMALS.includes(m[2]) ? m[0] : 'Player ' + (10 + Math.floor(Math.random() * 90)); };
 
 // ghost = recorded timeline [[ms, left, score], ...] of a real run on the same seed; bots fill in when none exists
 export function botTimeline(seed, cards = 24) {

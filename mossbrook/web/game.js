@@ -63,7 +63,7 @@ const T = {
 const LANG = /^de/i.test(navigator.language || '') ? 'de' : 'en';
 function t(k, ...a) { let s = T[LANG][k] ?? T.en[k] ?? k; a.forEach((v, i) => { s = s.replace('{' + i + '}', v); }); return s; }
 
-const VERSION = '0.2.0';
+const VERSION = '0.3.0';
 const LIFE_MS = 20 * 60 * 1000, MAX_LIVES = 5;
 const TASK_KEYS = ['path', 'bridge', 'well', 'garden', 'mill', 'bakery', 'lanterns', 'cottage'];
 const TASK_COST = [1, 2, 2, 2, 3, 3, 3, 4];
@@ -671,7 +671,7 @@ function openShop() {
 function openSettings() {
   modal('<h2>' + t('settings') + '</h2><div class="settings">' +
     '<label>' + t('sound') + '<input type="checkbox" id="sSound"' + (S.sound ? ' checked' : '') + '></label>' +
-    '<label>' + t('privacy') + '<a href="https://play.nyrathen.com/legal/privacy" target="_blank">↗</a></label>' +
+    '<label>' + t('privacy') + '<a href="https://play.nyrathen.com/mossbrook/privacy.html" target="_blank">↗</a></label>' +
     '<label>' + t('support') + '<a href="mailto:lords.azz6@gmail.com">✉</a></label>' +
     '<label>' + t('version') + '<span>' + VERSION + '</span></label></div>' +
     '<div class="row">' + btn('mX', 'green', t('close')) + '</div>', m => {

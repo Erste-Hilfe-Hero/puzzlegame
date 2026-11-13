@@ -26,7 +26,10 @@ Object.assign(T.de, {
 const API = /^http/.test(location.protocol) && location.pathname.startsWith('/mossbrook') ? '/mossbrook/api/' : 'https://play.nyrathen.com/mossbrook/api/';
 const STAKES = [100, 500, 2000];
 const NAMES = ['Fox', 'Badger', 'Owl', 'Otter', 'Wren', 'Hare', 'Heron', 'Mole'];
-if (!S.mp) { S.mp = { name: NAMES[Math.floor(Math.random() * NAMES.length)] + ' ' + (100 + Math.floor(Math.random() * 900)), trophies: 0 }; save(); }
+const ADJ = ['Swift', 'Lucky', 'Clever', 'Brave', 'Quiet', 'Merry', 'Bold', 'Mossy', 'Sunny', 'Misty'];
+const genName = () => ADJ[Math.floor(Math.random() * ADJ.length)] + ' ' + NAMES[Math.floor(Math.random() * NAMES.length)] + ' ' + (10 + Math.floor(Math.random() * 90));
+if (!S.mp) { S.mp = { name: genName(), trophies: 0 }; save(); }
+if (!/^[A-Z][a-z]+ [A-Z][a-z]+ \d{2}$/.test(S.mp.name)) { S.mp.name = genName(); save(); }
 let D = null;
 
 async function call(route, body) {
@@ -184,9 +187,9 @@ showVillage = function () { const b = $('oppBar'); if (b && !D) b.classList.add(
 openSettings = function () {
   soloSettings();
   const s = $('mbox').querySelector('.settings');
-  const l = el('label', '', t('yourName') + '<input id="sName" maxlength="16" value="' + S.mp.name.replace(/"/g, '') + '">');
+  const l = el('label', '', t('yourName') + ' <b id="sName">' + S.mp.name + '</b> <button id="sReroll" class="small">&#x21bb;</button>');
   s.prepend(l);
-  l.querySelector('input').onchange = e => { S.mp.name = e.target.value.trim().slice(0, 16) || S.mp.name; save(); if (S.mp.id) hello().catch(() => {}); };
+  l.querySelector('button').onclick = () => { S.mp.name = genName(); save(); $('sName').textContent = S.mp.name; if (S.mp.id) hello().catch(() => {}); };
 };
 $('btnDuel').onclick = duelMenu;
 $('btnDuel').textContent = '⚔ ' + t('duel');
