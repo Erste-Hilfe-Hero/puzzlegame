@@ -10,7 +10,6 @@ targets:
     sources:
       - App
       - path: ../web
-        name: www
         type: folder
         buildPhase: resources
     info:
