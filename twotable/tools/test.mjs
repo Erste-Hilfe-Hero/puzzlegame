@@ -7,24 +7,25 @@ const b = await chromium.launch();
 const pg = await b.newPage({ viewport: { width: 1420, height: 1000 } });
 const errs = []; pg.on('pageerror', e => errs.push(String(e)));
 await pg.goto('file://' + dir + '/index.html'); await pg.waitForTimeout(300);
+await pg.evaluate(() => { window.tt.fast = true; });
 const shot = n => shots && pg.screenshot({ path: `${shots}/${n}.png` });
 await shot('00-menu');
 let ok = 0;
-for (const id of ['four', 'checkers', 'dots']) {
+for (const id of ['four', 'checkers', 'dots', 'chess', 'backgammon']) {
   await pg.evaluate(id => window.tt.open(id), id);
   let n = 0;
-  for (; n < 400; n++) {
+  for (; n < (id === 'backgammon' ? 4000 : id === 'chess' ? 1500 : 400); n++) {
     const done = await pg.evaluate(id => {
       const g = window.tt.game(); if (window.tt.result()) return true;
       if (g.busy && g.busy()) return false;
       const l = g.legal(); if (!l.length) return true;
       const m = l[Math.floor(Math.random() * l.length)];
-      if (id === 'four') g.play(m); else if (id === 'checkers') g.playMove(m); else g.take(m[0], m[1], m[2]);
+      if (id === 'four') g.play(m); else if (id === 'dots') g.take(m[0], m[1], m[2]); else g.playMove(m);
       return false;
     }, id);
     if (n === 12) await shot('mid-' + id);
     if (done) break;
-    await pg.waitForTimeout(id === 'four' ? 120 : 15);
+    await pg.waitForTimeout(id === 'four' ? 120 : id === 'backgammon' ? 5 : 10);
   }
   await pg.waitForTimeout(900);
   const r = await pg.evaluate(() => window.tt.result());
@@ -49,6 +50,6 @@ for (let k = 0; k < 40; k++) {
 const hs = await pg.evaluate(() => window.tt.game().state());
 console.log('hockey score', hs.score);
 if (hs.score[0] + hs.score[1] > 0) ok++;
-console.log(`games ok ${ok}/4; page errors ${errs.length}`, errs.slice(0, 3));
+console.log(`games ok ${ok}/6; page errors ${errs.length}`, errs.slice(0, 3));
 await b.close();
-process.exit(ok === 4 && !errs.length ? 0 : 1);
+process.exit(ok === 6 && !errs.length ? 0 : 1);

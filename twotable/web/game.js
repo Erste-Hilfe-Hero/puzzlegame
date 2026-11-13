@@ -353,14 +353,307 @@
     };
   }
 
+  // ---------- CHESS ----------
+  // Red's back rank is the left column (c = 0) and moves toward +c; Blue's back rank is c = 7.
+  function Chess() {
+    var N = 8, S = 108, x0 = MID - N * S / 2, y0 = 500 - N * S / 2;
+    var ORDER = ["r", "n", "b", "q", "k", "b", "n", "r"], GLYPH = { k: "♚", q: "♛", r: "♜", b: "♝", n: "♞", p: "♟" };
+    var b = [], turn = starter, sel = null, ep = null, last = null, captured = [[], []];
+    for (var r = 0; r < N; r++) b.push(new Array(N).fill(null));
+    for (r = 0; r < N; r++) {
+      b[r][0] = { p: 0, t: ORDER[r], m: false }; b[r][1] = { p: 0, t: "p", m: false };
+      b[r][7] = { p: 1, t: ORDER[r], m: false }; b[r][6] = { p: 1, t: "p", m: false };
+    }
+    function inb(r, c) { return r >= 0 && r < N && c >= 0 && c < N; }
+    function fwd(p) { return p === 0 ? 1 : -1; }
+    function attacked(bd, r, c, by) {
+      for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) {
+        var q = bd[i][j]; if (!q || q.p !== by) continue;
+        var dr = r - i, dc = c - j, ar = Math.abs(dr), acc = Math.abs(dc);
+        if (q.t === "p") { if (dc === fwd(by) && ar === 1) return true; continue; }
+        if (q.t === "n") { if ((ar === 1 && acc === 2) || (ar === 2 && acc === 1)) return true; continue; }
+        if (q.t === "k") { if (ar <= 1 && acc <= 1 && (ar || acc)) return true; continue; }
+        var straight = dr === 0 || dc === 0, diag = ar === acc;
+        if (!(ar || acc)) continue;
+        if ((q.t === "r" && !straight) || (q.t === "b" && !diag) || (q.t === "q" && !straight && !diag)) continue;
+        var sr = Math.sign(dr), sc = Math.sign(dc), rr2 = i + sr, cc = j + sc, clear = true;
+        while (rr2 !== r || cc !== c) { if (bd[rr2][cc]) { clear = false; break; } rr2 += sr; cc += sc; }
+        if (clear) return true;
+      }
+      return false;
+    }
+    function kingPos(bd, p) { for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) if (bd[i][j] && bd[i][j].p === p && bd[i][j].t === "k") return [i, j]; return null; }
+    function inCheck(bd, p) { var k = kingPos(bd, p); return k && attacked(bd, k[0], k[1], 1 - p); }
+    function pseudo(r, c) {
+      var q = b[r][c], o = [], f = fwd(q.p);
+      function slide(dirs, once) {
+        dirs.forEach(function (d) {
+          var rr2 = r + d[0], cc = c + d[1];
+          while (inb(rr2, cc)) {
+            if (b[rr2][cc]) { if (b[rr2][cc].p !== q.p) o.push([rr2, cc]); break; }
+            o.push([rr2, cc]); if (once) break; rr2 += d[0]; cc += d[1];
+          }
+        });
+      }
+      var ST = [[1, 0], [-1, 0], [0, 1], [0, -1]], DG = [[1, 1], [1, -1], [-1, 1], [-1, -1]];
+      if (q.t === "p") {
+        if (inb(r, c + f) && !b[r][c + f]) { o.push([r, c + f]); if (!q.m && !b[r][c + 2 * f]) o.push([r, c + 2 * f, "double"]); }
+        [-1, 1].forEach(function (dr) {
+          var rr2 = r + dr, cc = c + f; if (!inb(rr2, cc)) return;
+          if (b[rr2][cc] && b[rr2][cc].p !== q.p) o.push([rr2, cc]);
+          if (ep && ep[0] === rr2 && ep[1] === cc) o.push([rr2, cc, "ep"]);
+        });
+      } else if (q.t === "n") slide([[1, 2], [2, 1], [-1, 2], [-2, 1], [1, -2], [2, -1], [-1, -2], [-2, -1]], true);
+      else if (q.t === "b") slide(DG);
+      else if (q.t === "r") slide(ST);
+      else if (q.t === "q") slide(ST.concat(DG));
+      else if (q.t === "k") {
+        slide(ST.concat(DG), true);
+        if (!q.m && !inCheck(b, q.p)) {
+          [[0, -1], [7, 1]].forEach(function (rk) {
+            var rook = b[rk[0]][c]; if (!rook || rook.t !== "r" || rook.m || rook.p !== q.p) return;
+            for (var i = Math.min(r, rk[0]) + 1; i < Math.max(r, rk[0]); i++) if (b[i][c]) return;
+            if (attacked(b, r + rk[1], c, 1 - q.p) || attacked(b, r + 2 * rk[1], c, 1 - q.p)) return;
+            o.push([r + 2 * rk[1], c, "castle", rk[0]]);
+          });
+        }
+      }
+      return o;
+    }
+    function simulate(r, c, m) {
+      var bd = b.map(function (row) { return row.slice(); }), q = bd[r][c];
+      bd[m[0]][m[1]] = q; bd[r][c] = null;
+      if (m[2] === "ep") bd[m[0]][c] = null;
+      if (m[2] === "castle") { bd[m[0] - Math.sign(m[0] - r)][c] = bd[m[3]][c]; bd[m[3]][c] = null; }
+      return bd;
+    }
+    function legal(r, c) { var q = b[r][c]; return pseudo(r, c).filter(function (m) { return !inCheck(simulate(r, c, m), q.p); }); }
+    function allLegal(p) { var o = []; for (var i = 0; i < N; i++) for (var j = 0; j < N; j++) if (b[i][j] && b[i][j].p === p) legal(i, j).forEach(function (m) { o.push([i, j, m]); }); return o; }
+    function apply(r, c, m) {
+      var q = b[r][c], victim = m[2] === "ep" ? b[m[0]][c] : b[m[0]][m[1]];
+      if (victim) captured[q.p].push(victim.t);
+      b = simulate(r, c, m); q.m = true;
+      if (m[2] === "castle") b[m[0] - Math.sign(m[0] - r)][c].m = true;
+      if (q.t === "p" && (m[1] === 0 || m[1] === N - 1)) b[m[0]][m[1]] = { p: q.p, t: "q", m: true };
+      ep = m[2] === "double" ? [r, c + fwd(q.p)] : null;
+      last = [r, c, m[0], m[1]]; sel = null; sfx.drop();
+      turn = 1 - turn;
+      var any = allLegal(turn).length;
+      if (!any) finish(inCheck(b, turn) ? 1 - turn : -1);
+      else {
+        var left = 0; b.forEach(function (row) { row.forEach(function (x) { if (x) left++; }); });
+        if (left === 2) finish(-1);
+      }
+    }
+    return {
+      down: function (pt) {
+        if (result) return;
+        var c = Math.floor((pt.x - x0) / S), r = Math.floor((pt.y - y0) / S);
+        if (!inb(r, c)) return;
+        if (sel) { var mv = legal(sel[0], sel[1]).filter(function (m) { return m[0] === r && m[1] === c; })[0]; if (mv) { apply(sel[0], sel[1], mv); return; } }
+        if (b[r][c] && b[r][c].p === turn && legal(r, c).length) { sel = [r, c]; sfx.tap(); } else sel = null;
+      },
+      move: function () {}, up: function () {}, update: function () {},
+      draw: function () {
+        table(); homeButton();
+        if (!result) turnGlow(turn);
+        rr(x0 - 22, y0 - 22, N * S + 44, N * S + 44, 18); ctx.fillStyle = "#3b2a1c"; ctx.fill();
+        for (var r = 0; r < N; r++) for (var c = 0; c < N; c++) { ctx.fillStyle = (r + c) % 2 ? "#b58863" : "#f0d9b5"; ctx.fillRect(x0 + c * S, y0 + r * S, S, S); }
+        if (last) { ctx.fillStyle = "rgba(255,230,80,0.35)"; [[last[0], last[1]], [last[2], last[3]]].forEach(function (q) { ctx.fillRect(x0 + q[1] * S, y0 + q[0] * S, S, S); }); }
+        var k = kingPos(b, turn);
+        if (k && inCheck(b, turn)) { ctx.fillStyle = "rgba(255,40,40,0.5)"; ctx.fillRect(x0 + k[1] * S, y0 + k[0] * S, S, S); }
+        if (sel) { ctx.fillStyle = "rgba(120,200,255,0.45)"; ctx.fillRect(x0 + sel[1] * S, y0 + sel[0] * S, S, S); }
+        for (r = 0; r < N; r++) for (c = 0; c < N; c++) {
+          var q = b[r][c]; if (!q) continue;
+          ctx.save(); ctx.translate(x0 + c * S + S / 2, y0 + r * S + S / 2); ctx.rotate(q.p === 0 ? Math.PI / 2 : -Math.PI / 2);
+          ctx.font = "84px 'Apple Symbols', 'Segoe UI Symbol', 'DejaVu Sans', serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+          ctx.lineWidth = 5; ctx.strokeStyle = PD[q.p]; ctx.strokeText(GLYPH[q.t], 0, 4);
+          ctx.fillStyle = q.p === 0 ? "#ff7a5c" : "#6aa8ff"; ctx.fillText(GLYPH[q.t], 0, 4);
+          ctx.restore();
+        }
+        if (sel) legal(sel[0], sel[1]).forEach(function (m) { circle(x0 + m[1] * S + S / 2, y0 + m[0] * S + S / 2, b[m[0]][m[1]] ? 48 : 16, b[m[0]][m[1]] ? "rgba(255,60,60,0.3)" : "rgba(0,0,0,0.3)"); });
+        for (var p = 0; p < 2; p++) {
+          scoreSide(p, PNAME[p]);
+          if (!result && turn === p && inCheck(b, p)) ptext(p, "Check!", p === 0 ? 76 : W - 76, H / 2 + 230, 26, "#ff6b6b");
+          var cap = captured[p].map(function (t) { return GLYPH[t]; }).join("");
+          if (cap) ptext(p, cap, p === 0 ? 120 : W - 120, H / 2, 34, "rgba(255,255,255,0.8)", "normal");
+        }
+      },
+      legal: function () { return allLegal(turn); }, playMove: function (mv) { apply(mv[0], mv[1], mv[2]); }
+    };
+  }
+
+  // ---------- BACKGAMMON ----------
+  // Points 1..24 from Red's view: Red moves 24 -> 1 and bears off from 1-6; Blue moves 1 -> 24, home 19-24.
+  // Layout: Red's near row (points 1-12) runs up the left side, Blue's (13-24) down the right side; the bar is the middle band.
+  function Backgammon() {
+    var pts = new Array(26).fill(0), bar = [0, 0], off = [0, 0], turn = starter, dice = [], rolled = false, sel = null, msg = "", msgT = 0, roll = null, shown = [];
+    pts[24] = 2; pts[13] = 5; pts[8] = 3; pts[6] = 5; pts[1] = -2; pts[12] = -5; pts[17] = -3; pts[19] = -5;
+    var BX0 = 150, BX1 = 1270, BY0 = 60, BY1 = 940, BAR0 = 470, BAR1 = 530, PH = (BAR0 - BY0) / 6, LEN = 400;
+    function own(p, n) { return p === 0 ? n > 0 : n < 0; }
+    function cnt(n) { return Math.abs(n); }
+    function home(p, s) { return p === 0 ? s >= 1 && s <= 6 : s >= 19 && s <= 24; }
+    function allHome(st, p) { if (st.bar[p]) return false; for (var s = 1; s <= 24; s++) if (own(p, st.pts[s]) && !home(p, s)) return false; return true; }
+    function snap() { return { pts: pts.slice(), bar: bar.slice(), off: off.slice() }; }
+    function movesFor(st, p, d) {
+      var o = [], dir = p === 0 ? -1 : 1;
+      function dest(from) { return from === "bar" ? (p === 0 ? 25 - d : d) : from + dir * d; }
+      function ok(to) { return to >= 1 && to <= 24 && !(own(1 - p, st.pts[to]) && cnt(st.pts[to]) >= 2); }
+      if (st.bar[p]) { var t0 = dest("bar"); if (ok(t0)) o.push(["bar", t0, d]); return o; }
+      var canOff = allHome(st, p);
+      for (var s = 1; s <= 24; s++) {
+        if (!own(p, st.pts[s])) continue;
+        var to = dest(s);
+        if (to >= 1 && to <= 24) { if (ok(to)) o.push([s, to, d]); continue; }
+        if (!canOff) continue;
+        var dist = p === 0 ? s : 25 - s;
+        if (dist === d) { o.push([s, "off", d]); continue; }
+        var higher = false;
+        for (var h = 1; h <= 24; h++) if (own(p, st.pts[h]) && (p === 0 ? h > s : h < s)) { higher = true; break; }
+        if (!higher) o.push([s, "off", d]);
+      }
+      return o;
+    }
+    function applyTo(st, p, m) {
+      var sign = p === 0 ? 1 : -1;
+      if (m[0] === "bar") st.bar[p]--; else st.pts[m[0]] -= sign;
+      if (m[1] === "off") st.off[p]++;
+      else {
+        if (own(1 - p, st.pts[m[1]]) && cnt(st.pts[m[1]]) === 1) { st.pts[m[1]] = 0; st.bar[1 - p]++; }
+        st.pts[m[1]] += sign;
+      }
+      return st;
+    }
+    function clone(st) { return { pts: st.pts.slice(), bar: st.bar.slice(), off: st.off.slice() }; }
+    function maxUse(st, p, ds) {
+      if (!ds.length) return 0;
+      var best = 0, tried = {};
+      for (var i = 0; i < ds.length; i++) {
+        if (tried[ds[i]]) continue; tried[ds[i]] = 1;
+        var rest = ds.slice(0, i).concat(ds.slice(i + 1)), ms = movesFor(st, p, ds[i]);
+        for (var j = 0; j < ms.length; j++) { var v = 1 + maxUse(applyTo(clone(st), p, ms[j]), p, rest); if (v > best) best = v; if (best === ds.length) return best; }
+      }
+      return best;
+    }
+    function legalNow() {
+      if (!rolled || result) return [];
+      var st = snap(), need = maxUse(st, turn, dice), o = [], tried = {};
+      if (!need) return [];
+      for (var i = 0; i < dice.length; i++) {
+        if (tried[dice[i]]) continue; tried[dice[i]] = 1;
+        var rest = dice.slice(0, i).concat(dice.slice(i + 1));
+        movesFor(st, turn, dice[i]).forEach(function (m) { if (1 + maxUse(applyTo(clone(st), turn, m), turn, rest) === need) o.push(m); });
+      }
+      if (need === 1 && dice.length === 2 && dice[0] !== dice[1]) {
+        var big = Math.max(dice[0], dice[1]), withBig = o.filter(function (m) { return m[2] === big; });
+        if (withBig.length) o = withBig;
+      }
+      return o;
+    }
+    function doRoll() {
+      var a = 1 + Math.floor(Math.random() * 6), c = 1 + Math.floor(Math.random() * 6);
+      dice = a === c ? [a, a, a, a] : [a, c]; shown = [a, c]; rolled = true; roll = 0.5; sfx.drop();
+      if (!legalNow().length) { msg = "No moves"; msgT = window.tt.fast ? 0.02 : 1.4; }
+    }
+    function endTurn() { turn = 1 - turn; rolled = false; dice = []; sel = null; }
+    function play(m) {
+      var st = applyTo(snap(), turn, m); pts = st.pts; bar = st.bar; off = st.off;
+      dice.splice(dice.indexOf(m[2]), 1); sel = null; sfx.tap();
+      if (off[turn] === 15) { finish(turn); return; }
+      if (!dice.length || !legalNow().length) { if (dice.length) { msg = "No more moves"; msgT = window.tt.fast ? 0.02 : 1.2; } else endTurn(); }
+    }
+    // geometry
+    function pointBox(s) {
+      var left = s <= 12, k = left ? s - 1 : s - 13; // k = 0..11 along the side
+      var y;
+      if (left) y = k < 6 ? BY1 - (k + 0.5) * PH : BAR0 - (k - 6 + 0.5) * PH;
+      else y = k < 6 ? BY0 + (k + 0.5) * PH : BAR1 + (k - 6 + 0.5) * PH;
+      return { left: left, y: y, x: left ? BX0 : BX1 };
+    }
+    function checkerPos(s, i) { var pb = pointBox(s), step = Math.min(62, (LEN - 40) / Math.max(1, cnt(pts[s]) - 1)); var off2 = 34 + i * step; return [pb.left ? pb.x + off2 : pb.x - off2, pb.y]; }
+    function rollBtn(p) { return { x: p === 0 ? 420 : W - 420, y: 500 }; }
+    function hit(pt) {
+      if (pt.y > BAR0 && pt.y < BAR1 && pt.x > BX0 && pt.x < BX1) return "bar";
+      if ((pt.x < BX0 && turn === 0) || (pt.x > BX1 && turn === 1)) return "off";
+      for (var s = 1; s <= 24; s++) { var pb = pointBox(s); if (Math.abs(pt.y - pb.y) < PH / 2 && (pb.left ? pt.x > BX0 && pt.x < MID : pt.x > MID && pt.x < BX1)) return s; }
+      return null;
+    }
+    return {
+      down: function (pt) {
+        if (result) return;
+        if (!rolled) { var rb = rollBtn(turn); if (Math.hypot(pt.x - rb.x, pt.y - rb.y) < 90) doRoll(); return; }
+        if (msgT > 0) return;
+        var h = hit(pt), L = legalNow();
+        if (sel != null) {
+          var mv = L.filter(function (m) { return m[0] === sel && m[1] === h; }).sort(function (a, c) { return a[2] - c[2]; })[0];
+          if (mv) { play(mv); return; }
+        }
+        if (h != null && L.some(function (m) { return m[0] === h; })) { sel = h; sfx.tap(); } else sel = null;
+      },
+      move: function () {}, up: function () {},
+      update: function (dt) {
+        if (roll > 0) roll -= dt;
+        if (msgT > 0) { msgT -= dt; if (msgT <= 0) endTurn(); }
+      },
+      draw: function () {
+        table(); homeButton();
+        if (!result) turnGlow(turn);
+        rr(BX0 - 20, BY0 - 20, BX1 - BX0 + 40, BY1 - BY0 + 40, 20); ctx.fillStyle = "#5a3920"; ctx.fill();
+        ctx.fillStyle = "#e9dcc0"; ctx.fillRect(BX0, BY0, BX1 - BX0, BY1 - BY0);
+        ctx.fillStyle = "#5a3920"; ctx.fillRect(BX0, BAR0, BX1 - BX0, BAR1 - BAR0);
+        var L = legalNow(), targets = sel != null ? L.filter(function (m) { return m[0] === sel; }).map(function (m) { return m[1]; }) : [];
+        for (var s = 1; s <= 24; s++) {
+          var pb = pointBox(s), tip = pb.left ? pb.x + LEN : pb.x - LEN;
+          ctx.beginPath(); ctx.moveTo(pb.x, pb.y - PH / 2 + 3); ctx.lineTo(tip, pb.y); ctx.lineTo(pb.x, pb.y + PH / 2 - 3); ctx.closePath();
+          ctx.fillStyle = s % 2 ? "#9c3b2a" : "#2f5d7c"; ctx.fill();
+          if (targets.indexOf(s) >= 0) { ctx.strokeStyle = "#ffe14d"; ctx.lineWidth = 6; ctx.stroke(); }
+          var n = cnt(pts[s]), who = pts[s] > 0 ? 0 : 1;
+          for (var i = 0; i < Math.min(n, 15); i++) {
+            var cp = checkerPos(s, i);
+            circle(cp[0], cp[1], 29, PD[who]); circle(cp[0], cp[1], 23, PC[who]);
+            if (sel === s && i === n - 1) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(cp[0], cp[1], 31, 0, 7); ctx.stroke(); }
+          }
+        }
+        for (var p = 0; p < 2; p++) {
+          for (var j = 0; j < bar[p]; j++) { var bx = p === 0 ? MID - 60 - j * 50 : MID + 60 + j * 50; circle(bx, 500, 27, PD[p]); circle(bx, 500, 21, PC[p]); }
+          if (sel === "bar" && turn === p) { ctx.strokeStyle = "#fff"; ctx.lineWidth = 5; ctx.beginPath(); ctx.arc(p === 0 ? MID - 60 : MID + 60, 500, 30, 0, 7); ctx.stroke(); }
+          var tx = p === 0 ? 75 : W - 75;
+          rr(tx - 45, 80, 90, 300, 16); ctx.fillStyle = targets.indexOf("off") >= 0 && turn === p ? "rgba(255,225,77,0.5)" : "rgba(0,0,0,0.25)"; ctx.fill();
+          for (var k = 0; k < off[p]; k++) { ctx.fillStyle = PC[p]; ctx.fillRect(tx - 34, 365 - k * 18, 68, 13); }
+          ptext(p, "Off " + off[p], tx, 430, 24, "#fff");
+        }
+        if (!result && !rolled) {
+          var rb = rollBtn(turn); circle(rb.x, rb.y, 80, PC[turn]); circle(rb.x, rb.y, 70, PD[turn]); ptext(turn, "Roll", rb.x, rb.y, 40, "#fff");
+        }
+        if (rolled && shown.length) {
+          var cx = turn === 0 ? 420 : W - 420;
+          shown.forEach(function (v, i) {
+            var dy = (i === 0 ? -42 : 42), jig = roll > 0 ? Math.sin(t * 40 + i) * 10 : 0, used = dice.indexOf(v) < 0 && !(shown[0] === shown[1] && dice.length);
+            ctx.save(); ctx.translate(cx + dy, 500 + jig); ctx.rotate(turn === 0 ? Math.PI / 2 : -Math.PI / 2);
+            rr(-30, -30, 60, 60, 12); ctx.fillStyle = used ? "rgba(255,255,255,0.35)" : "#fff"; ctx.fill();
+            var P = { 1: [[0, 0]], 2: [[-1, -1], [1, 1]], 3: [[-1, -1], [0, 0], [1, 1]], 4: [[-1, -1], [1, -1], [-1, 1], [1, 1]], 5: [[-1, -1], [1, -1], [0, 0], [-1, 1], [1, 1]], 6: [[-1, -1], [1, -1], [-1, 0], [1, 0], [-1, 1], [1, 1]] };
+            P[v].forEach(function (q) { circle(q[0] * 15, q[1] * 15, 6, "#222"); });
+            ctx.restore();
+          });
+          if (shown[0] === shown[1]) ptext(turn, "x" + dice.length, cx + (turn === 0 ? -70 : 70), 500, 28, "#fff");
+        }
+        if (msgT > 0) ptext(turn, msg, turn === 0 ? 300 : W - 300, 500, 40, "#ffe14d");
+      },
+      legal: function () { return rolled ? legalNow() : ["roll"]; },
+      playMove: function (m) { if (m === "roll") doRoll(); else play(m); },
+      state: function () { return { off: off.slice(), bar: bar.slice(), turn: turn }; },
+      busy: function () { return msgT > 0; }
+    };
+  }
+
   // ---------- MENU ----------
   var GAMES = [
     { id: "hockey", name: "Air Hockey", make: AirHockey },
     { id: "four", name: "Four in a Row", make: FourRow },
     { id: "checkers", name: "Checkers", make: Checkers },
     { id: "dots", name: "Dots & Boxes", make: Dots },
-    { id: "chess", name: "Chess", soon: true },
-    { id: "backgammon", name: "Backgammon", soon: true }
+    { id: "chess", name: "Chess", make: Chess },
+    { id: "backgammon", name: "Backgammon", make: Backgammon }
   ];
   function tiles() {
     return GAMES.map(function (g, i) { var col = i % 3, row = Math.floor(i / 3); return { g: g, x: 300 + col * 280, y: 140 + row * 380, w: 260, h: 340 }; });
