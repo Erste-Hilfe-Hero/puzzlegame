@@ -18,6 +18,7 @@ const T = {
     coinsSub: '', appOnly: 'Purchases are only available in the app.', pending: 'Payment is being processed.',
     buyErr: 'The store is not reachable right now. Please try again.', thanks: 'Thank you! Items added.',
     settings: 'Settings', sound: 'Sound', privacy: 'Privacy policy', support: 'Support', version: 'Version',
+    tCards: 'Cards', tDeck: 'Deck left ({0})', tTime: 'Speed ({0})', tCombo: 'Best combo', comboX: 'Combo x{0}', combos: ['Nice!', 'Great!', 'Super!', 'Amazing!', 'Unstoppable!'],
     tip1: 'Tap a card that is one higher or one lower than the open card. King and Ace connect!',
     tip2: 'No match? Tap the deck to draw a new card.',
     tip3: 'Clear all cards to win. Every card in a row fills your streak for bonus coins.',
@@ -45,6 +46,7 @@ const T = {
     coinsSub: '', appOnly: 'Käufe gibt es nur in der App.', pending: 'Zahlung wird bearbeitet.',
     buyErr: 'Der Store ist gerade nicht erreichbar. Bitte nochmal versuchen.', thanks: 'Danke! Inhalte hinzugefügt.',
     settings: 'Einstellungen', sound: 'Ton', privacy: 'Datenschutz', support: 'Support', version: 'Version',
+    tCards: 'Karten', tDeck: 'Rest-Stapel ({0})', tTime: 'Tempo ({0})', tCombo: 'Beste Serie', comboX: 'Serie x{0}', combos: ['Gut!', 'Klasse!', 'Super!', 'Wahnsinn!', 'Unaufhaltsam!'],
     tip1: 'Tippe eine Karte, die eins höher oder eins tiefer ist als die offene Karte. König und Ass passen auch!',
     tip2: 'Nichts passt? Tippe auf den Stapel für eine neue Karte.',
     tip3: 'Räume alle Karten ab, um zu gewinnen. Karten am Stück füllen die Serie für Bonus-Münzen.',
@@ -172,18 +174,19 @@ function hud() {
   if (G) { $('jokerN').textContent = S.jokers; $('undoN').textContent = S.undos;
     $('btnJoker').classList.toggle('off', !S.jokers); $('btnUndo').classList.toggle('off', !S.undos || !G.hist.length); }
 }
-setInterval(hud, 1000);
+setInterval(() => { hud(); if (G && !G.over) $('gTime').textContent = '\u23F1 ' + fmtTime(now() - G.t0); }, 1000);
 
 // ---------- village ----------
 function sceneSVG() {
-  const sky = [['#9fd8f5', '#e6f6ff'], ['#f7a46b', '#ffe0b8'], ['#a9c3e0', '#eef4fb']][S.district % 3];
-  const grass = [['#86c06a', '#5f9e4c'], ['#a9c46a', '#7a9e3f'], ['#e9f0f5', '#c9d6df']][S.district % 3];
+  const sky = [['#0d1240', '#3b3a8f'], ['#2a1450', '#d9675a'], ['#0b2140', '#3f6f9a']][S.district % 3];
+  const grass = [['#3f7a4a', '#2c5a3a'], ['#6a7a3a', '#4a5a2a'], ['#b9c9d6', '#8fa3b5']][S.district % 3];
   const g = (k, ruin, built) => '<g id="t-' + k + '"><g class="ruin">' + ruin + '</g><g class="built">' + built + '</g></g>';
   return '<svg viewBox="0 0 360 440" preserveAspectRatio="xMidYMid slice">' +
   '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient>' +
   '<radialGradient id="glow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient></defs>' +
   '<rect width="360" height="440" fill="url(#sky)"/>' +
-  (S.district % 3 === 1 ? '<circle cx="290" cy="70" r="34" fill="#ffcf6b" opacity=".9"/>' : '<circle cx="290" cy="60" r="26" fill="#fff4b0"/>') +
+  Array.from({ length: 26 }, (_, i) => '<circle cx="' + ((i * 137) % 360) + '" cy="' + ((i * 71) % 110 + 6) + '" r="' + (i % 3 ? 1 : 1.8) + '" fill="#fff" opacity="' + (0.4 + (i % 4) * 0.15) + '"/>').join('') +
+  (S.district % 3 === 1 ? '<circle cx="290" cy="80" r="34" fill="#ffb36b" opacity=".9"/>' : '<circle cx="290" cy="56" r="22" fill="#fff8d0"/><circle cx="298" cy="50" r="20" fill="' + sky[0] + '"/>') +
   '<path d="M0 120 Q60 80 130 110 T260 100 T360 115 V440 H0Z" fill="' + grass[1] + '" opacity=".7"/>' +
   '<path d="M0 150 Q90 120 180 140 T360 135 V440 H0Z" fill="' + grass[0] + '"/>' +
   '<path d="M360 150 C300 190 250 200 220 240 C190 280 120 290 90 330 C60 370 30 400 0 420 V440 H40 C70 410 110 380 140 350 C170 320 230 300 260 260 C290 225 330 205 360 190Z" fill="#5aa9d6"/>' +
@@ -368,7 +371,7 @@ function startLevel(n) {
   if (!infinite() && S.lives <= 0) { noLives(); return; }
   closeModal();
   const L = genLevel(n);
-  G = { n, hard: L.hard, cards: L.cards, stock: L.stock, waste: [], hist: [], streak: 0, best: 0, earned: 0, plusN: 0, idle: 0 };
+  G = { n, hard: L.hard, cards: L.cards, stock: L.stock, waste: [], hist: [], streak: 0, best: 0, earned: 0, plusN: 0, idle: 0, t0: now() };
   $('village').classList.add('hidden'); $('game').classList.remove('hidden');
   $('btnHome').innerHTML = '&#8962;';
   $('gLevel').textContent = t('level', n) + (G.hard ? ' • ' + t('hard') : '');
@@ -408,12 +411,34 @@ function refresh() {
   $('stockCount').textContent = t('stock', G.stock.length);
   const left = G.cards.filter(c => !c.gone).length;
   $('gGoal').textContent = t('cardsLeft', left);
+  G.left = left;
   const pct = Math.min(1, (G.streak % 5) / 5 + (G.streak && G.streak % 5 === 0 ? 1 : 0));
   $('streakFill').style.width = (pct * 100) + '%';
   $('streakTxt').textContent = t('streak', G.streak);
   G.idle = 0;
   hud();
   tutorial();
+}
+function confetti() {
+  const app = $('app'), c = el('canvas'); c.id = 'fx'; c.width = app.clientWidth; c.height = app.clientHeight; app.appendChild(c);
+  const r = el('div', 'rays'); app.appendChild(r);
+  const x = c.getContext('2d'), cols = ['#3ef2ff', '#ff4fd8', '#ffd23f', '#7dff9a', '#ffffff'];
+  const ps = Array.from({ length: 140 }, () => ({ x: c.width / 2, y: c.height * 0.45, vx: (Math.random() - .5) * 14, vy: -Math.random() * 14 - 4, s: 4 + Math.random() * 6, c: cols[Math.floor(Math.random() * 5)], a: Math.random() * 6 }));
+  let f = 0;
+  (function tick() {
+    x.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.vy += .35; p.x += p.vx; p.y += p.vy; p.a += .2; x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); x.restore(); });
+    if (++f < 150) requestAnimationFrame(tick); else c.remove();
+  })();
+  setTimeout(() => r.remove(), 4000);
+}
+function combo(n) {
+  const o = document.getElementById('combo'); if (o) o.remove();
+  const words = T[LANG].combos, w = words[Math.min(words.length - 1, Math.floor((n - 3) / 3))];
+  const d = el('div', '', w + '<small>' + t('comboX', n) + '</small>'); d.id = 'combo';
+  d.style.top = (G.geo.y0 + G.geo.ch * 0.6) + 'px';
+  if (n >= 9) d.classList.add('hot');
+  $('board').appendChild(d); setTimeout(() => d.remove(), 900);
 }
 function flyText(txt, x, y) { const f = el('div', 'fly', txt); f.style.left = x + 'px'; f.style.top = y + 'px'; $('board').appendChild(f); setTimeout(() => f.remove(), 1000); }
 function pushWaste(item) {
@@ -438,6 +463,7 @@ function tapCard(c) {
   c.el.classList.remove('play');
   const [x, y] = cardPos(c);
   flyText('+' + gain, x, y);
+  if (G.streak >= 3) combo(G.streak);
   tone(392 * Math.pow(2, Math.min(G.streak, 14) / 12), .1); haptic('merge');
   refresh();
   checkEnd();
@@ -492,11 +518,13 @@ function checkEnd() {
 function win() {
   G.over = true;
   const tipEl = document.getElementById('tip'); if (tipEl) tipEl.remove();
-  const bonus = 50 + G.stock.length * 20, coins = G.earned + bonus, stars = G.hard ? 2 : 1;
+  const secs = Math.round((now() - G.t0) / 1000), timeB = Math.max(0, (90 - secs) * 3);
+  const deckB = G.stock.length * 20, bonus = 50 + deckB + timeB, coins = G.earned + bonus, stars = G.hard ? 2 : 1;
   S.coins += coins; S.stars += stars; S.level = G.n + 1; S.wins++; save();
-  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .18), i * 120)); haptic('deliver');
+  [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => tone(f, .18), i * 120)); haptic('deliver'); confetti();
   const line = T[LANG].wrenWin[G.n % T[LANG].wrenWin.length];
   setTimeout(() => modal('<h2>' + t('winT') + '</h2>' + who(fox(), line) +
+    '<div class="tally"><span>' + t('tCards') + '</span><b>' + G.earned + '</b><span>' + t('tDeck', G.stock.length) + '</span><b>' + (50 + deckB) + '</b><span>' + t('tTime', fmtTime(secs * 1000)) + '</span><b>' + timeB + '</b><span>' + t('tCombo') + '</span><b>' + G.best + '</b></div>' +
     '<div class="reward"><span><span class="ic coin"></span>+' + coins + '</span><span><span class="ic star"></span>+' + stars + '</span></div>' +
     '<div class="row">' + btn('mVil', 'blue', t('village')) + btn('mNext', 'green', t('next')) + '</div>', m => {
       m.querySelector('#mVil').onclick = () => { closeModal(); showVillage(); };

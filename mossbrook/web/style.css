@@ -121,3 +121,54 @@ button { font-family: inherit; cursor: pointer; border: 0; }
 #toast.on { opacity: 1; }
 #tip { position: absolute; left: 10px; right: 10px; bottom: 8px; font-size: 14px; line-height: 1.25; z-index: 400; background: var(--cream); color: var(--ink); border-radius: 14px; padding: 8px 10px; font-size: 15px; box-shadow: 0 4px 12px rgba(0,0,0,.4); display: flex; gap: 8px; align-items: center; }
 #tip svg { width: 40px; height: 40px; flex: none; }
+
+#combo { position: absolute; left: 0; right: 0; text-align: center; z-index: 450; pointer-events: none; font-size: 34px; font-weight: 700; color: var(--gold); text-shadow: 0 3px 0 #7a4a08, 0 0 16px rgba(255,200,60,.6); animation: combo .9s ease-out forwards; }
+#combo small { display: block; font-size: 16px; color: var(--cream); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+#combo.hot { color: #ff8a3d; font-size: 40px; }
+@keyframes combo { 0% { transform: scale(.4); opacity: 0; } 20% { transform: scale(1.15); opacity: 1; } 70% { transform: scale(1); opacity: 1; } 100% { transform: translateY(-24px); opacity: 0; } }
+.tally { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; text-align: left; font-size: 15px; background: #fff; border: 2px solid #eadfc4; border-radius: 12px; padding: 8px 12px; margin: 6px 0; font-variant-numeric: tabular-nums; }
+.tally b { text-align: right; }
+
+/* ===== Bar-table look (dark, neon, glossy) ===== */
+:root { --bg1: #070a1c; --bg2: #18205a; --felt: #1c2f7a; --felt2: #0b123a; --neon: #3ef2ff; --neon2: #ff4fd8; --gold: #ffd23f; --gold2: #b8860b; }
+#app { background: radial-gradient(ellipse at 50% -10%, #2a2f86 0%, var(--bg2) 30%, var(--bg1) 80%); }
+.pill { background: rgba(6,10,35,.85); border: 1.5px solid rgba(62,242,255,.55); box-shadow: 0 0 10px rgba(62,242,255,.25), inset 0 0 8px rgba(62,242,255,.15); }
+.iconbtn { background: rgba(6,10,35,.85); border: 1.5px solid rgba(255,79,216,.6); box-shadow: 0 0 10px rgba(255,79,216,.3); }
+#vTitle, #gHead { color: #fff; text-shadow: 0 0 8px var(--neon), 0 0 18px rgba(62,242,255,.5); letter-spacing: .5px; }
+#gTime { color: var(--gold); text-shadow: 0 0 8px rgba(255,210,63,.7); font-variant-numeric: tabular-nums; }
+#board { border: 2px solid rgba(62,242,255,.7); box-shadow: 0 0 18px rgba(62,242,255,.45), 0 0 40px rgba(255,79,216,.18), inset 0 0 60px rgba(0,0,0,.6);
+  background: radial-gradient(ellipse at 50% 35%, #2a46b0 0%, var(--felt) 35%, var(--felt2) 85%); }
+#board::before { content: ''; position: absolute; inset: 0; pointer-events: none; background: repeating-radial-gradient(circle at 50% 40%, rgba(255,255,255,.025) 0 2px, transparent 2px 7px); }
+#scene svg { border: 2px solid rgba(255,79,216,.7); box-shadow: 0 0 18px rgba(255,79,216,.45), 0 0 34px rgba(62,242,255,.2); }
+.card .b { background: linear-gradient(135deg, #8a0f2f, #4a0620); border: 2px solid var(--gold); box-shadow: 0 2px 6px rgba(0,0,0,.6); }
+.card .b::after { inset: 14% 14%; border-radius: 12%; background: repeating-linear-gradient(45deg, rgba(255,210,63,.35) 0 2px, transparent 2px 6px), repeating-linear-gradient(-45deg, rgba(255,210,63,.35) 0 2px, transparent 2px 6px); border: 1.5px solid rgba(255,210,63,.8); }
+.card .f { background: linear-gradient(180deg, #ffffff 0%, #f2f0ea 100%); border: 1.5px solid #c9c2ae; box-shadow: 0 3px 8px rgba(0,0,0,.55); }
+.card .f.red { color: #e0102f; }
+.card.play .f { box-shadow: 0 0 0 2px rgba(62,242,255,.0), 0 3px 8px rgba(0,0,0,.55); }
+.card.hint .f { animation: hintN 1s ease-in-out infinite; }
+@keyframes hintN { 50% { box-shadow: 0 0 0 3px var(--neon), 0 0 18px var(--neon); } }
+.card.wild .f { background: linear-gradient(135deg, #fff1a8, #ffc21a); box-shadow: 0 0 14px var(--gold); }
+#streak { border: 1.5px solid rgba(255,79,216,.6); box-shadow: 0 0 10px rgba(255,79,216,.3); height: 18px; }
+#streakFill { background: linear-gradient(90deg, var(--neon2), var(--gold)); box-shadow: 0 0 12px var(--neon2); }
+#streakTxt { line-height: 18px; }
+.booster { background: linear-gradient(#fff07a, #ffbf1f 55%, #d68a00); box-shadow: 0 4px 0 #8a5a00, 0 0 14px rgba(255,210,63,.5); border: 1.5px solid #fff3b0; }
+.green { background: linear-gradient(#7dff9a, #19c24a 55%, #0e8a32); box-shadow: 0 5px 0 #075e20, 0 0 18px rgba(60,255,120,.45); border: 1.5px solid #c9ffd6; }
+.blue { background: linear-gradient(#7ae6ff, #1e8fe0 55%, #1160a8); box-shadow: 0 5px 0 #0a3d6e, 0 0 16px rgba(62,242,255,.45); border: 1.5px solid #c8f6ff; }
+.gold { background: linear-gradient(#fff07a, #ffbf1f 55%, #d68a00); box-shadow: 0 5px 0 #8a5a00, 0 0 16px rgba(255,210,63,.5); border: 1.5px solid #fff3b0; }
+.big { letter-spacing: .5px; }
+#mbox { background: linear-gradient(180deg, #1b2260, #0b0f2e); color: #fff; border: 2px solid var(--neon); box-shadow: 0 0 24px rgba(62,242,255,.55), 0 0 60px rgba(255,79,216,.25); }
+#mbox h2 { color: var(--gold); text-shadow: 0 0 10px rgba(255,210,63,.7); }
+.tally, .sitem { background: rgba(255,255,255,.06); border-color: rgba(62,242,255,.35); color: #fff; }
+.sitem .sub, .small { color: #b9c3ff; }
+.sitem.wide { background: linear-gradient(#4a2a00, #2a1800); border-color: var(--gold); }
+.settings label { border-color: rgba(62,242,255,.25); }
+.settings a { color: var(--neon); }
+.task { background: linear-gradient(180deg, #1b2260, #0e1340); color: #fff; border: 1.5px solid rgba(62,242,255,.5); box-shadow: 0 0 10px rgba(62,242,255,.25); }
+.task button[disabled] { background: #3a3f63; box-shadow: 0 2px 0 #23264a; color: #8a90b8; }
+#tip { background: rgba(10,14,48,.95); color: #fff; border: 1.5px solid var(--neon); box-shadow: 0 0 14px rgba(62,242,255,.5); }
+.who svg circle:first-child { fill: rgba(255,255,255,.12); }
+#fx { position: absolute; inset: 0; pointer-events: none; z-index: 49; }
+.rays { position: absolute; left: 50%; top: 40%; width: 900px; height: 900px; margin: -450px 0 0 -450px; pointer-events: none; z-index: 48;
+  background: repeating-conic-gradient(rgba(255,210,63,.18) 0 10deg, transparent 10deg 20deg); border-radius: 50%; -webkit-mask: radial-gradient(circle, #000 20%, transparent 65%); mask: radial-gradient(circle, #000 20%, transparent 65%); animation: spin 8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+#board { isolation: isolate; z-index: 1; }
