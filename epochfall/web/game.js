@@ -1,18 +1,23 @@
 'use strict';
 (() => {
 // ---------- constants ----------
-const TS = 16, MW = 200, MH = 40, VH = 300;
+const TS = 16, MW = 200, VH = 300;
 const PAST = 0, PRESENT = 1;
 const THRESH = 10; // past kills to drive a species extinct
 const SAVE_KEY = 'epochfall.save.v1';
 const cv = document.getElementById('game');
-const ctx = cv.getContext('2d');
+let ctx = cv.getContext('2d'); // swapped briefly to draw menu portraits
 let VW = 640, K = 1;
 
 // ---------- i18n ----------
 const I = window.EF_I18N;
 let lang = 'en';
 function t(k, ...a) { let s = (I[lang] && I[lang][k]) || I.en[k] || k; a.forEach((v, i) => { s = s.replace('{' + i + '}', v); }); return s; }
+function tk(k, fb) { return (I[lang] && I[lang][k]) || I.en[k] || fb; }
+function spName(id) { return tk('sn_' + id, SPEC[id].name); }
+function matName(m) { return tk('m_' + m, MATS[m]); }
+function spiritName(id) { return id === 'diwata' ? t('sp_diwata') : t('spiritOf', spName(id)); }
+let rng = Math.random; // forge rolls; replaceable through EF.rng for deterministic tests
 
 // ---------- data ----------
 const SPEC = {
@@ -24,11 +29,24 @@ const SPEC = {
   wisp:       { niche: 'swarm', name: 'Static Wisps', hp: 16, spd: 110, dmg: 8, beh: 'swarm', w: 10, h: 10, col: '#c7a2ff', eye: '#ffffff', mat: 'swarmS', xp: 8, group: 4 },
   wakwak:     { niche: 'flyer', name: 'Wakwak', hp: 22, spd: 60, dmg: 9, beh: 'flyer', w: 20, h: 12, col: '#1d3b38', eye: '#ff6b4a', mat: 'flyerP', xp: 9 },
   rotor:      { niche: 'flyer', name: 'Wakwak Drones', hp: 26, spd: 70, dmg: 10, beh: 'flyer', w: 20, h: 12, col: '#59607a', eye: '#ff3d8b', mat: 'flyerX', xp: 11 },
-  mantis:     { niche: 'flyer', name: 'Mantis Drones', hp: 30, spd: 90, dmg: 12, beh: 'diver', w: 18, h: 14, col: '#2f7a4a', eye: '#ffc65a', mat: 'flyerS', xp: 14 }
+  mantis:     { niche: 'flyer', name: 'Mantis Drones', hp: 30, spd: 90, dmg: 12, beh: 'diver', w: 18, h: 14, col: '#2f7a4a', eye: '#ffc65a', mat: 'flyerS', xp: 14 },
+  kapre:      { niche: 'giant', name: 'Kapre', hp: 110, spd: 26, dmg: 16, beh: 'giant', w: 24, h: 42, col: '#5e4834', eye: '#ffb347', mat: 'giantP', xp: 28, quake: 1 },
+  kapremech:  { niche: 'giant', name: 'Kapre Mech', hp: 130, spd: 30, dmg: 18, beh: 'giant', w: 26, h: 42, col: '#4a4f6a', eye: '#ff3d8b', mat: 'giantX', xp: 32, quake: 1 },
+  ugat:       { niche: 'giant', name: 'Ugat Colossus', hp: 150, spd: 22, dmg: 20, beh: 'giant', w: 30, h: 38, col: '#2f4a2c', eye: '#3ef0b4', mat: 'giantS', xp: 40, quake: 2 },
+  punso:      { niche: 'scav', name: 'Taga-Punso', hp: 14, spd: 120, dmg: 5, beh: 'thief', w: 12, h: 12, col: '#8a5a3a', eye: '#ffe08a', mat: 'scavP', xp: 7 },
+  rustling:   { niche: 'scav', name: 'Rustlings', hp: 16, spd: 135, dmg: 6, beh: 'thief', w: 12, h: 11, col: '#5c6070', eye: '#2bd9ff', mat: 'scavX', xp: 8 },
+  mirrormole: { niche: 'scav', name: 'Mirror Moles', hp: 22, spd: 125, dmg: 7, beh: 'thief', w: 14, h: 11, col: '#9aa8c0', eye: '#ffffff', mat: 'scavS', xp: 11 },
+  cindershrew:{ niche: 'scav', name: 'Cinder Shrews', hp: 18, spd: 150, dmg: 8, beh: 'thief', w: 13, h: 10, col: '#4a2a2a', eye: '#ff8a3d', mat: 'scavA', xp: 11 }
 };
-const NICHES = { hunter: ['sigbin', 'sigbinx', 'tiktik'], swarm: ['salagubang', 'neonmite', 'wisp'], flyer: ['wakwak', 'rotor', 'mantis'] };
+const NICHE_IDS = ['hunter', 'swarm', 'flyer', 'giant', 'scav'];
+const NICHES = { hunter: ['sigbin', 'sigbinx', 'tiktik'], swarm: ['salagubang', 'neonmite', 'wisp'], flyer: ['wakwak', 'rotor', 'mantis'],
+  giant: ['kapre', 'kapremech', 'ugat'], scav: ['punso', 'rustling', 'mirrormole'] };
+// a successor that depends on another niche: the scavenger successor feeds on swarm shells while the swarm lives
+const SUCC_ALT = { scav: { dep: 'swarm', dead: 'cindershrew' } };
 const MATS = { hunterP: 'Sigbin Fang', hunterX: 'Chrome Fang', hunterS: 'Tiktik Plume', swarmP: 'Salagubang Shell', swarmX: 'Mite Core',
-  swarmS: 'Wisp Static', flyerP: 'Wakwak Feather', flyerX: 'Drone Rotor', flyerS: 'Mantis Lens', tikCore: 'Tikbalang Core' };
+  swarmS: 'Wisp Static', flyerP: 'Wakwak Feather', flyerX: 'Drone Rotor', flyerS: 'Mantis Lens',
+  giantP: 'Kapre Ember', giantX: 'Piston Heart', giantS: 'Heartwood Core', scavP: 'Punso Clay', scavX: 'Salvaged Wire', scavS: 'Mirror Scale', scavA: 'Cinder Tail',
+  tikCore: 'Tikbalang Core' };
 const NODES = [
   { id: 'arnis', br: 'blade', req: null, cost: 0 },
   { id: 'swift', br: 'blade', req: 'arnis', cost: 1 },
@@ -45,55 +63,142 @@ const NODES = [
   { id: 'iron', br: 'body', req: 'airdash', cost: 2 },
   { id: 'asc', br: 'asc', req: 'arnis', cost: 2, lvl: 5 }
 ];
+// spirits: the starter Diwata Wisp (id diwata) plus the ghost of each extinct past species (id = past species id)
+const SPIRITS = ['diwata', 'sigbin', 'salagubang', 'wakwak', 'kapre', 'punso'];
+const SPIRIT_COL = { diwata: '#9dffd9', sigbin: '#c7a2ff', salagubang: '#ffe08a', wakwak: '#8fe3ff', kapre: '#ffb347', punso: '#f2c48a' };
+// forge: kampilan +1..+10, each + is +6% melee damage. Success odds are always shown in the UI.
+const FORGE = [
+  { chance: 100, mats: { hunterP: 2, swarmP: 2 } },
+  { chance: 100, mats: { flyerP: 2, scavP: 2 } },
+  { chance: 100, mats: { giantP: 1, hunterX: 2 } },
+  { chance: 100, mats: { swarmX: 2, flyerX: 2 } },
+  { chance: 100, mats: { giantX: 2, scavX: 2 } },
+  { chance: 90, mats: { hunterS: 2, swarmP: 3 } },
+  { chance: 80, mats: { swarmS: 2, flyerS: 1, scavX: 2 } },
+  { chance: 70, mats: { flyerS: 2, giantS: 1, hunterX: 3 } },
+  { chance: 60, mats: { hunterS: 3, swarmS: 2, giantS: 2 } },
+  { chance: 50, mats: { hunterS: 3, flyerS: 3, giantS: 2, tikCore: 1 } }
+];
+const FORGE_PCT = 6;
+const OY = 40; // rows added above the original slice (sky rooftops, canopy, cave)
+const GY = OY + 36; // top row of the ground
 const SHRINES = [10, 86, 160];
-const FEATHER = { x: 140 * TS, y: 18 * TS };
+const FEATHER = { x: 140 * TS, y: (OY + 18) * TS };
 const SPAWNS = [
-  { n: 'hunter', x: 28, y: 35 }, { n: 'hunter', x: 92, y: 35 }, { n: 'hunter', x: 125, y: 17 }, { n: 'hunter', x: 138, y: 35 },
-  { n: 'hunter', x: 60, y: 35, era: PRESENT },
-  { n: 'swarm', x: 22, y: 31 }, { n: 'swarm', x: 120, y: 33 }, { n: 'swarm', x: 146, y: 33 },
-  { n: 'flyer', x: 36, y: 26 }, { n: 'flyer', x: 95, y: 24 }, { n: 'flyer', x: 132, y: 12 }, { n: 'flyer', x: 150, y: 28 },
-  { n: 'flyer', x: 58, y: 30, era: PRESENT }
+  { n: 'hunter', x: 28, y: OY + 35 }, { n: 'hunter', x: 92, y: OY + 35 }, { n: 'hunter', x: 125, y: OY + 17 }, { n: 'hunter', x: 138, y: OY + 35 },
+  { n: 'hunter', x: 60, y: OY + 35, era: PRESENT },
+  { n: 'swarm', x: 22, y: OY + 31 }, { n: 'swarm', x: 120, y: OY + 33 }, { n: 'swarm', x: 146, y: OY + 33 }, { n: 'swarm', x: 50, y: 48, era: PRESENT },
+  { n: 'flyer', x: 36, y: OY + 26 }, { n: 'flyer', x: 95, y: OY + 24 }, { n: 'flyer', x: 132, y: OY + 12 }, { n: 'flyer', x: 150, y: OY + 28 },
+  { n: 'flyer', x: 58, y: OY + 30, era: PRESENT }, { n: 'flyer', x: 124, y: 34 },
+  { n: 'giant', x: 128, y: 39 }, { n: 'giant', x: 143, y: OY + 35 }, { n: 'giant', x: 60, y: 51, era: PRESENT },
+  { n: 'scav', x: 82, y: OY + 35 }, { n: 'scav', x: 118, y: OY + 17 }, { n: 'scav', x: 90, y: 55, era: PAST }, { n: 'scav', x: 56, y: OY + 35, era: PRESENT }
 ];
 const ARENA = { x0: 168 * TS, x1: 198 * TS, door: 166, trigger: 171 * TS };
+// secret chests: x, y = floor row the chest stands on; era = only there in that era
+const CHESTS = [
+  { id: 'roof', x: 54, y: 37, era: PRESENT, loot: { hunterX: 3, swarmX: 3, flyerX: 2, scavX: 2, giantX: 1 } },
+  { id: 'cave', x: 84, y: 56, loot: { hunterP: 3, swarmP: 2, flyerP: 2, giantP: 2, scavP: 3 } }
+];
+// present-only rooftops (tile 7), zigzag steps: [x, y] with width 4
+const ROOF_STEPS = [[41, 73], [36, 70], [41, 67], [36, 64], [41, 61], [36, 58], [41, 55]];
+const ROOF_STEPS2 = [[62, 49], [67, 46], [62, 43], [67, 40]];
+const CANOPY_STEPS = [[118, 55], [113, 52], [118, 49], [113, 46], [118, 43]];
 
 // ---------- map ----------
+const MH = OY + 40;
 const map = new Uint8Array(MW * MH);
 function setT(x, y, v) { if (x >= 0 && x < MW && y >= 0 && y < MH) map[y * MW + x] = v; }
 function fill(x, y, w, h, v) { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) setT(i, j, v); }
 function tileAt(x, y) { if (x < 0 || x >= MW || y >= MH) return 1; if (y < 0) return 0; return map[y * MW + x]; }
+// tiles: 1 rock, 2 one-way plank, 3 vine (one-way, past only), 4 walkway (solid, present only), 5 spikes,
+// 6 cracked stone, 7 rooftop (one-way, present only), 8 vine curtain (solid concrete seal in the present, open in the past)
 function buildMap() {
   map.fill(0);
-  fill(0, 36, MW, 4, 1);
+  fill(0, GY, MW, 4, 1);
   fill(0, 0, 1, MH, 1); fill(MW - 1, 0, 1, MH, 1);
   // A: barangay gate
-  fill(18, 32, 5, 1, 2); fill(30, 29, 4, 1, 2);
+  fill(18, OY + 32, 5, 1, 2); fill(30, OY + 29, 4, 1, 2);
+  // A up: present-only rooftop district (two zigzag climbs, deck, top deck with a secret chest)
+  ROOF_STEPS.forEach(([x, y]) => fill(x, y, 4, 1, 7));
+  fill(45, 52, 22, 1, 7);
+  ROOF_STEPS2.forEach(([x, y]) => fill(x, y, 4, 1, 7));
+  fill(50, 37, 17, 1, 7);
   // B: the broken bridge (present-only walkway over a stake pit)
-  fill(44, 36, 32, 3, 0); fill(44, 38, 32, 1, 5); fill(44, 36, 32, 1, 4);
-  // C: vine steps (past only) up to the ledge
-  [[105, 33], [100, 30], [105, 27], [100, 24], [105, 21]].forEach(([x, y]) => fill(x, y, 4, 1, 3));
-  fill(110, 18, 41, 2, 1);
+  fill(44, GY, 32, 3, 0); fill(44, GY + 2, 32, 1, 5); fill(44, GY, 32, 1, 4);
+  // sky rock above shrine 2 with the hidden Punso den (past-only entrance behind a vine curtain)
+  fill(80, 44, 20, 14, 1); fill(82, 47, 16, 9, 0); fill(98, 53, 2, 3, 8);
+  fill(86, 50, 4, 1, 2);
+  // C: vine steps (past only) up to the ledge, plus one step to the den
+  [[105, OY + 33], [100, OY + 30], [105, OY + 27], [100, OY + 24], [105, OY + 21], [100, OY + 18]].forEach(([x, y]) => fill(x, y, 4, 1, 3));
+  fill(110, OY + 18, 41, 2, 1);
+  // balete canopy above the ledge (branches in the past, scaffolding in the present)
+  CANOPY_STEPS.forEach(([x, y]) => fill(x, y, 4, 1, 2));
+  fill(112, 40, 25, 1, 2);
+  fill(124, 34, 4, 1, 2); fill(130, 31, 5, 1, 2);
   // D: the wall, cracked at the bottom, passable over the top with a double jump
-  fill(146, 13, 6, 1, 2);
-  fill(154, 10, 2, 26, 1); fill(154, 32, 2, 4, 6);
+  fill(146, OY + 13, 6, 1, 2);
+  fill(154, OY + 10, 2, 26, 1); fill(154, OY + 32, 2, 4, 6);
   // E: arena
-  fill(166, 19, 34, 1, 1); fill(166, 20, 2, 10, 1);
+  fill(166, OY + 19, 34, 1, 1); fill(166, OY + 20, 2, 10, 1);
 }
-function isSolid(v) { return v === 1 || v === 6 || (v === 4 && S.era === PRESENT); }
-function isOneWay(v) { return v === 2 || (v === 3 && S.era === PAST); }
+function isSolid(v) { return v === 1 || v === 6 || ((v === 4 || v === 8) && S.era === PRESENT); }
+function isOneWay(v) { return v === 2 || (v === 3 && S.era === PAST) || (v === 7 && S.era === PRESENT); }
 
 // ---------- state ----------
 let S, P, enemies = [], projs = [], parts = [], texts = [], items = [], boss = null;
 let cam = { x: 0, y: 0 }, shake = 0, hitstop = 0, flash = 0, flashCol = '#fff', mode = 'title', paused = false;
 let spawnState = [];
 let hintCd = 0, featherTaken = false;
+const WIPE = 0.5; let wipeT = 0, wipeCol = '#fff', denReveal = 0;
 
 function freshSave() {
-  return { v: 1, lvl: 1, xp: 0, sp: 1, nodes: ['arnis'], mats: {}, pastKills: { hunter: 0, swarm: 0, flyer: 0 }, dj: false,
+  return { v: 1, lvl: 1, xp: 0, sp: 1, nodes: ['arnis'], mats: {}, pastKills: { hunter: 0, swarm: 0, flyer: 0, giant: 0, scav: 0 }, dj: false,
     shrine: 0, era: PRESENT, bossMem: { attempts: 0, wins: 0, left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0, maxStage: 1 },
-    bossDone: false, deaths: 0, time: 0, lang: null };
+    bossDone: false, deaths: 0, time: 0, lang: null,
+    spirits: ['diwata'], spirit: 'diwata', spiritAt: {}, forge: 0, chests: [], ex: '', minimap: false };
 }
-function load() { try { const r = localStorage.getItem(SAVE_KEY); if (r) { const d = JSON.parse(r); if (d && d.v === 1) return Object.assign(freshSave(), d); } } catch (e) {} return null; }
-function save() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function load() {
+  try {
+    const r = localStorage.getItem(SAVE_KEY);
+    if (r) {
+      const d = JSON.parse(r);
+      if (d && d.v === 1) {
+        const f = freshSave(), s = Object.assign(f, d);
+        s.pastKills = Object.assign(freshSave().pastKills, d.pastKills);
+        // older saves: extinct niches whose spirit was never offered wait at the middle shrine
+        for (const n of NICHE_IDS) { const id = NICHES[n][0]; if (s.pastKills[n] >= THRESH && !s.spirits.includes(id) && s.spiritAt[id] === undefined) s.spiritAt[id] = 1; }
+        return s;
+      }
+    }
+  } catch (e) {}
+  return null;
+}
+// explored map: cells of EXC x EXC tiles, stored in the save as a '0'/'1' string
+const EXC = 4, EXW = Math.ceil(MW / EXC), EXH = Math.ceil(MH / EXC);
+const explored = new Uint8Array(EXW * EXH);
+let exDirty = true, exCell = -1;
+function loadExplored() { explored.fill(0); const s = S.ex || ''; for (let i = 0; i < explored.length && i < s.length; i++) explored[i] = s.charCodeAt(i) === 49 ? 1 : 0; exDirty = true; exCell = -1; }
+// minimap: one pixel per tile for explored cells, redrawn only when something new is explored or the era changes
+const mmCanvas = document.createElement('canvas'); mmCanvas.width = MW; mmCanvas.height = MH;
+const mmCtx = mmCanvas.getContext('2d'), mmImg = mmCtx.createImageData(MW, MH), mmPix = new Uint32Array(mmImg.data.buffer);
+function rgba(r, g, b, a) { return (a << 24) | (b << 16) | (g << 8) | r; }
+const MM_COL = { air: rgba(26, 34, 54, 200), solidP: rgba(90, 140, 90, 255), solidX: rgba(120, 100, 170, 255), plat: rgba(236, 230, 214, 255), shrine: rgba(62, 240, 180, 255), chest: rgba(255, 198, 90, 255) };
+function redrawMinimap() {
+  exDirty = false;
+  const solid = S.era === PAST ? MM_COL.solidP : MM_COL.solidX;
+  for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
+    const i = y * MW + x;
+    if (!explored[Math.floor(y / EXC) * EXW + Math.floor(x / EXC)]) { mmPix[i] = 0; continue; }
+    const v = map[i];
+    mmPix[i] = isSolid(v) ? solid : isOneWay(v) ? MM_COL.plat : MM_COL.air;
+  }
+  const mark = (x, y, c) => { for (let j = -1; j <= 0; j++) for (let k = 0; k <= 1; k++) { const xx = x + k, yy = y + j; if (xx >= 0 && yy >= 0 && xx < MW && yy < MH && explored[Math.floor(yy / EXC) * EXW + Math.floor(xx / EXC)]) mmPix[yy * MW + xx] = c; } };
+  SHRINES.forEach(sx => mark(sx, GY - 1, MM_COL.shrine));
+  CHESTS.forEach(c => { if (!S.chests.includes(c.id) && (c.era === undefined || c.era === S.era)) mark(c.x, c.y - 1, MM_COL.chest); });
+  mmCtx.putImageData(mmImg, 0, 0);
+}
+function exploredPct() { let n = 0; for (let i = 0; i < explored.length; i++) n += explored[i]; return Math.round(n / explored.length * 100); }
+function save() { try { S.ex = explored.join(''); localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
 function has(id) { return S.nodes.includes(id); }
 function popPct(n) { return Math.max(0, THRESH - S.pastKills[n]) / THRESH; }
 
@@ -187,17 +292,20 @@ function toast(msg, dur = 2.6) { toastEl.textContent = msg; toastEl.classList.ad
 function newPlayer(x, y) {
   return { x, y, w: 12, h: 26, vx: 0, vy: 0, face: 1, onGround: false, jumps: 0, coyote: 0, jbuf: 0, hp: 100, maxhp: 100, en: 50, maxen: 50,
     inv: 0, dashT: 0, dashCd: 0, airDashed: false, atkT: 0, atkDur: 0, atkCd: 0, combo: 0, comboWin: 0, finisher: false, hitIds: null,
-    safe: { x, y }, hurtT: 0, anim: 0 };
+    safe: { x, y }, hurtT: 0, anim: 0, shieldCd: 0, biteCd: 0, dartCd: 1, stompCd: 3 };
 }
+function forgeMult(lv) { return 1 + FORGE_PCT / 100 * lv; }
 function stats() {
-  const asc = has('asc') ? 1.1 : 1;
+  const asc = has('asc') ? 1.1 : 1, sp = S.spirit;
   return {
     spd: (has('swift') ? 1.15 : 1) * asc,
     maxCombo: has('fourth') ? 4 : 3,
-    dmg: 12 * (has('edge') ? 1.2 : 1) * asc,
-    maxhp: (100 + (has('roots') ? 25 : 0)) * asc,
+    dmg: 12 * (has('edge') ? 1.2 : 1) * asc * forgeMult(S.forge),
+    maxhp: (100 + (has('roots') ? 25 : 0) + (sp === 'kapre' ? 30 : 0)) * asc,
     maxen: 50 + (has('well') ? 25 : 0),
-    regen: has('well') ? 9 : 5,
+    regen: (has('well') ? 9 : 5) + (sp === 'wakwak' ? 3 : 0),
+    crit: sp === 'sigbin' ? 0.18 : 0.04,
+    magnet: sp === 'punso' ? 190 : 70,
     dashInv: has('step') ? 0.28 : 0.16,
     dashCd: has('step') ? 0.32 : 0.5,
     taken: (has('iron') ? 0.85 : 1) / asc
@@ -205,6 +313,12 @@ function stats() {
 }
 function hurtPlayer(dmg, fromX) {
   if (P.inv > 0 || mode !== 'play') return;
+  if (S.spirit === 'salagubang' && P.shieldCd <= 0) {
+    P.shieldCd = 12; P.inv = 0.5;
+    popText(P.x + P.w / 2, P.y - 4, t('block'), '#ffe08a'); burst(P.x + P.w / 2, P.y + P.h / 2, 14, '#ffe08a', 160, 0.4);
+    sfx(1200, 0.12, 'triangle', 0.05, -500);
+    return;
+  }
   const st = stats();
   const d = Math.round(dmg * st.taken);
   P.hp -= d; P.inv = 0.7; P.hurtT = 0.25;
@@ -219,7 +333,7 @@ function die() {
   if (boss && boss.active) endBossFight(false);
   toast(t('died'));
   const sx = SHRINES[S.shrine] * TS;
-  P = newPlayer(sx, 34 * TS - 26 + 16);
+  P = newPlayer(sx, (OY + 34) * TS - 26 + 16);
   const st = stats(); P.maxhp = P.hp = st.maxhp; P.maxen = P.en = st.maxen;
   P.inv = 1.2; flash = 0.5; flashCol = '#ff3d8b';
   enemies = []; projs = []; resetSpawns();
@@ -227,8 +341,12 @@ function die() {
 }
 
 // ---------- enemies ----------
+function succOf(niche) {
+  const alt = SUCC_ALT[niche];
+  return alt && popPct(alt.dep) <= 0 ? alt.dead : NICHES[niche][2];
+}
 function speciesFor(niche) {
-  const [past, pres, succ] = NICHES[niche], p = popPct(niche);
+  const [past, pres] = NICHES[niche], succ = succOf(niche), p = popPct(niche);
   if (S.era === PAST) return p > 0 ? past : null;
   if (p <= 0) return succ;
   if (p <= 0.5) return Math.random() < 0.5 ? succ : pres;
@@ -240,7 +358,8 @@ function spawnEnemy(sp) {
   const d = SPEC[id], n = d.group || 1;
   for (let i = 0; i < n; i++) {
     const e = { id: uid++, sp: id, d, x: sp.x * TS + i * 12, y: sp.y * TS - d.h - (d.beh === 'swarm' ? i * 10 : 0), w: d.w, h: d.h, vx: 0, vy: 0,
-      hp: d.hp, max: d.hp, face: -1, onGround: false, st: 'walk', t: rnd(0, 1), home: { x: sp.x * TS, y: sp.y * TS - 40 }, src: sp, era: S.era, flashT: 0, kb: 0, ph: rnd(0, 6) };
+      hp: d.hp, max: d.hp, face: -1, onGround: false, st: 'walk', t: rnd(0, 1), home: { x: sp.x * TS, y: sp.y * TS - 40 }, src: sp, era: S.era, flashT: 0, kb: 0, ph: rnd(0, 6),
+      loot: null, target: null };
     if (d.beh === 'flyer' || d.beh === 'diver') e.y = sp.y * TS - 30;
     enemies.push(e); sp.alive++;
   }
@@ -286,6 +405,10 @@ function updateEnemy(e, dt) {
       const gap = !isSolid(tileAt(ahead, below)) && !isOneWay(tileAt(ahead, below));
       if (hitWall || (gap && e.st !== 'charge') || (gap && e.st === 'charge')) { e.face *= -1; if (e.st === 'charge') { e.st = 'walk'; e.t = 0; } }
     }
+  } else if (d.beh === 'giant') {
+    updateGiant(e, dt, dx, dy);
+  } else if (d.beh === 'thief') {
+    updateThief(e, dt, dx, dy);
   } else if (d.beh === 'swarm') {
     const near = Math.abs(dx) < 200 && Math.abs(dy) < 120;
     const tx = near ? px + Math.sin(e.t * 3 + e.ph) * 26 : e.home.x + Math.sin(e.t + e.ph) * 30;
@@ -310,13 +433,89 @@ function updateEnemy(e, dt) {
     e.x += e.vx * dt; e.y += e.vy * dt; e.face = e.vx >= 0 ? 1 : -1;
     const gy = Math.floor((e.y + e.h) / TS); if (isSolid(tileAt(Math.floor(ex / TS), gy))) { e.y = gy * TS - e.h; e.vy = -Math.abs(e.vy) * 0.5; if (e.st === 'dive') { e.st = 'walk'; e.t = 0; } }
   }
-  if (overlap(e, P) && P.dashT <= 0) hurtPlayer(d.dmg, ex);
+  if ((d.beh !== 'thief' || e.st === 'nip') && overlap(e, P) && P.dashT <= 0) hurtPlayer(d.dmg, ex);
 }
-function damageEnemy(e, dmg, kx, isBolt) {
+function groundAhead(e) {
+  const ahead = Math.floor((e.face > 0 ? e.x + e.w + 2 : e.x - 2) / TS), below = Math.floor((e.y + e.h + 2) / TS), v = tileAt(ahead, below);
+  return isSolid(v) || isOneWay(v);
+}
+// giant: slow walk toward the player, telegraphed wind-up (arms raised), ground pound that sends shockwaves along the floor
+function updateGiant(e, dt, dx, dy) {
+  const d = e.d;
+  e.vy = Math.min(600, e.vy + 900 * dt);
+  if (e.st === 'walk') {
+    const chase = Math.abs(dx) < 240 && Math.abs(dy) < 70;
+    if (chase && e.kb <= 0) e.face = Math.sign(dx) || e.face;
+    e.vx = e.kb > 0 ? e.vx : e.face * d.spd * (chase ? 1 : 0.6);
+    if (Math.abs(dx) < 66 && Math.abs(dy) < 50 && e.t > 1.1) { e.st = 'wind'; e.t = 0; e.vx = 0; sfx(90, 0.3, 'sawtooth', 0.04, 40); }
+  } else if (e.st === 'wind') {
+    e.vx = 0;
+    if (e.t > 0.7) {
+      e.st = 'rest'; e.t = 0; shake = Math.max(shake, 6); sfx(55, 0.35, 'sawtooth', 0.07, -20);
+      const cx = e.x + e.w / 2, fy = e.y + e.h;
+      for (let i = 0; i < d.quake; i++) for (const s of [-1, 1])
+        projs.push({ from: 'enemy', x: cx - 6, y: fy - 10, w: 12, h: 10, vx: s * (190 - i * 60), vy: 0, dmg: Math.round(d.dmg * 0.8), type: 'wave', life: 1.1, hit: null });
+      burst(cx, fy, 16, e.sp === 'kapremech' ? '#ff3d8b' : '#a88b5a', 170, 0.5);
+    }
+  } else if (e.st === 'rest') { e.vx = 0; if (e.t > 0.9) { e.st = 'walk'; e.t = 0; } }
+  if (e.sp !== 'kapremech' && Math.random() < dt * 3) parts.push({ x: e.x + e.w / 2 + e.face * 14, y: e.y + 8, vx: rnd(-6, 6), vy: -18, life: 1.1, max: 1.1, col: e.sp === 'ugat' ? 'rgba(62,240,180,.6)' : 'rgba(200,200,200,.45)', size: 2, grav: -10 });
+  else if (e.sp === 'kapremech' && Math.random() < dt * 4) parts.push({ x: e.x + e.w / 2 - e.face * 8, y: e.y + 2, vx: rnd(-6, 6), vy: -26, life: 0.8, max: 0.8, col: 'rgba(255,61,139,.5)', size: 2, grav: -10 });
+  const hitWall = moveX(e, e.vx * dt);
+  moveY(e, e.vy * dt);
+  if (e.onGround && e.st === 'walk' && (hitWall || !groundAhead(e))) { e.face *= -1; e.vx = 0; }
+}
+// scavenger: runs to dropped materials and steals them, nips the player, then flees; escapes with the loot if it gets far enough away
+function updateThief(e, dt, dx, dy) {
+  const d = e.d;
+  e.vy = Math.min(600, e.vy + 900 * dt);
+  if (e.kb <= 0) {
+    if (e.st === 'walk') {
+      e.vx = e.face * d.spd * 0.35;
+      let best = null, bd = 1e9;
+      if (!e.loot || e.loot.length < 3) for (const it of items) {
+        if (it.got) continue;
+        const ix = it.x + 4 - (e.x + e.w / 2), iy = it.y + 4 - (e.y + e.h / 2);
+        if (Math.abs(ix) < 210 && Math.abs(iy) < 50 && Math.abs(ix) < bd) { bd = Math.abs(ix); best = it; }
+      }
+      if (best) { e.target = best; e.st = 'grab'; e.t = 0; }
+      else if (Math.abs(dx) < 110 && Math.abs(dy) < 30 && e.t > 1.2) { e.st = 'nip'; e.t = 0; e.face = Math.sign(dx) || 1; sfx(700, 0.05, 'square', 0.025, 200); }
+    } else if (e.st === 'grab') {
+      const it = e.target;
+      if (!it || it.got || e.t > 4) { e.st = 'walk'; e.t = 0; e.target = null; }
+      else {
+        e.face = it.x + 4 > e.x + e.w / 2 ? 1 : -1; e.vx = e.face * d.spd;
+        if (overlap(e, it)) {
+          it.got = true; (e.loot || (e.loot = [])).push(it.mat); e.target = null;
+          popText(e.x + e.w / 2, e.y - 8, t('stolen'), '#ff6b8a'); sfx(1300, 0.06, 'square', 0.03, -600);
+          e.st = 'flee'; e.t = 0;
+        }
+      }
+    } else if (e.st === 'nip') {
+      e.vx = e.face * d.spd * 1.5;
+      if (e.t > 0.4) { e.st = 'flee'; e.t = 0; }
+    } else if (e.st === 'flee') {
+      e.face = dx > 0 ? -1 : 1; e.vx = e.face * d.spd * 1.15;
+      if (e.t > 2.4) { e.st = 'walk'; e.t = 0; }
+    }
+  }
+  const hitWall = moveX(e, e.vx * dt);
+  moveY(e, e.vy * dt);
+  if (e.onGround && e.kb <= 0) {
+    if (hitWall) { if (e.st === 'flee') e.vy = -300; else e.face *= -1; }
+    else if (!groundAhead(e)) { if (e.st === 'flee') e.vy = -260; else if (e.st !== 'grab') e.face *= -1; }
+  }
+  if (e.loot && e.loot.length && e.st === 'flee' && Math.abs(dx) > 380) {
+    e.dead = true; e.escaped = true;
+    if (e.src) { e.src.alive = Math.max(0, e.src.alive - 1); if (e.src.alive === 0) e.src.cd = 12; }
+    toast(t('escaped', e.loot.length));
+  }
+}
+function damageEnemy(e, dmg, kx, isBolt, crit) {
   e.hp -= dmg; e.flashT = 0.1;
-  e.kb = 0.18; e.vx = kx * 170; if (e.d.beh !== 'swarm' && e.d.beh !== 'flyer' && e.d.beh !== 'diver') e.vy = -120; else e.vy = -40;
-  if (e.st === 'charge' || e.st === 'dive') { e.st = 'walk'; e.t = 0; }
-  popText(e.x + e.w / 2, e.y - 2, Math.round(dmg), isBolt ? '#3ef0b4' : '#ffc65a');
+  if (e.d.beh === 'giant') { e.kb = 0.06; if (e.st === 'walk') e.vx = kx * 30; }
+  else { e.kb = 0.18; e.vx = kx * 170; if (e.d.beh !== 'swarm' && e.d.beh !== 'flyer' && e.d.beh !== 'diver') e.vy = -120; else e.vy = -40; }
+  if (e.st === 'charge' || e.st === 'dive' || e.st === 'grab') { e.st = e.d.beh === 'thief' ? 'flee' : 'walk'; e.t = 0; }
+  popText(e.x + e.w / 2, e.y - 2, Math.round(dmg) + (crit ? '!' : ''), crit ? '#ff8a3d' : isBolt ? '#3ef0b4' : '#ffc65a');
   burst(e.x + e.w / 2, e.y + e.h / 2, 6, e.d.eye, 140, 0.35);
   if (e.hp <= 0) killEnemy(e);
 }
@@ -328,8 +527,11 @@ function killEnemy(e) {
   sfx(220, 0.12, 'square', 0.05, -120);
   if (e.src) { e.src.alive = Math.max(0, e.src.alive - 1); if (e.src.alive === 0) e.src.cd = 12; }
   if (has('mend')) P.hp = Math.min(P.maxhp, P.hp + 4);
-  // drop
-  if (Math.random() < (d.group ? 0.45 : 0.85)) items.push({ x: e.x + e.w / 2 - 4, y: e.y, w: 8, h: 8, vy: -120, mat: d.mat, t: 0 });
+  // drop (the Taga-Punso spirit finds more), plus anything a scavenger stole
+  const dropX = e.x + e.w / 2 - 4, extra = S.spirit === 'punso';
+  if (Math.random() < Math.min(1, (d.group ? 0.45 : 0.85) * (extra ? 1.25 : 1))) dropItem(dropX, e.y, d.mat);
+  if (extra && Math.random() < 0.25) dropItem(dropX + 6, e.y, d.mat);
+  if (e.loot) e.loot.forEach((m, i) => dropItem(dropX + (i - 1) * 8, e.y, m));
   gainXp(d.xp);
   // ecosystem
   if (e.era === PAST && NICHES[d.niche][0] === e.sp) {
@@ -337,17 +539,20 @@ function killEnemy(e) {
     S.pastKills[d.niche] = Math.min(THRESH, S.pastKills[d.niche] + 1);
     const after = popPct(d.niche);
     if (before > 0 && after <= 0) {
-      const succ = SPEC[NICHES[d.niche][2]].name;
-      toast(t('extinctToast', d.name, succ), 4);
+      // the ghost of the extinct species waits at the next Anito shrine ahead of the player
+      let si = SHRINES.findIndex(sx => sx * TS > P.x + P.w); if (si < 0) si = SHRINES.length - 1;
+      if (!S.spirits.includes(e.sp)) S.spiritAt[e.sp] = si;
+      toast(t('extinctToast', spName(e.sp), spName(succOf(d.niche))) + (S.spirits.includes(e.sp) ? '' : ' ' + t('spiritAppear', spiritName(e.sp))), 5);
       flash = 0.4; flashCol = '#ff3d8b'; shake = 8; sfx(90, 0.6, 'sawtooth', 0.07, -40);
       enemies.forEach(o => { if (o.sp === e.sp && !o.dead) { o.dead = true; burst(o.x, o.y, 12, '#ff3d8b'); } });
       spawnState.forEach(s => { if (s.n === d.niche) s.alive = 0; });
     } else if (before > 0.5 && after <= 0.5) {
-      toast(d.name + ' · ' + t('population') + ' ' + Math.round(after * 100) + '%');
+      toast(spName(e.sp) + ' · ' + t('population') + ' ' + Math.round(after * 100) + '%');
     }
   }
   save();
 }
+function dropItem(x, y, mat) { items.push({ x, y, w: 8, h: 8, vy: -120, mat, t: 0, got: false }); }
 function gainXp(x) {
   S.xp += x;
   popText(P.x + P.w / 2, P.y - 14, '+' + x + ' XP', '#c7a2ff');
@@ -363,9 +568,9 @@ function gainXp(x) {
 // ---------- boss: Tikbalang with learning stages ----------
 function bossBaseStage() { return Math.min(3, 1 + Math.floor(S.bossMem.attempts / 2)); }
 function startBossFight() {
-  fill(ARENA.door, 30, 2, 6, 1);
+  fill(ARENA.door, OY + 30, 2, 6, 1);
   const base = bossBaseStage();
-  boss = { active: true, x: 188 * TS, y: 36 * TS - 64, w: 36, h: 64, vx: 0, vy: 0, hp: 520, max: 520, face: -1, onGround: false,
+  boss = { active: true, x: 188 * TS, y: GY * TS - 64, w: 36, h: 64, vx: 0, vy: 0, hp: 520, max: 520, face: -1, onGround: false,
     st: 'intro', t: 0, stage: base, base, flashT: 0, next: null, last: [], tele: 0, plan: null,
     mem: { left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0 }, telePX: 0, hitThis: null, alpha: 1 };
   enemies = [];
@@ -376,7 +581,7 @@ function endBossFight(won) {
   const m = S.bossMem, b = boss;
   if (b) { m.left += b.mem.left; m.right += b.mem.right; m.air += b.mem.air; m.ground += b.mem.ground; m.bolts += b.mem.bolts; m.melee += b.mem.melee; m.maxStage = Math.max(m.maxStage, b.stage); }
   if (won) { m.wins++; S.bossDone = true; } else m.attempts++;
-  fill(ARENA.door, 30, 2, 6, 0);
+  fill(ARENA.door, OY + 30, 2, 6, 0);
   boss = null;
   save();
 }
@@ -575,7 +780,11 @@ function updatePlayer(dt) {
       const hb = attackBox();
       const mult = P.finisher ? (has('breaker') ? 2.08 : 1.6) : 1;
       for (const e of enemies) if (!e.dead && !P.hitIds.has(e.id) && overlap(hb, e)) {
-        P.hitIds.add(e.id); damageEnemy(e, st.dmg * mult * rnd(0.92, 1.08), P.face, false);
+        P.hitIds.add(e.id);
+        const crit = Math.random() < st.crit;
+        damageEnemy(e, st.dmg * mult * rnd(0.92, 1.08) * (crit ? 1.75 : 1), P.face, false, crit);
+        // Sigbin spirit: every few seconds a hit is followed by a spectral bite
+        if (S.spirit === 'sigbin' && P.biteCd <= 0 && !e.dead) { P.biteCd = 3.5; damageEnemy(e, st.dmg * 0.6, P.face, false, false); burst(e.x + e.w / 2, e.y + e.h / 2, 10, SPIRIT_COL.sigbin, 150, 0.4); sfx(480, 0.08, 'sawtooth', 0.04, -200); }
         hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, P.finisher ? 5 : 2);
       }
       if (boss && !P.hitIds.has('boss') && overlap(hb, boss)) { P.hitIds.add('boss'); damageBoss(st.dmg * mult * rnd(0.92, 1.08), false); hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, 3); }
@@ -622,14 +831,84 @@ const timeBtn = document.getElementById('b-time');
 function switchEra() {
   S.era = S.era === PAST ? PRESENT : PAST;
   S.shrine = nearShrine;
-  enemies = []; projs = projs.filter(p => p.from !== 'boss'); resetSpawns();
+  enemies = []; projs = projs.filter(p => p.from === 'player'); resetSpawns();
   // never leave the player inside a solid tile
   for (let i = 0; i < 4 && (isSolid(tileAt(Math.floor((P.x + 2) / TS), Math.floor((P.y + P.h - 2) / TS))) || isSolid(tileAt(Math.floor((P.x + P.w - 2) / TS), Math.floor((P.y + P.h - 2) / TS)))); i++) P.y -= TS;
   flash = 0.7; flashCol = S.era === PAST ? '#3ef0b4' : '#ff3d8b'; shake = 6;
   sfx(S.era === PAST ? 300 : 600, 0.5, 'sine', 0.06, S.era === PAST ? -150 : 300);
   burst(P.x + P.w / 2, P.y + P.h / 2, 40, flashCol, 260, 0.9, 2, 0);
   toast(S.era === PAST ? t('past') + ' · ' + t('yearPast') : t('present') + ' · ' + t('yearPresent'), 1.6);
+  wipeT = WIPE; wipeCol = flashCol; exDirty = true;
   save();
+}
+// ---------- spirits ----------
+const SPR = { x: 0, y: 0 };
+function spiritSpot(si) { return { x: SHRINES[si] * TS + 34, y: GY * TS - 34 }; }
+function equipSpirit(id) {
+  if (!S.spirits.includes(id)) return false;
+  S.spirit = id; P.shieldCd = 0; P.biteCd = 0;
+  const st = stats(); P.maxhp = st.maxhp; P.hp = Math.min(P.hp, P.maxhp);
+  save(); return true;
+}
+function captureSpirit(id) {
+  delete S.spiritAt[id];
+  if (!S.spirits.includes(id)) S.spirits.push(id);
+  toast(t('spiritGot', spiritName(id)), 3.5); flash = 0.4; flashCol = SPIRIT_COL[id];
+  burst(P.x + P.w / 2, P.y + P.h / 2, 30, SPIRIT_COL[id], 200, 0.9, 2, 0); sfx(784, 0.3, 'sine', 0.06, 400);
+  equipSpirit(id);
+}
+function updateSpirit(dt) {
+  for (const id in S.spiritAt) {
+    const p = spiritSpot(S.spiritAt[id]);
+    if (Math.abs(P.x + P.w / 2 - p.x) < 14 && Math.abs(P.y + P.h / 2 - p.y) < 28) captureSpirit(id);
+  }
+  const sp = S.spirit; if (!sp) return;
+  const tx = P.x + P.w / 2 - P.face * 18, ty = P.y - 4 + Math.sin(S.time * 3) * 3;
+  if (Math.abs(SPR.x - tx) > 300 || Math.abs(SPR.y - ty) > 300) { SPR.x = tx; SPR.y = ty; }
+  SPR.x += (tx - SPR.x) * Math.min(1, dt * 5); SPR.y += (ty - SPR.y) * Math.min(1, dt * 5);
+  if (P.shieldCd > 0) P.shieldCd -= dt;
+  if (P.biteCd > 0) P.biteCd -= dt;
+  if (sp === 'diwata') P.hp = Math.min(P.maxhp, P.hp + 1.2 * dt);
+  else if (sp === 'wakwak') {
+    P.dartCd -= dt;
+    if (P.dartCd <= 0) {
+      let best = null, bd = 150 * 150;
+      for (const e of enemies) if (!e.dead && (e.d.beh === 'flyer' || e.d.beh === 'diver')) { const ddx = e.x + e.w / 2 - SPR.x, ddy = e.y + e.h / 2 - SPR.y, d2 = ddx * ddx + ddy * ddy; if (d2 < bd) { bd = d2; best = e; } }
+      if (best) {
+        const ddx = best.x + best.w / 2 - SPR.x, ddy = best.y + best.h / 2 - SPR.y, m = Math.hypot(ddx, ddy) || 1;
+        projs.push({ from: 'player', x: SPR.x - 3, y: SPR.y - 3, w: 6, h: 6, vx: ddx / m * 300, vy: ddy / m * 300, dmg: 14, type: 'dart', life: 0.8, pierce: false, hit: new Set() });
+        sfx(1100, 0.05, 'triangle', 0.03, -400); P.dartCd = 1.3;
+      } else P.dartCd = 0.2;
+    }
+  } else if (sp === 'kapre') {
+    P.stompCd -= dt;
+    if (P.stompCd <= 0) {
+      let any = false;
+      for (const e of enemies) if (!e.dead && e.d.beh !== 'flyer' && e.d.beh !== 'diver' && Math.abs(e.x + e.w / 2 - P.x - P.w / 2) < 70 && Math.abs(e.y + e.h - P.y - P.h) < 30) { any = true; damageEnemy(e, 16, Math.sign(e.x - P.x) || 1, false, false); }
+      if (any) { P.stompCd = 8; shake = Math.max(shake, 4); burst(P.x + P.w / 2, P.y + P.h, 18, SPIRIT_COL.kapre, 160, 0.5); sfx(70, 0.3, 'sawtooth', 0.06, -20); }
+      else P.stompCd = 0.25;
+    }
+  }
+}
+// ---------- chests, explored map ----------
+function updateChests() {
+  for (const c of CHESTS) {
+    if (S.chests.includes(c.id) || (c.era !== undefined && c.era !== S.era)) continue;
+    if (Math.abs(P.x + P.w / 2 - (c.x * TS + 8)) < 14 && Math.abs(P.y + P.h - c.y * TS) < 10) {
+      S.chests.push(c.id);
+      const got = [];
+      for (const m in c.loot) { S.mats[m] = (S.mats[m] || 0) + c.loot[m]; got.push(c.loot[m] + 'x ' + matName(m)); }
+      toast(t('chestOpen', got.join(', ')), 4.5); flash = 0.3; flashCol = '#ffc65a';
+      burst(c.x * TS + 8, c.y * TS - 8, 30, '#ffc65a', 180, 0.8); sfx(880, 0.15, 'triangle', 0.06, 300); setTimeout(() => sfx(1320, 0.2, 'triangle', 0.05), 120);
+      gainXp(20); exDirty = true; save();
+    }
+  }
+}
+function markExplored() {
+  const cx = Math.floor((P.x + P.w / 2) / TS / EXC), cy = Math.floor((P.y + P.h / 2) / TS / EXC), c = cy * EXW + cx;
+  if (c === exCell) return;
+  exCell = c;
+  for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 3; x <= cx + 3; x++) if (x >= 0 && y >= 0 && x < EXW && y < EXH && !explored[y * EXW + x]) { explored[y * EXW + x] = 1; exDirty = true; }
 }
 function update(dt) {
   S.time += dt;
@@ -644,9 +923,13 @@ function update(dt) {
   if (hitstop > 0) { hitstop -= dt; return; }
 
   updatePlayer(dt);
+  updateSpirit(dt);
+  updateChests();
+  markExplored();
+  if (wipeT > 0) wipeT -= dt;
   // shrines
   nearShrine = -1;
-  SHRINES.forEach((sx, i) => { if (Math.abs(P.x + P.w / 2 - (sx * TS + 8)) < 22 && P.y > 30 * TS) nearShrine = i; });
+  SHRINES.forEach((sx, i) => { if (Math.abs(P.x + P.w / 2 - (sx * TS + 8)) < 22 && P.y > (OY + 30) * TS) nearShrine = i; });
   timeBtn.hidden = nearShrine < 0 || !!(boss && boss.active);
   if (!timeBtn.hidden) timeBtn.textContent = t('shrineBtn') + ' ⟲';
   if (pressed.up && nearShrine >= 0 && !(boss && boss.active)) switchEra();
@@ -657,11 +940,12 @@ function update(dt) {
   }
   // hints
   if (hintCd <= 0) {
-    if (!has('breaker') && P.x > 149 * TS && P.x < 154 * TS && P.y > 30 * TS) { toast(t('cracked'), 3); hintCd = 8; }
-    else if (S.era === PAST && P.x > 38 * TS && P.x < 44 * TS && P.y > 30 * TS) { toast(t('noCross'), 3); hintCd = 8; }
+    if (!has('breaker') && P.x > 149 * TS && P.x < 154 * TS && P.y > (OY + 30) * TS) { toast(t('cracked'), 3); hintCd = 8; }
+    else if (S.era === PAST && P.x > 38 * TS && P.x < 44 * TS && P.y > (OY + 30) * TS) { toast(t('noCross'), 3); hintCd = 8; }
+    else if (S.era === PRESENT && P.x > 96 * TS && P.x < 104 * TS && P.y > (OY + 30) * TS) { toast(t('sealed'), 3.5); hintCd = 12; }
   }
   // boss arena
-  if (!boss && !S.bossDone && P.x > ARENA.trigger && P.y > 20 * TS) startBossFight();
+  if (!boss && !S.bossDone && P.x > ARENA.trigger && P.y > (OY + 20) * TS) startBossFight();
   if (boss) updateBoss(dt);
   else updateSpawns(dt);
   for (const e of enemies) if (!e.dead) updateEnemy(e, dt);
@@ -675,16 +959,19 @@ function update(dt) {
       for (const e of enemies) if (!e.dead && !p.hit.has(e.id) && overlap(p, e)) { p.hit.add(e.id); damageEnemy(e, p.dmg, Math.sign(p.vx), true); if (!p.pierce) p.life = 0; }
       if (boss && !p.hit.has('boss') && overlap(p, boss) && boss.alpha > 0.5) { p.hit.add('boss'); damageBoss(p.dmg, true); if (!p.pierce) p.life = 0; }
     } else if (overlap(p, P) && P.dashT <= 0) { hurtPlayer(p.dmg, p.x); if (p.type === 'leaf') p.life = 0; }
-    if (p.type !== 'wave' && isSolid(tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h / 2) / TS)))) p.life = 0;
+    if (p.type === 'wave') { const v = tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h + 2) / TS)); if (!isSolid(v) && !isOneWay(v)) p.life = 0; }
+    else if (isSolid(tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h / 2) / TS)))) p.life = 0;
   }
   projs = projs.filter(p => p.life > 0);
   // items
+  const magnet = stats().magnet;
   for (const it of items) {
+    if (it.got) continue;
     it.t += dt;
     const dx = P.x + P.w / 2 - (it.x + 4), dy = P.y + P.h / 2 - (it.y + 4), dist = Math.hypot(dx, dy);
-    if (dist < 70 && it.t > 0.3) { it.x += dx / dist * 260 * dt; it.y += dy / dist * 260 * dt; }
+    if (dist < magnet && it.t > 0.3) { it.x += dx / dist * 260 * dt; it.y += dy / dist * 260 * dt; }
     else { it.vy = Math.min(400, it.vy + 700 * dt); moveY(it, it.vy * dt); }
-    if (dist < 12 && it.t > 0.3) { it.got = true; S.mats[it.mat] = (S.mats[it.mat] || 0) + 1; popText(P.x + P.w / 2, P.y - 24, '+1 ' + MATS[it.mat], '#ffe08a'); sfx(990, 0.05, 'triangle', 0.03); }
+    if (dist < 12 && it.t > 0.3) { it.got = true; S.mats[it.mat] = (S.mats[it.mat] || 0) + 1; popText(P.x + P.w / 2, P.y - 24, '+1 ' + matName(it.mat), '#ffe08a'); sfx(990, 0.05, 'triangle', 0.03); }
   }
   items = items.filter(i => !i.got && i.t < 30);
   // camera
@@ -702,7 +989,7 @@ const rain = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.rand
 const flies = Array.from({ length: 40 }, () => ({ x: Math.random(), y: rnd(0.35, 0.9), p: rnd(0, 6) }));
 
 function drawBG(time) {
-  const past = S.era === PAST;
+  const past = S.era === PAST, cy = cam.y - OY * TS; // parallax relative to the original ground camera
   const g = ctx.createLinearGradient(0, 0, 0, VH);
   if (past) { g.addColorStop(0, '#071a24'); g.addColorStop(0.55, '#0d3a3c'); g.addColorStop(1, '#16514a'); }
   else { g.addColorStop(0, '#0a0718'); g.addColorStop(0.5, '#2a0f3c'); g.addColorStop(1, '#5a1748'); }
@@ -718,7 +1005,7 @@ function drawBG(time) {
   if (past) {
     const cols = ['#0b2b2e', '#082224', '#051718'];
     ridges.forEach((rg, l) => {
-      const par = 0.08 + l * 0.12, base = VH * (0.62 + l * 0.1) - cam.y * par * 0.3;
+      const par = 0.08 + l * 0.12, base = VH * (0.62 + l * 0.1) - cy * par * 0.3;
       ctx.fillStyle = cols[l]; ctx.beginPath(); ctx.moveTo(0, VH);
       for (let i = 0; i <= 40; i++) { const x = i * (VW / 20) - (cam.x * par) % (VW / 20 * 20); ctx.lineTo(x, base - rg[i % 40] * 70); }
       ctx.lineTo(VW, VH); ctx.fill();
@@ -726,7 +1013,7 @@ function drawBG(time) {
     // palms
     ctx.strokeStyle = '#041213'; ctx.fillStyle = '#041213'; ctx.lineWidth = 3;
     for (let i = 0; i < 14; i++) {
-      const x = ((i * 97 - cam.x * 0.45) % (VW + 200) + VW + 200) % (VW + 200) - 100, y = VH * 0.92 - cam.y * 0.15;
+      const x = ((i * 97 - cam.x * 0.45) % (VW + 200) + VW + 200) % (VW + 200) - 100, y = VH * 0.92 - cy * 0.15;
       ctx.beginPath(); ctx.moveTo(x, y); ctx.quadraticCurveTo(x + 10, y - 50, x + 4, y - 90); ctx.stroke();
       for (let f = 0; f < 6; f++) { const a = -Math.PI / 2 + (f - 2.5) * 0.55; ctx.beginPath(); ctx.moveTo(x + 4, y - 90); ctx.quadraticCurveTo(x + 4 + Math.cos(a) * 26, y - 96 + Math.sin(a) * 10, x + 4 + Math.cos(a) * 40, y - 80 + Math.sin(a) * 18); ctx.stroke(); }
     }
@@ -735,7 +1022,7 @@ function drawBG(time) {
     // skyline, two layers
     for (let l = 0; l < 2; l++) {
       const par = 0.15 + l * 0.2; let x = -((cam.x * par) % 2000);
-      const base = VH * (0.95 - l * 0.02) - cam.y * par * 0.3;
+      const base = VH * (0.95 - l * 0.02) - cy * par * 0.3;
       for (let i = 0; x < VW + 40; i++) {
         const tw = towers[(i + l * 13) % towers.length], h = tw.h * (l ? 1 : 1.25);
         ctx.fillStyle = l ? '#120a24' : '#1b1033'; ctx.fillRect(x, base - h, tw.w, h);
@@ -785,12 +1072,76 @@ function drawTiles(time) {
     } else if (v === 5) {
       if (past) { ctx.fillStyle = '#8a7444'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(px + i * 5 + 1, py + TS); ctx.lineTo(px + i * 5 + 3, py + 3); ctx.lineTo(px + i * 5 + 5, py + TS); ctx.fill(); } }
       else { ctx.fillStyle = '#5a6080'; for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(px + i * 5 + 1, py + TS); ctx.lineTo(px + i * 5 + 3, py + 3); ctx.lineTo(px + i * 5 + 5, py + TS); ctx.fill(); } if (Math.sin(time * 20 + x) > 0.6) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(px + 3, py + 2, 1, 4); } }
+    } else if (v === 7) {
+      if (!past) {
+        ctx.fillStyle = '#241a3e'; ctx.fillRect(px, py, TS, 6);
+        ctx.fillStyle = (x + y) % 3 ? '#ff3d8b' : '#2bd9ff'; ctx.fillRect(px, py, TS, 2);
+        ctx.fillStyle = 'rgba(255,61,139,.14)'; ctx.fillRect(px, py + 6, TS, 3);
+        if (tileAt(x - 1, y) !== 7 || tileAt(x + 1, y) !== 7) { ctx.fillStyle = '#3a2d5c'; ctx.fillRect(px + 6, py + 6, 3, 10); }
+        if ((x * 5 + y) % 9 === 0) { ctx.fillStyle = '#4a4f6a'; ctx.fillRect(px + 3, py - 6, 9, 6); ctx.fillStyle = '#2bd9ff'; ctx.fillRect(px + 5, py - 4, 2, 2); }
+      } else { ctx.strokeStyle = 'rgba(255,61,139,.1)'; ctx.setLineDash([2, 4]); ctx.strokeRect(px + 0.5, py + 0.5, TS - 1, 4); ctx.setLineDash([]); }
+    } else if (v === 8) {
+      if (!past) {
+        ctx.fillStyle = '#3a3c48'; ctx.fillRect(px, py, TS, TS); ctx.fillStyle = '#4a4d5c'; ctx.fillRect(px + 1, py + 1, TS - 2, TS - 2);
+        ctx.fillStyle = '#2a2c36'; ctx.fillRect(px + 2, py + 7, TS - 4, 1);
+        if (y === 54) { ctx.fillStyle = '#ffc65a'; ctx.fillRect(px + 2, py + 3, 4, 2); ctx.fillStyle = '#111'; ctx.fillRect(px + 6, py + 3, 4, 2); ctx.fillStyle = '#ffc65a'; ctx.fillRect(px + 10, py + 3, 4, 2); }
+      } else {
+        ctx.strokeStyle = '#3f8a4a'; ctx.lineWidth = 1.5; ctx.beginPath();
+        for (let i = 0; i < 4; i++) { const sx = px + 2 + i * 4, sw = Math.sin(time * 1.5 + x + i) * 1.5; ctx.moveTo(sx, py); ctx.quadraticCurveTo(sx + sw, py + 8, sx - sw * 0.5, py + TS); }
+        ctx.stroke(); ctx.fillStyle = '#86b84a'; ctx.fillRect(px + 4 + (y % 2) * 6, py + 6, 2, 2);
+      }
     }
+  }
+}
+// landmarks drawn behind the tiles: balete tree / scaffold, rooftop facades, the den's glow
+function drawDecor(time) {
+  const past = S.era === PAST;
+  // balete canopy trunk (x 122..130, rows 40..58)
+  let x = 122 * TS - cam.x, y = 40 * TS - cam.y;
+  if (x > -200 && x < VW + 200 && y < VH + 20 && y > -400) {
+    if (past) {
+      ctx.fillStyle = '#1e2a1c'; ctx.fillRect(x, y, 8 * TS, 18 * TS);
+      ctx.strokeStyle = '#2c3d27'; ctx.lineWidth = 3; ctx.beginPath();
+      for (let i = 0; i < 7; i++) { const rx = x + 6 + i * 19; ctx.moveTo(rx, y + 4); ctx.bezierCurveTo(rx - 8, y + 90, rx + 10, y + 180, rx - 4 + (i % 2) * 8, y + 18 * TS); }
+      ctx.stroke();
+      for (let i = 0; i < 9; i++) {
+        const lx = x + 4 * TS + (i - 4) * 40 + Math.sin(i * 2.1) * 10, ly = y - 30 - Math.abs(i - 4) * -6 + Math.sin(i * 1.3) * 14;
+        ctx.fillStyle = i % 2 ? 'rgba(30,72,44,.85)' : 'rgba(40,94,54,.8)'; ctx.beginPath(); ctx.ellipse(lx, ly, 46, 26, 0, 0, 7); ctx.fill();
+        ctx.fillStyle = 'rgba(95,179,92,.35)'; ctx.beginPath(); ctx.ellipse(lx - 8, ly - 10, 22, 8, 0, 0, 7); ctx.fill();
+      }
+      for (let i = 0; i < 10; i++) { const a = 0.4 + 0.6 * Math.sin(time * 2 + i * 1.7); ctx.fillStyle = `rgba(190,255,150,${a})`; ctx.fillRect(x - 60 + i * 26, y - 40 + Math.sin(time + i) * 10 + (i % 3) * 18, 2, 2); }
+    } else {
+      ctx.strokeStyle = 'rgba(89,96,122,.7)'; ctx.lineWidth = 2; ctx.beginPath();
+      for (let r = 0; r < 18; r += 3) { ctx.moveTo(x, y + r * TS); ctx.lineTo(x + 8 * TS, y + (r + 3) * TS); ctx.moveTo(x + 8 * TS, y + r * TS); ctx.lineTo(x, y + (r + 3) * TS); }
+      ctx.moveTo(x, y); ctx.lineTo(x, y + 18 * TS); ctx.moveTo(x + 8 * TS, y); ctx.lineTo(x + 8 * TS, y + 18 * TS); ctx.stroke();
+      if (Math.sin(time * 3) > -0.7) { ctx.fillStyle = '#ff3d8b'; ctx.fillRect(x + 4 * TS - 1, y - 6, 3, 3); }
+    }
+  }
+  // rooftop facades under the present-only decks
+  if (!past) {
+    for (const [bx, by, bw] of [[45, 52, 22], [50, 37, 17], [36, 58, 9]]) {
+      const fx = bx * TS - cam.x, fy = by * TS + 6 - cam.y, fw = bw * TS, fh = (GY - by) * TS - 6;
+      if (fx > VW || fx + fw < 0 || fy > VH || fy + fh < 0) continue;
+      ctx.fillStyle = 'rgba(20,12,40,.82)'; ctx.fillRect(fx + 8, fy, fw - 16, fh);
+      ctx.fillStyle = 'rgba(255,198,90,.32)';
+      for (let wy = fy + 10; wy < fy + fh - 6; wy += 18) for (let wx = fx + 16; wx < fx + fw - 20; wx += 14) if (((wx + cam.x) * 3 + (wy + cam.y) * 7 | 0) % 5 === 0) ctx.fillRect(wx, wy, 4, 6);
+    }
+    x = 52 * TS - cam.x; y = 37 * TS - cam.y - 58;
+    if (x > -120 && x < VW + 20 && y > -30 && y < VH) {
+      const on = Math.sin(time * 2.3) > -0.8; ctx.font = '700 9px "Chakra Petch", sans-serif';
+      ctx.globalAlpha = on ? 0.95 : 0.4; ctx.fillStyle = '#3ef0b4'; ctx.fillRect(x + 40, y, 78, 13); ctx.fillStyle = '#0b0e1a'; ctx.fillText('BUBONG · 24/7', x + 44, y + 10); ctx.globalAlpha = 1;
+    }
+  }
+  // den glow (inside the sky rock)
+  x = 82 * TS - cam.x; y = 47 * TS - cam.y;
+  if (x > -300 && x < VW && y > -200 && y < VH) {
+    ctx.fillStyle = past ? 'rgba(62,240,180,.08)' : 'rgba(0,0,0,.25)'; ctx.fillRect(x, y, 16 * TS, 9 * TS);
+    if (past) for (let i = 0; i < 6; i++) { const mx = x + 10 + i * 40, my = y + 9 * TS - 4; ctx.fillStyle = '#c99a5a'; ctx.fillRect(mx, my - 4, 2, 4); ctx.fillStyle = `rgba(62,240,180,${0.5 + 0.4 * Math.sin(time * 3 + i)})`; ctx.fillRect(mx - 2, my - 7, 6, 3); }
   }
 }
 function drawShrines(time) {
   SHRINES.forEach((sx, i) => {
-    const x = sx * TS - cam.x, y = 36 * TS - cam.y;
+    const x = sx * TS - cam.x, y = GY * TS - cam.y;
     if (x < -40 || x > VW + 40) return;
     const near = nearShrine === i, glow = near ? 0.6 + 0.3 * Math.sin(time * 5) : 0.25;
     ctx.fillStyle = `rgba(62,240,180,${glow * 0.35})`; ctx.beginPath(); ctx.ellipse(x + 8, y - 18, 20, 26, 0, 0, 7); ctx.fill();
@@ -810,53 +1161,179 @@ function drawShrines(time) {
     ctx.fillStyle = '#ff8a3d'; ctx.beginPath(); ctx.ellipse(x, y, 3, 9, 0.5, 0, 7); ctx.fill();
     ctx.fillStyle = '#ffd34a'; ctx.beginPath(); ctx.ellipse(x + 1, y - 2, 1.5, 6, 0.5, 0, 7); ctx.fill();
   }
+  // spirits of extinct species waiting at a shrine
+  for (const id in S.spiritAt) {
+    const p = spiritSpot(S.spiritAt[id]), x = p.x - cam.x, y = p.y - cam.y + Math.sin(time * 2.5) * 3;
+    if (x < -30 || x > VW + 30 || y < -30 || y > VH + 30) continue;
+    ctx.strokeStyle = SPIRIT_COL[id]; ctx.globalAlpha = 0.35; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(x, y, 16 + Math.sin(time * 3) * 2, 0, 7); ctx.stroke(); ctx.globalAlpha = 1;
+    drawSpiritGhost(id, x, y, -1, time, 0.9);
+  }
+  // secret chests
+  for (const c of CHESTS) {
+    if (c.era !== undefined && c.era !== S.era) continue;
+    const x = c.x * TS - cam.x, y = c.y * TS - cam.y, open = S.chests.includes(c.id);
+    if (x < -20 || x > VW + 20 || y < -20 || y > VH + 20) continue;
+    if (!open) { ctx.fillStyle = `rgba(255,198,90,${0.15 + 0.1 * Math.sin(time * 4)})`; ctx.fillRect(x - 4, y - 16, 24, 16); }
+    const pastStyle = S.era === PAST;
+    ctx.fillStyle = pastStyle ? '#6b4426' : '#2c3354'; ctx.fillRect(x + 1, y - 9, 14, 9);
+    ctx.fillStyle = pastStyle ? '#8a5a34' : '#3b4466'; if (open) ctx.fillRect(x + 1, y - 14, 14, 3); else ctx.fillRect(x + 1, y - 12, 14, 4);
+    ctx.fillStyle = pastStyle ? '#c99a5a' : '#2bd9ff'; ctx.fillRect(x + 1, y - 9, 14, 1); ctx.fillRect(x + 7, y - 10, 2, 3);
+  }
 }
 function drawEnemy(e, time) {
-  const x = Math.round(e.x - cam.x), y = Math.round(e.y - cam.y), d = e.d, f = e.face;
-  if (x < -40 || x > VW + 40 || y < -40 || y > VH + 40) return;
+  const x = Math.round(e.x - cam.x), y = Math.round(e.y - cam.y), d = e.d;
+  if (x < -50 || x > VW + 50 || y < -50 || y > VH + 50) return;
   const white = e.flashT > 0;
-  ctx.save(); ctx.translate(x + e.w / 2, y + e.h / 2); ctx.scale(f, 1);
-  const body = white ? '#ffffff' : d.col;
-  if (e.st === 'wind') { ctx.fillStyle = 'rgba(255,61,139,.35)'; ctx.beginPath(); ctx.arc(0, 0, e.w * 0.8, 0, 7); ctx.fill(); }
+  ctx.save(); ctx.translate(x + e.w / 2, y + e.h / 2); ctx.scale(e.face, 1);
+  if (e.st === 'wind') { ctx.fillStyle = 'rgba(255,61,139,.35)'; ctx.beginPath(); ctx.arc(0, 0, Math.max(e.w, e.h) * 0.6, 0, 7); ctx.fill(); }
+  drawBody(e.sp, e.t, e.st, white ? '#ffffff' : d.col, d.eye, white);
+  if (e.loot && e.loot.length) { ctx.fillStyle = '#ffe08a'; for (let i = 0; i < e.loot.length; i++) ctx.fillRect(-6 + i * 4, -e.h / 2 - 4, 3, 3); }
+  ctx.restore();
+  if (e.hp < e.max) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(x, y - 5, e.w, 2); ctx.fillStyle = '#ff3d8b'; ctx.fillRect(x, y - 5, e.w * e.hp / e.max, 2); }
+}
+// species bodies, drawn around the origin facing +x; plain = no accent colours (hit flash, spirit ghost)
+function drawBody(sp, tm, st, body, eye, plain) {
   ctx.fillStyle = body;
-  switch (e.sp) {
+  switch (sp) {
     case 'sigbin': case 'sigbinx': {
       // low hound, head between hind legs folklore pose: tail high, head low
       ctx.fillRect(-11, -4, 20, 9);
       ctx.fillRect(6, -1, 7, 6);
-      const leg = Math.sin(e.t * 14) * 2;
+      const leg = Math.sin(tm * 14) * 2;
       ctx.fillRect(-9, 4, 3, 4 + leg); ctx.fillRect(4, 4, 3, 4 - leg);
       ctx.beginPath(); ctx.moveTo(-11, -3); ctx.quadraticCurveTo(-18, -12, -12, -16); ctx.lineTo(-10, -14); ctx.quadraticCurveTo(-14, -10, -9, -4); ctx.fill();
-      if (e.sp === 'sigbinx' && !white) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-8, -4, 14, 1); }
-      ctx.fillStyle = d.eye; ctx.fillRect(10, 0, 2, 2);
+      if (sp === 'sigbinx' && !plain) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-8, -4, 14, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(10, 0, 2, 2);
       break;
     }
     case 'tiktik': {
       ctx.beginPath(); ctx.ellipse(0, 2, 6, 8, 0, 0, 7); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(-14, -9 + Math.sin(e.t * 12) * 3); ctx.lineTo(-4, -6); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(-14, -9 + Math.sin(tm * 12) * 3); ctx.lineTo(-4, -6); ctx.fill();
       ctx.beginPath(); ctx.moveTo(2, -6); ctx.lineTo(8, -10); ctx.lineTo(6, -3); ctx.fill();
-      ctx.fillStyle = d.eye; ctx.fillRect(4, -5, 2, 2);
+      ctx.fillStyle = eye; ctx.fillRect(4, -5, 2, 2);
       break;
     }
     case 'salagubang': case 'neonmite': case 'wisp': {
-      if (e.sp === 'wisp') { ctx.globalAlpha = 0.7 + 0.3 * Math.sin(e.t * 20); ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
-      else { ctx.beginPath(); ctx.ellipse(0, 0, 5, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(236,230,214,.45)'; const wv = Math.sin(e.t * 40) * 3; ctx.fillRect(-4, -4 - Math.abs(wv), 4, 2); ctx.fillRect(0, -4 - Math.abs(wv), 4, 2); }
-      ctx.fillStyle = d.eye; ctx.fillRect(3, -1, 2, 2);
+      if (sp === 'wisp') { const ga = ctx.globalAlpha; ctx.globalAlpha = ga * (0.7 + 0.3 * Math.sin(tm * 20)); ctx.beginPath(); ctx.arc(0, 0, 5, 0, 7); ctx.fill(); ctx.globalAlpha = ga; }
+      else { ctx.beginPath(); ctx.ellipse(0, 0, 5, 4, 0, 0, 7); ctx.fill(); ctx.fillStyle = 'rgba(236,230,214,.45)'; const wv = Math.sin(tm * 40) * 3; ctx.fillRect(-4, -4 - Math.abs(wv), 4, 2); ctx.fillRect(0, -4 - Math.abs(wv), 4, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(3, -1, 2, 2);
+      break;
+    }
+    case 'kapre': {
+      // tree giant: bark body, arms to the knees, a beard of hanging roots, the slow glow of its cigar
+      const wk = st === 'walk' ? Math.sin(tm * 4) * 1.5 : 0, up = st === 'wind';
+      ctx.fillRect(-8, 9, 6, 12 + wk); ctx.fillRect(2, 9, 6, 12 - wk);
+      ctx.fillRect(-10, -10, 20, 21);
+      if (up) { ctx.fillRect(-15, -27, 5, 18); ctx.fillRect(10, -27, 5, 18); } else { ctx.fillRect(-15, -8, 5, 23); ctx.fillRect(10, -8, 5, 23); }
+      ctx.fillRect(-8, -21, 16, 12);
+      if (!plain) {
+        ctx.fillStyle = '#3a2b1e'; ctx.fillRect(-5, -7, 2, 16); ctx.fillRect(2, -4, 2, 13); ctx.fillRect(-1, -9, 1, 6);
+        ctx.strokeStyle = '#3d4a26'; ctx.lineWidth = 1.5; ctx.beginPath();
+        for (let i = 0; i < 5; i++) { const rx = -7 + i * 3.4; ctx.moveTo(rx, -10); ctx.lineTo(rx + Math.sin(tm * 2 + i) * 1.5, -2 + (i % 2) * 3); }
+        ctx.stroke();
+        ctx.fillStyle = '#6b4a2a'; ctx.fillRect(7, -13, 7, 2);
+        const g = 0.5 + 0.4 * Math.sin(tm * 2.2);
+        ctx.fillStyle = `rgba(255,138,61,${g * 0.35})`; ctx.beginPath(); ctx.arc(15, -12, 4.5, 0, 7); ctx.fill();
+        ctx.fillStyle = `rgb(255,${150 + (g * 80 | 0)},70)`; ctx.fillRect(14, -13, 2, 2);
+        ctx.fillStyle = 'rgba(190,255,150,.8)'; ctx.fillRect(-6 + Math.sin(tm) * 2, -19, 1, 1); ctx.fillRect(4, -20 + Math.cos(tm * 1.3), 1, 1);
+      }
+      ctx.fillStyle = eye; ctx.fillRect(3, -17, 3, 2); ctx.fillRect(-2, -17, 2, 2);
+      break;
+    }
+    case 'kapremech': {
+      // demolition walker built in the Kapre's image: piston legs, hazard plating, a glowing exhaust where the cigar would be
+      const wk = st === 'walk' ? Math.sin(tm * 5) * 1.5 : 0, up = st === 'wind';
+      ctx.fillRect(-9, 8, 5, 13 + wk); ctx.fillRect(4, 8, 5, 13 - wk);
+      ctx.fillRect(-12, -10, 24, 19);
+      if (up) { ctx.fillRect(-17, -26, 5, 18); ctx.fillRect(12, -26, 5, 18); } else { ctx.fillRect(-17, -8, 5, 20); ctx.fillRect(12, -8, 5, 20); }
+      ctx.fillRect(-7, -20, 14, 10);
+      if (!plain) {
+        ctx.fillStyle = '#2b2f42'; ctx.fillRect(-9, 12, 3, 6); ctx.fillRect(6, 12, 3, 6);
+        for (let i = 0; i < 6; i++) { ctx.fillStyle = i % 2 ? '#111' : '#ffc65a'; ctx.fillRect(-12 + i * 4, 4, 4, 3); }
+        ctx.fillStyle = '#2b2f42'; ctx.fillRect(-11, -26, 3, 16);
+        const g = 0.5 + 0.5 * Math.sin(tm * 6);
+        ctx.fillStyle = `rgba(255,61,139,${0.3 + g * 0.4})`; ctx.fillRect(-12, -29, 5, 3);
+        ctx.fillStyle = '#ff3d8b'; ctx.fillRect(-5, -16, 11, 3);
+      }
+      ctx.fillStyle = eye; ctx.fillRect(2, -16, 3, 3);
+      break;
+    }
+    case 'ugat': {
+      // root colossus that grew where the Kapre once tended the balete: a walking mound of roots with jade sap
+      const wk = st === 'walk' ? Math.sin(tm * 3) * 1.5 : 0, up = st === 'wind';
+      ctx.beginPath(); ctx.ellipse(0, 2, 15, 15 + (up ? 2 : 0), 0, 0, 7); ctx.fill();
+      ctx.fillRect(-12, 12, 6, 7 + wk); ctx.fillRect(-2, 13, 5, 6); ctx.fillRect(7, 12, 6, 7 - wk);
+      if (up) { ctx.fillRect(-18, -20, 5, 18); ctx.fillRect(13, -20, 5, 18); } else { ctx.fillRect(-19, -4, 5, 18); ctx.fillRect(14, -4, 5, 18); }
+      if (!plain) {
+        ctx.strokeStyle = `rgba(62,240,180,${0.5 + 0.3 * Math.sin(tm * 2)})`; ctx.lineWidth = 1.5; ctx.beginPath();
+        ctx.moveTo(-8, -8); ctx.lineTo(-3, 0); ctx.lineTo(-6, 8); ctx.moveTo(4, -10); ctx.lineTo(7, -2); ctx.lineTo(3, 6); ctx.stroke();
+        ctx.fillStyle = '#4c7a2e'; ctx.fillRect(-10, -14, 6, 3); ctx.fillRect(2, -16, 8, 3); ctx.fillRect(-2, -13, 3, 2);
+      }
+      ctx.fillStyle = eye; ctx.fillRect(6, -6, 2, 2); ctx.fillRect(10, -4, 2, 2); ctx.fillRect(8, -9, 2, 2);
+      break;
+    }
+    case 'punso': {
+      // little mound dweller: a body shaped like its earthen mound, a leaf satchel, bright curious eyes
+      const leg = Math.sin(tm * 22) * 1.5;
+      ctx.fillRect(-4, 3, 2, 3 + leg); ctx.fillRect(2, 3, 2, 3 - leg);
+      ctx.beginPath(); ctx.moveTo(-6, 4); ctx.quadraticCurveTo(-6, -4, 0, -7); ctx.quadraticCurveTo(6, -4, 6, 4); ctx.closePath(); ctx.fill();
+      if (!plain) { ctx.fillStyle = '#a8744a'; ctx.fillRect(-5, 0, 10, 1); ctx.fillRect(-3, -4, 6, 1); ctx.fillStyle = '#3f8a4a'; ctx.fillRect(-7, -1, 3, 4); ctx.fillStyle = '#2a1a10'; ctx.fillRect(0, -3, 5, 4); }
+      ctx.fillStyle = eye; ctx.fillRect(1, -2, 1, 1); ctx.fillRect(3, -2, 1, 1);
+      break;
+    }
+    case 'rustling': {
+      const leg = Math.sin(tm * 24) * 1.5;
+      ctx.fillRect(-4, 3, 2, 3 + leg); ctx.fillRect(2, 3, 2, 3 - leg);
+      ctx.fillRect(-5, -4, 10, 8);
+      if (!plain) { ctx.strokeStyle = '#8a6a4a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-5, 1); ctx.quadraticCurveTo(-10, 0, -9, -4 + Math.sin(tm * 10)); ctx.stroke(); ctx.fillStyle = '#3a3d4a'; ctx.fillRect(-1, -9, 1, 5); ctx.fillStyle = Math.sin(tm * 8) > 0 ? '#2bd9ff' : '#ff3d8b'; ctx.fillRect(-2, -10, 3, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(2, -2, 2, 2);
+      break;
+    }
+    case 'mirrormole': {
+      const leg = Math.sin(tm * 20) * 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0, 0, 7); ctx.fill();
+      ctx.fillRect(-5, 3, 2, 3 + leg); ctx.fillRect(3, 3, 2, 3 - leg); ctx.fillRect(6, 0, 3, 2);
+      if (!plain) { ctx.fillStyle = 'rgba(255,255,255,.85)'; ctx.fillRect(-4, -4, 3, 1); ctx.fillRect(0, -5, 2, 1); ctx.fillStyle = 'rgba(43,217,255,.6)'; ctx.fillRect(-2, -3, 4, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(4, -2, 1, 1);
+      break;
+    }
+    case 'cindershrew': {
+      const leg = Math.sin(tm * 26) * 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 6, 4, 0, 0, 7); ctx.fill();
+      ctx.fillRect(-4, 3, 2, 2 + leg); ctx.fillRect(2, 3, 2, 2 - leg); ctx.fillRect(5, -1, 3, 2);
+      if (!plain) { ctx.strokeStyle = `rgba(255,138,61,${0.6 + 0.4 * Math.sin(tm * 12)})`; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-6, 0); ctx.quadraticCurveTo(-10, -2, -12, -6 + Math.sin(tm * 9) * 2); ctx.stroke(); }
+      ctx.fillStyle = eye; ctx.fillRect(3, -2, 1, 1);
+      break;
+    }
+    case 'diwata': {
+      // starter spirit: a mote of the forest guardian's light with two leaf wings
+      const fl = Math.sin(tm * 9) * 2;
+      ctx.fillStyle = '#3f8a4a'; ctx.beginPath(); ctx.ellipse(-4, -2 - fl * 0.5, 4, 2, -0.6, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(4, -2 - fl * 0.5, 4, 2, 0.6, 0, 7); ctx.fill();
+      ctx.fillStyle = '#eafff6'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, 7); ctx.fill();
       break;
     }
     default: {
       // wakwak / drones / mantis: winged night flyer
-      const flap = Math.sin(e.t * (e.st === 'dive' ? 4 : 12)) * 6;
+      const flap = Math.sin(tm * (st === 'dive' ? 4 : 12)) * 6;
       ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0, 0, 7); ctx.fill();
       ctx.beginPath(); ctx.moveTo(-3, -2); ctx.lineTo(-12, -6 - flap); ctx.lineTo(-2, 2); ctx.fill();
       ctx.beginPath(); ctx.moveTo(1, -2); ctx.lineTo(10, -6 - flap); ctx.lineTo(3, 2); ctx.fill();
       ctx.beginPath(); ctx.moveTo(6, -1); ctx.lineTo(12, 1); ctx.lineTo(6, 2); ctx.fill();
-      if (e.sp !== 'wakwak' && !white) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-5, 3, 10, 1); }
-      ctx.fillStyle = d.eye; ctx.fillRect(4, -2, 2, 2);
+      if (sp !== 'wakwak' && !plain) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-5, 3, 10, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(4, -2, 2, 2);
     }
   }
+}
+// a spirit: translucent ghost of its species (or the Diwata Wisp), scaled down
+function drawSpiritGhost(id, x, y, face, time, scale) {
+  ctx.save(); ctx.translate(Math.round(x), Math.round(y)); ctx.scale(face * scale, scale);
+  const col = SPIRIT_COL[id];
+  ctx.globalAlpha = 0.22 + 0.08 * Math.sin(time * 4); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
+  ctx.globalAlpha = 0.8;
+  if (id === 'diwata') drawBody('diwata', time, 'walk', col, '#ffffff', false);
+  else { ctx.globalAlpha = 0.7; drawBody(id, time, 'walk', col, '#ffffff', true); }
+  ctx.globalAlpha = 1;
   ctx.restore();
-  if (e.hp < e.max) { ctx.fillStyle = 'rgba(0,0,0,.5)'; ctx.fillRect(x, y - 5, e.w, 2); ctx.fillStyle = '#ff3d8b'; ctx.fillRect(x, y - 5, e.w * e.hp / e.max, 2); }
 }
 function drawBoss(time) {
   const b = boss, x = Math.round(b.x - cam.x), y = Math.round(b.y - cam.y);
@@ -922,6 +1399,7 @@ function drawProj() {
     const x = p.x - cam.x, y = p.y - cam.y;
     if (p.type === 'bolt') { ctx.fillStyle = 'rgba(62,240,180,.35)'; ctx.fillRect(x - 3, y - 2, p.w + 6, p.h + 4); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(x, y + 2, p.w, p.h - 4); ctx.fillStyle = '#eafff6'; ctx.fillRect(x + 3, y + 3, p.w - 6, 2); }
     else if (p.type === 'leaf') { ctx.save(); ctx.translate(x + 5, y + 5); ctx.rotate(p.life * 12); ctx.fillStyle = '#7ad04a'; ctx.beginPath(); ctx.ellipse(0, 0, 6, 3, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(-5, 0, 10, 1); ctx.restore(); }
+    else if (p.type === 'dart') { ctx.fillStyle = 'rgba(143,227,255,.35)'; ctx.fillRect(x - 2, y - 2, p.w + 4, p.h + 4); ctx.fillStyle = '#8fe3ff'; ctx.fillRect(x, y, p.w, p.h); }
     else if (p.type === 'wave') { ctx.fillStyle = 'rgba(168,139,90,.85)'; ctx.beginPath(); ctx.moveTo(x, y + p.h); ctx.lineTo(x + p.w / 2, y); ctx.lineTo(x + p.w, y + p.h); ctx.fill(); ctx.fillStyle = 'rgba(255,61,139,.6)'; ctx.fillRect(x, y + p.h - 2, p.w, 2); }
   }
 }
@@ -933,21 +1411,45 @@ function drawHUD(time) {
   bar(ox + 34, oy + 1, 110, 7, P.hp / P.maxhp, '#ff3d8b');
   bar(ox + 34, oy + 11, 80, 4, P.en / P.maxen, '#3ef0b4');
   bar(ox + 34, oy + 18, 80, 2, S.xp / (20 + 12 * S.lvl), '#c7a2ff');
-  if (S.sp > 0) { ctx.fillStyle = '#ffc65a'; ctx.fillText('+' + S.sp + ' SP', ox + 150, oy + 9); }
+  let hx = ox + 150;
+  if (S.sp > 0) { ctx.fillStyle = '#ffc65a'; const st = '+' + S.sp + ' SP'; ctx.fillText(st, hx, oy + 9); hx += ctx.measureText(st).width + 8; }
+  if (S.forge > 0) {
+    ctx.strokeStyle = '#ece6d6'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(hx + 1, oy + 10); ctx.lineTo(hx + 7, oy); ctx.stroke();
+    ctx.strokeStyle = '#ffc65a'; ctx.beginPath(); ctx.moveTo(hx - 1, oy + 6); ctx.lineTo(hx + 4, oy + 9); ctx.stroke();
+    ctx.fillStyle = '#ffc65a'; ctx.fillText('+' + S.forge, hx + 9, oy + 9);
+  }
+  // active spirit
+  if (S.spirit) {
+    const sy = oy + 31, col = SPIRIT_COL[S.spirit];
+    ctx.fillStyle = 'rgba(11,14,26,.6)'; ctx.beginPath(); ctx.arc(ox + 6, sy - 3, 6, 0, 7); ctx.fill();
+    ctx.fillStyle = col; ctx.beginPath(); ctx.arc(ox + 6, sy - 3, 3.5, 0, 7); ctx.fill();
+    let cd = 0;
+    if (S.spirit === 'salagubang') cd = P.shieldCd / 12; else if (S.spirit === 'sigbin') cd = P.biteCd / 3.5; else if (S.spirit === 'kapre') cd = P.stompCd > 1 ? P.stompCd / 8 : 0;
+    if (cd > 0) { ctx.strokeStyle = 'rgba(236,230,214,.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(ox + 6, sy - 3, 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - cd)); ctx.stroke(); }
+    ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = col; ctx.fillText(spiritName(S.spirit), ox + 16, sy);
+  }
   // era pill
   const past = S.era === PAST, label = (past ? t('past') : t('present')) + ' · ' + (past ? t('yearPast') : t('yearPresent'));
   ctx.font = '700 10px "Chakra Petch", sans-serif';
   const w = ctx.measureText(label).width + 16, cx = VW / 2 - w / 2;
   ctx.fillStyle = past ? 'rgba(62,240,180,.18)' : 'rgba(255,61,139,.18)'; ctx.fillRect(cx, oy - 2, w, 16);
   ctx.fillStyle = past ? '#3ef0b4' : '#ff3d8b'; ctx.fillRect(cx, oy - 2, 2, 16); ctx.fillText(label, cx + 9, oy + 9);
-  // population chips
-  let px = VW - 60 - 3 * 34;
-  for (const n of ['hunter', 'swarm', 'flyer']) {
+  // population chips (drop to a second row when the era pill would touch them on narrow screens)
+  let px = VW - 60 - NICHE_IDS.length * 34, cy = oy;
+  if (px < VW / 2 + w / 2 + 6) { px = VW - 12 - NICHE_IDS.length * 34; cy = oy + 18; }
+  for (const n of NICHE_IDS) {
     const p = popPct(n);
-    ctx.fillStyle = 'rgba(11,14,26,.6)'; ctx.fillRect(px, oy, 30, 12);
-    ctx.fillStyle = p <= 0 ? '#ff3d8b' : p <= 0.5 ? '#ffc65a' : '#3ef0b4'; ctx.fillRect(px + 1, oy + 9, 28 * Math.max(p, 0.04), 2);
-    ctx.fillStyle = '#ece6d6'; ctx.font = '700 7px "Chakra Petch", sans-serif'; ctx.fillText(n === 'hunter' ? 'HNT' : n === 'swarm' ? 'SWM' : 'FLY', px + 3, oy + 7);
+    ctx.fillStyle = 'rgba(11,14,26,.6)'; ctx.fillRect(px, cy, 30, 12);
+    ctx.fillStyle = p <= 0 ? '#ff3d8b' : p <= 0.5 ? '#ffc65a' : '#3ef0b4'; ctx.fillRect(px + 1, cy + 9, 28 * Math.max(p, 0.04), 2);
+    ctx.fillStyle = '#ece6d6'; ctx.font = '700 7px "Chakra Petch", sans-serif'; ctx.fillText(t('c_' + n), px + 3, cy + 7);
     px += 34;
+  }
+  if (S.minimap) {
+    const mw = MW / 2, mh = MH / 2, mx = VW - 12 - mw, my = cy + 34;
+    if (exDirty) redrawMinimap();
+    ctx.fillStyle = 'rgba(11,14,26,.72)'; ctx.fillRect(mx - 2, my - 2, mw + 4, mh + 4);
+    ctx.imageSmoothingEnabled = false; ctx.drawImage(mmCanvas, mx, my, mw, mh);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(mx + (P.x + P.w / 2) / TS / 2 - 1, my + (P.y + P.h / 2) / TS / 2 - 1, 3, 3);
   }
   if (boss) {
     const bw = Math.min(360, VW - 120), bx = VW / 2 - bw / 2, by = VH - 26;
@@ -962,19 +1464,45 @@ function render(time) {
   ctx.save();
   if (shake > 0) ctx.translate(rnd(-shake, shake), rnd(-shake, shake));
   drawBG(time);
+  drawDecor(time);
   drawTiles(time);
   drawShrines(time);
   for (const it of items) { const x = it.x - cam.x, y = it.y - cam.y + Math.sin(it.t * 6) * 1.5; ctx.fillStyle = 'rgba(255,224,138,.3)'; ctx.fillRect(x - 2, y - 2, 12, 12); ctx.fillStyle = '#ffe08a'; ctx.fillRect(x + 1, y + 1, 6, 6); }
   for (const e of enemies) drawEnemy(e, time);
   if (boss) drawBoss(time);
   drawPlayer(time);
+  if (S.spirit) {
+    drawSpiritGhost(S.spirit, SPR.x - cam.x, SPR.y - cam.y, P.face, time, 0.7);
+    if (S.spirit === 'salagubang' && P.shieldCd <= 0) { ctx.strokeStyle = `rgba(255,224,138,${0.35 + 0.15 * Math.sin(time * 5)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(P.x + P.w / 2 - cam.x, P.y + P.h / 2 - cam.y, 13, 18, 0, 0, 7); ctx.stroke(); }
+  }
   drawProj();
   for (const p of parts) { ctx.globalAlpha = Math.max(0, p.life / p.max); ctx.fillStyle = p.col; ctx.fillRect(p.x - cam.x - p.size / 2, p.y - cam.y - p.size / 2, p.size, p.size); }
   ctx.globalAlpha = 1;
   ctx.textAlign = 'center';
   for (const x of texts) { ctx.globalAlpha = Math.min(1, x.life * 2); ctx.font = '700 10px "Chakra Petch", sans-serif'; ctx.fillStyle = '#0b0e1a'; ctx.fillText(x.txt, x.x - cam.x + 1, x.y - cam.y + 1); ctx.fillStyle = x.col; ctx.fillText(x.txt, x.x - cam.x, x.y - cam.y); }
   ctx.globalAlpha = 1; ctx.textAlign = 'left';
+  // the den stays hidden behind rock until the player is inside it in the past
+  const inDen = S.era === PAST && P.x + P.w > 82 * TS && P.x < 100 * TS && P.y + P.h > 47 * TS && P.y < 57 * TS;
+  denReveal = clamp(denReveal + (inDen ? 0.05 : -0.05), 0, 1);
+  if (denReveal < 1) {
+    const x = 82 * TS - cam.x, y = 47 * TS - cam.y;
+    if (x < VW && x + 16 * TS > 0 && y < VH && y + 9 * TS > 0) {
+      ctx.globalAlpha = 1 - denReveal; ctx.fillStyle = S.era === PAST ? '#3a352a' : '#232842'; ctx.fillRect(x, y, 16 * TS, 9 * TS);
+      ctx.fillStyle = S.era === PAST ? '#26231c' : '#151829';
+      for (let j = 0; j < 9; j++) for (let i = 0; i < 16; i++) if (((82 + i) * 7 + (47 + j) * 3) % 5 === 0) ctx.fillRect(x + i * TS + 4, y + j * TS + 5, 5, 3);
+      ctx.globalAlpha = 1;
+    }
+  }
   ctx.restore();
+  if (wipeT > 0) {
+    // era wipe: a bright band sweeps left to right; the old era's tint still covers what it has not reached
+    const pr = 1 - wipeT / WIPE, bx = -80 + pr * (VW + 160);
+    ctx.fillStyle = S.era === PAST ? 'rgba(42,15,60,.88)' : 'rgba(7,26,36,.88)';
+    ctx.beginPath(); ctx.moveTo(bx + 40, 0); ctx.lineTo(VW, 0); ctx.lineTo(VW, VH); ctx.lineTo(bx - 40, VH); ctx.fill();
+    ctx.fillStyle = wipeCol; ctx.globalAlpha = 0.85;
+    ctx.beginPath(); ctx.moveTo(bx + 28, 0); ctx.lineTo(bx + 40, 0); ctx.lineTo(bx - 40, VH); ctx.lineTo(bx - 52, VH); ctx.fill();
+    ctx.globalAlpha = 1;
+  }
   if (flash > 0) { ctx.globalAlpha = Math.min(0.6, flash); ctx.fillStyle = flashCol; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   drawHUD(time);
 }
@@ -1012,13 +1540,39 @@ function nodeHTML(n) {
   if (!got) {
     if (n.cost) need.push(n.cost + ' SP');
     if (n.lvl) need.push(t('lvl') + ' ' + n.lvl);
-    if (n.mats) for (const m in n.mats) need.push(n.mats[m] + 'x ' + MATS[m] + ' (' + (S.mats[m] || 0) + ')');
+    if (n.mats) for (const m in n.mats) need.push(n.mats[m] + 'x ' + matName(m) + ' (' + (S.mats[m] || 0) + ')');
   }
   return `<div class="node ${got ? 'have' : can ? 'can' : ''}"><span class="nm">${t('n_' + n.id)}</span><span class="ds">${t('d_' + n.id)}</span>` +
     (got ? `<span class="st">${t('learned')}</span>` : can ? `<button type="button" data-learn="${n.id}">${t('learn')} · ${need.join(' · ')}</button>` : `<span class="st lock">${t('needs')}: ${need.join(' · ')}${n.req && !has(n.req) ? ' · ' + t('n_' + n.req) : ''}</span>`) + '</div>';
 }
+// ---------- forge ----------
+let forgeMsg = null;
+function forgeCan() {
+  if (S.forge >= FORGE.length) return false;
+  const f = FORGE[S.forge];
+  for (const m in f.mats) if ((S.mats[m] || 0) < f.mats[m]) return false;
+  return true;
+}
+// one upgrade attempt: the materials are always consumed; success raises the level, failure never lowers it
+function forgeUpgrade() {
+  if (!forgeCan()) return null;
+  const f = FORGE[S.forge];
+  for (const m in f.mats) S.mats[m] -= f.mats[m];
+  const ok = rng() * 100 < f.chance;
+  if (ok) S.forge++;
+  forgeMsg = { ok, lv: S.forge };
+  if (ok) { sfx(660, 0.15, 'triangle', 0.06, 300); setTimeout(() => sfx(990, 0.25, 'triangle', 0.06), 110); } else sfx(160, 0.3, 'sawtooth', 0.05, -80);
+  save(); return ok;
+}
+const TABS = { skills: 'skills', eco: 'eco', spirits: 'spirits', forge: 'forge', bag: 'bag', map: 'map' };
+function portrait(cnv, id) {
+  const c2 = cnv.getContext('2d'), old = ctx;
+  c2.clearRect(0, 0, cnv.width, cnv.height);
+  ctx = c2;
+  try { drawSpiritGhost(id, cnv.width / 2 + (id === 'sigbin' ? 2 : 0), cnv.height / 2 + 2, 1, 1.3, id === 'kapre' ? 0.9 : id === 'sigbin' || id === 'wakwak' ? 1.2 : 1.5); } finally { ctx = old; }
+}
 function renderMenu() {
-  document.querySelectorAll('.tabs [data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === tab); b.textContent = t(b.dataset.tab === 'skills' ? 'skills' : b.dataset.tab === 'eco' ? 'eco' : 'bag'); });
+  document.querySelectorAll('.tabs [data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === tab); b.textContent = t(TABS[b.dataset.tab]); });
   document.getElementById('m-close').textContent = t('resume');
   if (tab === 'skills') {
     let h = `<div class="sp-line"><span>Eskrimador · ${t('lvl')} ${S.lvl}</span><span>${t('sp')}: <b>${S.sp}</b></span></div><div class="tree">`;
@@ -1028,17 +1582,56 @@ function renderMenu() {
     mBody.querySelectorAll('[data-learn]').forEach(b => b.addEventListener('click', () => { learn(b.dataset.learn); renderMenu(); }));
   } else if (tab === 'eco') {
     let h = `<p class="eco-hint">${t('ecoHint')}</p><div class="eco">`;
-    for (const n of ['hunter', 'swarm', 'flyer']) {
-      const [pa, pr, su] = NICHES[n], p = popPct(n);
-      h += `<div class="niche"><h4>${t('niche_' + n)}</h4><div class="row"><span>${t('past')}: ${SPEC[pa].name}</span><span>${p <= 0 ? `<span class="ext">${t('extinct')}</span>` : Math.round(p * 100) + '%'}</span></div>` +
+    for (const n of NICHE_IDS) {
+      const [pa, pr] = NICHES[n], su = succOf(n), p = popPct(n), alt = SUCC_ALT[n];
+      h += `<div class="niche"><h4>${t('niche_' + n)}</h4><div class="row"><span>${t('past')}: ${spName(pa)}</span><span>${p <= 0 ? `<span class="ext">${t('extinct')}</span>` : Math.round(p * 100) + '%'}</span></div>` +
         `<div class="bar"><i style="width:${Math.round(p * 100)}%"></i></div>` +
-        `<div class="row"><span>${t('present')}:</span><span>${p <= 0 ? SPEC[su].name : p <= 0.5 ? SPEC[pr].name + ' + ' + SPEC[su].name : SPEC[pr].name}</span></div>` +
-        `<div class="row"><span>Drops</span><span>${p <= 0 ? MATS[SPEC[su].mat] : p <= 0.5 ? MATS[SPEC[pr].mat] + ', ' + MATS[SPEC[su].mat] : MATS[SPEC[pr].mat]}</span></div></div>`;
+        `<div class="row"><span>${t('present')}:</span><span>${p <= 0 ? spName(su) : p <= 0.5 ? spName(pr) + ' + ' + spName(su) : spName(pr)}</span></div>` +
+        `<div class="row"><span>${t('drops')}</span><span>${p <= 0 ? matName(SPEC[su].mat) : p <= 0.5 ? matName(SPEC[pr].mat) + ', ' + matName(SPEC[su].mat) : matName(SPEC[pr].mat)}</span></div>` +
+        (alt ? `<div class="dep">${t('succDep', t('niche_' + alt.dep), spName(NICHES[n][2]), spName(alt.dead))}</div>` : '') + '</div>';
     }
     mBody.innerHTML = h + '</div>';
+  } else if (tab === 'spirits') {
+    let h = `<p class="eco-hint">${t('spiritHint')}</p><div class="spirits">`;
+    for (const id of SPIRITS) {
+      const got = S.spirits.includes(id), on = S.spirit === id, wait = S.spiritAt[id];
+      let st;
+      if (on) st = `<span class="st">${t('spiritActive')}</span>`;
+      else if (got) st = `<button type="button" data-equip="${id}">${t('equip')}</button>`;
+      else if (wait !== undefined) st = `<span class="st wait">${t('spiritWaiting', wait + 1)}</span>`;
+      else st = `<span class="st lock">${t('spiritLocked', spName(id))}</span>`;
+      h += `<div class="spirit ${on ? 'have' : got ? 'can' : ''} ${got || wait !== undefined ? '' : 'dim'}"><canvas width="56" height="44" data-por="${id}"></canvas><div class="sp-txt"><span class="nm" style="color:${SPIRIT_COL[id]}">${spiritName(id)}</span><span class="ds">${t('spd_' + id)}</span>${st}</div></div>`;
+    }
+    mBody.innerHTML = h + '</div>';
+    mBody.querySelectorAll('[data-por]').forEach(c => portrait(c, c.dataset.por));
+    mBody.querySelectorAll('[data-equip]').forEach(b => b.addEventListener('click', () => { equipSpirit(b.dataset.equip); renderMenu(); }));
+  } else if (tab === 'forge') {
+    const lv = S.forge;
+    let h = `<div class="forge"><div class="fg-head"><span class="blade">Kampilan <b>+${lv}</b></span><span>${t('forgeBonus', lv * FORGE_PCT)}</span></div>`;
+    if (lv >= FORGE.length) h += `<p class="fg-rule">${t('forgeMax')}</p>`;
+    else {
+      const f = FORGE[lv], can = forgeCan();
+      h += `<div class="fg-next"><div class="fg-odds"><span>${t('forgeNext', lv + 1, (lv + 1) * FORGE_PCT)}</span><span>${t('forgeChance')}: <b>${f.chance}%</b></span></div><div class="fg-cost">`;
+      for (const m in f.mats) { const have = S.mats[m] || 0; h += `<span class="${have >= f.mats[m] ? '' : 'short'}">${f.mats[m]}x ${matName(m)} (${have})</span>`; }
+      h += `</div><p class="fg-rule">${t('forgeRule')}</p>` +
+        (can ? `<button type="button" data-forge="1">${t('forgeBtn')} · ${f.chance}%</button>` : `<span class="st lock">${t('forgeMissing')}</span>`) + '</div>';
+    }
+    if (forgeMsg) h += `<p class="fg-msg ${forgeMsg.ok ? 'ok' : 'bad'}">${forgeMsg.ok ? t('forgeOk', forgeMsg.lv) : t('forgeFail', forgeMsg.lv)}</p>`;
+    h += `<div class="fg-table"><span class="fg-tt">${t('forgeOdds')}</span>`;
+    FORGE.forEach((f, i) => { h += `<span class="${i < lv ? 'done' : i === lv ? 'cur' : ''}">+${i + 1} <b>${f.chance}%</b></span>`; });
+    mBody.innerHTML = h + '</div></div>';
+    const fb = mBody.querySelector('[data-forge]');
+    if (fb) fb.addEventListener('click', () => { forgeUpgrade(); renderMenu(); });
+  } else if (tab === 'map') {
+    if (exDirty) redrawMinimap();
+    mBody.innerHTML = `<div class="map-line"><span>${t('explored', exploredPct())}</span><label><input type="checkbox" id="mm-toggle" ${S.minimap ? 'checked' : ''}> ${t('minimapToggle')}</label></div><canvas id="map-cv" width="${MW * 3}" height="${MH * 3}"></canvas><p class="eco-hint">${t('mapLegend')}</p>`;
+    const mc = document.getElementById('map-cv'), c2 = mc.getContext('2d');
+    c2.imageSmoothingEnabled = false; c2.fillStyle = '#0b0e1a'; c2.fillRect(0, 0, mc.width, mc.height); c2.drawImage(mmCanvas, 0, 0, mc.width, mc.height);
+    c2.fillStyle = '#ffffff'; c2.fillRect((P.x + P.w / 2) / TS * 3 - 3, (P.y + P.h / 2) / TS * 3 - 3, 6, 6);
+    document.getElementById('mm-toggle').addEventListener('change', e => { S.minimap = e.target.checked; save(); });
   } else {
     let h = '<div class="mats">';
-    for (const m in MATS) { const c = S.mats[m] || 0; h += `<div class="${c ? '' : 'zero'}"><span>${MATS[m]}</span><span>${c}</span></div>`; }
+    for (const m in MATS) { const c = S.mats[m] || 0; h += `<div class="${c ? '' : 'zero'}"><span>${matName(m)}</span><span>${c}</span></div>`; }
     mBody.innerHTML = h + '</div>';
   }
 }
@@ -1062,10 +1655,11 @@ function startGame(fresh) {
   S = (!fresh && load()) || freshSave();
   buildMap();
   const sx = S.bossDone ? SHRINES[2] : (S.shrine || S.time ? SHRINES[S.shrine] : 4);
-  P = newPlayer(sx * TS, 36 * TS - 26);
+  P = newPlayer(sx * TS, GY * TS - 26);
   const st = stats(); P.maxhp = P.hp = st.maxhp; P.maxen = P.en = st.maxen;
   enemies = []; projs = []; items = []; parts = []; texts = []; boss = null;
-  resetSpawns();
+  resetSpawns(); loadExplored(); wipeT = 0;
+  SPR.x = P.x; SPR.y = P.y - 10;
   cam.x = clamp(P.x - VW / 2, 0, MW * TS - VW); cam.y = clamp(P.y - VH * 0.58, 0, MH * TS - VH);
   document.getElementById('title').hidden = true;
   mode = 'play';
@@ -1097,7 +1691,7 @@ function frame(now) {
 }
 function titleRender(time) {
   ctx.setTransform(K, 0, 0, K, 0, 0);
-  if (!S) { S = freshSave(); S.era = Math.floor(time / 4) % 2; cam.x = (time * 30) % 1000; cam.y = 0; drawBG(time); S = null; }
+  if (!S) { S = freshSave(); S.era = Math.floor(time / 4) % 2; cam.x = (time * 30) % 1000; cam.y = OY * TS; drawBG(time); S = null; }
 }
 try { const l = localStorage.getItem('epochfall.lang'); if (l && I[l]) lang = l; else { const n = (navigator.language || 'en').toLowerCase(); lang = n.startsWith('de') ? 'de' : (n.startsWith('fil') || n.startsWith('tl')) ? 'fil' : 'en'; } } catch (e) {}
 applyLang();
@@ -1111,6 +1705,18 @@ window.EF = {
   tap(k) { press(k); update(STEP); release(k); },
   teleport(tx, ty) { P.x = tx * TS; P.y = ty * TS - P.h; P.vx = P.vy = 0; cam.x = clamp(P.x - VW / 2, 0, MW * TS - VW); cam.y = clamp(P.y - VH * 0.58, 0, MH * TS - VH); },
   learn, era() { nearShrine = S.shrine; switchEra(); }, tile: tileAt, menu: toggleMenu, render: () => render(performance.now() / 1000),
-  give(m, n) { S.mats[m] = (S.mats[m] || 0) + n; }, sp(n) { S.sp += n; }, lvl(n) { S.lvl = n; }
+  give(m, n) { S.mats[m] = (S.mats[m] || 0) + n; }, sp(n) { S.sp += n; }, lvl(n) { S.lvl = n; },
+  OY, GY, get items() { return items; }, get projs() { return projs; }, get wipe() { return wipeT; }, get spirit() { return SPR; },
+  speciesFor, succOf, stats, equip: equipSpirit, forge: forgeUpgrade, forgeCan, explored: exploredPct,
+  rng(fn) { rng = fn || Math.random; },
+  tab(name) { tab = name; renderMenu(); },
+  drop(tx, ty, mat) { dropItem(tx * TS, ty * TS - 8, mat); return items[items.length - 1]; },
+  spawnAt(id, tx, ty) {
+    const d = SPEC[id], e = { id: uid++, sp: id, d, x: tx * TS, y: ty * TS - d.h, w: d.w, h: d.h, vx: 0, vy: 0, hp: d.hp, max: d.hp, face: -1, onGround: false,
+      st: 'walk', t: 0, home: { x: tx * TS, y: ty * TS - 40 }, src: null, era: S.era, flashT: 0, kb: 0, ph: 0, loot: null, target: null };
+    enemies.push(e); return e;
+  },
+  solid(x, y) { return isSolid(tileAt(x, y)); },
+  clearEnemies() { enemies = []; spawnState.forEach(s => { s.alive = 0; s.cd = 999; }); }
 };
 })();
