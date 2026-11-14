@@ -40,6 +40,7 @@ ok('daily gift gives Tala once per day', pre.tala === 100 && pre.again === false
 await page.evaluate(() => EF.start(true));
 await page.waitForTimeout(300);
 ok('game starts', await page.evaluate(() => EF.mode === 'play'));
+ok('no Balangay dock before the Tikbalang falls', await page.evaluate(() => EF.dock() === null && !EF.unlocked('z2') && EF.zone.id === 'z1'));
 // the map grew upward by EF.OY rows; every original coordinate below is shifted by Y
 const Y = await page.evaluate(() => EF.OY);
 await page.evaluate(() => {
@@ -376,6 +377,357 @@ await shot('21-forge-de');
 await page.evaluate(() => { document.querySelector('.langs [data-lang="fil"]').click(); EF.tab('spirits'); });
 await shot('22-spirits-fil');
 await page.evaluate(() => { EF.menu(false); document.querySelector('.langs [data-lang="en"]').click(); });
+
+
+// ================= zones 2 + 3: the Balangay, Kalayaan Jungle Planet, Station Bakunawa =================
+const setLangZ = l => page.evaluate(l => document.querySelector(`.langs [data-lang="${l}"]`).click(), l);
+const dockT = await page.evaluate(Y => {
+  EF.clearEnemies(); T.toEra(1);
+  const d = EF.dock();
+  if (!d) return { d };
+  EF.teleport(176, Y + 35); EF.step(10);
+  T.goto(d.x / 16 + 0.6);
+  const btn = document.getElementById('b-time'), near = !btn.hidden, label = btn.textContent;
+  EF.tap('up');
+  return { d, near, label, mode: EF.mode, vis: !document.getElementById('travel').hidden, cards: [...document.querySelectorAll('.zone-card')].map(c => c.className.replace('zone-card ', '')) };
+}, Y);
+ok('Balangay dock appears after the Tikbalang falls and opens the travel screen (real inputs)', dockT.d && dockT.near && dockT.mode === 'travel' && dockT.vis, JSON.stringify(dockT));
+ok('travel screen: zone 2 charted, zone 3 locked until the Manananggal falls', dockT.cards && dockT.cards.join() === 'here,open,locked', String(dockT.cards));
+for (const l of ['en', 'fil', 'de']) { await setLangZ(l); await page.evaluate(() => EF.openTravel()); await page.waitForTimeout(120); await shot('40-travel-' + l); }
+await setLangZ('en'); await page.evaluate(() => EF.openTravel());
+const lockedClick = await page.evaluate(() => { document.querySelector('.zone-card[data-zone="z3"]').click(); return EF.zone.id; });
+await page.click('.zone-card[data-zone="z2"]');
+const z2 = await page.evaluate(() => {
+  for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; }
+  const sv = JSON.parse(localStorage.getItem('epochfall.save.v1'));
+  return { lockedClick: null, zone: EF.zone, era: EF.S.era, label: EF.eraLabel(), mode: EF.mode, ground: EF.P.onGround, saved: sv.zone, z1: sv.zones.z1 && { done: sv.zones.z1.bossDone, kills: sv.zones.z1.pastKills.hunter, ex: (sv.zones.z1.ex || '').includes('1') }, hidden: document.getElementById('travel').hidden };
+});
+ok('locked zone 3 cannot be chosen', lockedClick === 'z1');
+ok('zone 2 Kalayaan Jungle Planet loads with its own map, arriving in the present', z2.zone.id === 'z2' && z2.zone.mw === 170 && z2.zone.mh === 60 && z2.era === 1 && z2.mode === 'play' && z2.ground && z2.hidden, JSON.stringify(z2));
+ok('zone 1 state is stashed in the save while away (boss, kills, explored tiles)', z2.saved === 'z2' && z2.z1 && z2.z1.done && z2.z1.kills === 10 && z2.z1.ex, JSON.stringify(z2.z1));
+await page.waitForTimeout(200);
+await shot('41-z2-present-landing');
+
+// era switching at a zone 2 Anito shrine with real inputs
+const sw2 = await page.evaluate(() => { EF.clearEnemies(); const s = EF.zone.shrines[0]; T.goto(s + 0.5); EF.tap('up'); return { era: EF.S.era, label: EF.eraLabel(), shrine: EF.S.shrine }; });
+ok('zone 2: Anito shrine switches to the primal past', sw2.era === 0 && sw2.label === 'PAST · Primal age', JSON.stringify(sw2));
+await page.evaluate(() => { EF.teleport(30, EF.zone.gy - 1); for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 0; } });
+await page.waitForTimeout(200);
+await shot('42-z2-past');
+
+// zone 2 gate: the bio-dome wall is sealed glass in the present, a gap between the roots in the past
+const gate2 = await page.evaluate(() => {
+  const g = EF.zone.gy; T.toEra(1); EF.clearEnemies();
+  EF.teleport(88, g - 1); EF.step(20);
+  T.goto(101);
+  const blocked = EF.P.x / 16, sealed = EF.solid(96, g - 2);
+  T.goto(EF.zone.shrines[1] + 0.5); EF.tap('up');
+  const era = EF.S.era, open = !EF.solid(96, g - 2);
+  T.goto(102);
+  return { blocked, sealed, era, open, passed: EF.P.x / 16 };
+});
+ok('zone 2 gate: the dome wall blocks the present, the past route passes (real inputs)', gate2.blocked < 96 && gate2.sealed && gate2.era === 0 && gate2.open && gate2.passed > 100, JSON.stringify(gate2));
+// secret 1: giant-leaf stairs, then a double jump onto the mesa
+const mesa = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies();
+  EF.teleport(55, g - 1); EF.step(20);
+  const log = T.climb([[59.5, 'right'], [64.5, 'right'], [59.5, 'left'], [64.5, 'right'], [59.5, 'left']]);
+  EF.hold('right', true); EF.hold('jump', true);
+  for (let i = 0; i < 18; i++) { EF.step(1); EF.P.inv = 9; }
+  EF.hold('jump', false); EF.step(2); EF.hold('jump', true);
+  for (let i = 0; i < 18; i++) { EF.step(1); EF.P.inv = 9; }
+  EF.hold('jump', false); EF.hold('right', false);
+  for (let i = 0; i < 40; i++) { EF.step(1); EF.P.inv = 9; }
+  const top = T.feet();
+  T.goto(68.5);
+  return { log, top, chest: EF.S.chests.includes('z2mesa'), mats: EF.S.mats.z2_hunterX || 0 };
+});
+ok('zone 2 secret: leaf stairs + double jump reach the mesa chest', mesa.top <= 56 - 21 + 0.05 && mesa.chest && mesa.mats >= 3, JSON.stringify(mesa));
+await page.waitForTimeout(150);
+await shot('43-z2-mesa');
+// secret 2: the hollow behind cracked stone
+const hollow = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies();
+  EF.teleport(110, g - 1); EF.P.face = 1; EF.step(10);
+  for (let i = 0; i < 4; i++) { EF.tap('attack'); for (let j = 0; j < 14; j++) { EF.step(1); EF.P.inv = 9; } }
+  const broke = EF.tile(112, g - 2) === 0 && EF.tile(113, g - 2) === 0;
+  T.goto(118.5);
+  return { broke, chest: EF.S.chests.includes('z2hollow') };
+});
+ok('zone 2 secret: Kampilan Breaker opens the hollow and its chest', hollow.broke && hollow.chest, JSON.stringify(hollow));
+
+// every zone 2 species spawns in its era
+const NI = ['hunter', 'swarm', 'flyer', 'giant', 'scav'];
+const spawnCheck = (zoneSpots) => page.evaluate(([NI, spots]) => {
+  const z = EF.zone, out = {};
+  for (const n of NI) {
+    const sp = spots[n].map(([x, dy]) => [x, z.gy + dy]);
+    T.toEra(z.eras[0]); EF.respawn(); const a = T.findSpawn(e => e.d.niche === n, sp);
+    T.toEra(z.eras[1]); EF.respawn(); const b = T.findSpawn(e => e.d.niche === n, sp);
+    out[n] = { old: [...new Set(a)], neu: [...new Set(b)], want: EF.niches[n] };
+  }
+  return out;
+}, [NI, zoneSpots]);
+const SP2 = { hunter: [[26, -1], [104, -1], [132, -1]], swarm: [[20, -5], [106, -6]], flyer: [[36, -9], [122, -13]], giant: [[74, -1], [130, -1]], scav: [[56, -1], [102, -1]] };
+const s2 = await spawnCheck(SP2);
+ok('zone 2: each past species spawns (Amomongo, Alitaptap, Tigmamanukan, Sarangay, Duwende)', NI.every(n => s2[n].old.length === 1 && s2[n].old[0] === s2[n].want[0]), JSON.stringify(NI.map(n => s2[n].old)));
+ok('zone 2: each present species spawns', NI.every(n => s2[n].neu.length === 1 && s2[n].neu[0] === s2[n].want[1]), JSON.stringify(NI.map(n => s2[n].neu)));
+await page.evaluate(() => { const e = EF.enemies[0]; if (e) { EF.teleport(e.x / 16 - 5, EF.zone.gy - 1); } EF.step(3); });
+await page.waitForTimeout(150);
+await shot('44-z2-present-species');
+
+// extinction in zone 2: ten past kills, the successor takes the niche, the spirit waits at the next shrine
+const ext2 = await page.evaluate(() => {
+  const g = EF.zone.gy; T.toEra(0); EF.clearEnemies(); EF.S.pastKills.hunter = 9;
+  EF.teleport(60, g - 1); EF.step(5);
+  const a = EF.spawnAt('amomongo', 62, g); const dead = T.meleeKill(a, 1500);
+  return { dead, kills: EF.S.pastKills.hunter, at: EF.S.spiritAt.amomongo, succ: EF.speciesFor('hunter'), z1kills: EF.S.zones.z1.pastKills.hunter };
+});
+ok('zone 2: ten past kills drive the Amomongo extinct, per-zone kill count', ext2.dead && ext2.kills === 10 && ext2.at === 1 && ext2.z1kills === 10, JSON.stringify(ext2));
+const succ2 = await page.evaluate(() => { T.toEra(1); EF.respawn(); return [...new Set(T.findSpawn(e => e.d.niche === 'hunter', [[26, EF.zone.gy - 1], [104, EF.zone.gy - 1], [132, EF.zone.gy - 1]]))]; });
+ok('zone 2: Thorn Stalkers take the hunter niche in the present', succ2.length === 1 && succ2[0] === 'thornstalker', succ2.join(','));
+const succAll2 = await page.evaluate(([NI, spots]) => {
+  const keep = Object.assign({}, EF.S.pastKills); const out = {};
+  for (const n of NI) if (n !== 'hunter') { EF.S.pastKills[n] = 10; EF.respawn(); out[n] = [...new Set(T.findSpawn(e => e.d.niche === n, spots[n].map(([x, dy]) => [x, EF.zone.gy + dy])))]; }
+  Object.assign(EF.S.pastKills, keep);
+  return out;
+}, [NI, SP2]);
+ok('zone 2: every successor spawns once its niche is extinct', NI.filter(n => n !== 'hunter').every(n => succAll2[n].length === 1 && succAll2[n][0] === EF_niche2(n)), JSON.stringify(succAll2));
+function EF_niche2(n) { return s2[n].want[2]; }
+const cap2 = await page.evaluate(() => {
+  EF.clearEnemies(); const c0 = EF.stats().crit;
+  const s = EF.zone.shrines[1]; EF.teleport(s + 1, EF.zone.gy - 1); EF.step(10);
+  EF.hold('right', true); for (let i = 0; i < 120 && !EF.S.spirits.includes('amomongo'); i++) { EF.step(1); EF.P.inv = 9; } EF.hold('right', false);
+  return { got: EF.S.spirits.includes('amomongo'), active: EF.S.spirit, c0, c1: EF.stats().crit };
+});
+ok('zone 2: the Amomongo spirit is captured and has its effect', cap2.got && cap2.active === 'amomongo' && cap2.c1 > cap2.c0 + 0.05, JSON.stringify(cap2));
+
+// forge, map and materials work per zone
+const pz = await page.evaluate(() => {
+  const lv = EF.S.forge, keys = ['swarmS', 'flyerS', 'scavX'].map(EF.zm);
+  const before = EF.forgeCan();
+  EF.give('z2_swarmS', 2); EF.give('z2_flyerS', 1); EF.give('z2_scavX', 2);
+  const z1mats = EF.S.mats.swarmS;
+  const can = EF.forgeCan();
+  EF.menu(true); EF.tab('forge'); const txt = document.getElementById('m-body').textContent;
+  EF.rng(() => 0); const ok = EF.forge(); EF.rng(null);
+  const after = { lv: EF.S.forge, z2: EF.S.mats.z2_swarmS, z1: EF.S.mats.swarmS };
+  EF.tab('map'); const map = document.getElementById('m-body').textContent;
+  EF.tab('bag'); const bag = document.getElementById('m-body').textContent;
+  return { lv, keys, before, can, shows: txt.includes('Spore Dust') && txt.includes('Kite Membrane'), ok, after, z1mats, map: map.includes('Kalayaan') && /\d+% explored/.test(map), bag: bag.includes('Amomongo Claw') };
+});
+ok('zone 2 forge uses the zone 2 materials (keeps zone 1 stock)', pz.keys.join() === 'z2_swarmS,z2_flyerS,z2_scavX' && pz.can && pz.shows && pz.ok && pz.after.lv === pz.lv + 1 && pz.after.z2 === 0 && pz.after.z1 === pz.z1mats, JSON.stringify(pz));
+ok('zone 2 map tab and materials list show the zone', pz.map && pz.bag);
+await shot('45-z2-forge-map');
+await page.evaluate(() => { EF.tab('eco'); });
+await shot('46-z2-eco');
+await page.evaluate(() => { EF.tab('spirits'); document.getElementById('m-body').scrollTop = 9999; });
+await shot('47-z2-spirits');
+await page.evaluate(() => EF.menu(false));
+
+// Manananggal: splits, regenerates while its lower half is untouched, learns and escalates
+const m0 = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies(); T.toEra(1);
+  EF.teleport(146, g - 1); EF.step(5);
+  const started = !!EF.boss && EF.boss.kind === 'mana';
+  for (let i = 0; i < 150; i++) { EF.step(1); EF.P.inv = 9; }
+  const b = EF.boss, L = b.lower;
+  const split = b.st !== 'intro' && b.y + b.h < L.y - 20;
+  b.hp -= 120; const h0 = b.hp; for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; } const healed = b.hp - h0;
+  EF.P.x = L.x - 14; EF.P.y = L.y + L.h - EF.P.h; EF.P.face = 1; EF.tap('attack');
+  for (let i = 0; i < 14; i++) { EF.step(1); EF.P.inv = 9; EF.P.x = L.x - 14; }
+  const sealed = L.sealT > 0, h1 = b.hp; for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; EF.P.x = 146 * 16; } const healed2 = b.hp - h1;
+  return { started, split, healed: Math.round(healed), sealed, healed2: Math.round(healed2), lhp: Math.round(L.hp) };
+});
+ok('Manananggal fight starts and the upper body splits off and flies', m0.started && m0.split, JSON.stringify(m0));
+ok('Manananggal heals while its lower half is untouched; a hit on the lower half stops it', m0.healed > 5 && m0.sealed && m0.healed2 <= 0 && m0.lhp < 150, JSON.stringify(m0));
+await page.waitForTimeout(100);
+await shot('48-z2-manananggal');
+const f2 = await page.evaluate(() => {
+  const seen = new Set(); let maxStage = 0, frames = 0, waves = false, acid = false;
+  while (EF.boss && frames < 60 * 120) {
+    const b = EF.boss, L = b.lower; seen.add(b.st); maxStage = Math.max(maxStage, b.stage);
+    if (EF.projs.some(p => p.type === 'acid')) acid = true; if (EF.projs.some(p => p.type === 'wave')) waves = true;
+    EF.P.inv = 9;
+    // fight from the ground: break the lower half, then punish the upper body when it swoops low
+    const tg = L && !L.dead && L.sealT < 1 ? L : b;
+    EF.P.x = tg.x + (EF.P.x < tg.x ? -14 : tg.w + 2); EF.P.y = EF.zone.gy * 16 - EF.P.h; EF.P.vy = 0; EF.P.face = EF.P.x < tg.x ? 1 : -1;
+    if (frames % 10 === 0) EF.tap('attack'); else EF.step(1);
+    frames++;
+  }
+  return { seen: [...seen], maxStage, frames, mode: EF.mode, done: EF.S.bossDone, beaten: EF.S.beaten.slice(), acid, core: EF.S.mats.z2_core || 0 };
+});
+ok('Manananggal uses several attacks (swoop, spit, shriek, lower-half stamp)', f2.seen.includes('swoop') && f2.seen.includes('spit') && f2.acid && f2.seen.length >= 6, JSON.stringify(f2));
+ok('Manananggal escalates stages and can be defeated', f2.maxStage >= 3 && f2.done && f2.mode === 'win' && f2.core === 1, JSON.stringify(f2));
+await page.waitForTimeout(300);
+await shot('49-z2-win');
+await page.evaluate(() => { document.getElementById('w-again').click(); });
+
+// zone 3 unlocks: back to the Balangay at the landing site
+const toZ3 = await page.evaluate(() => {
+  EF.clearEnemies(); const d = EF.dock();
+  EF.teleport(10, EF.zone.gy - 1); EF.step(10);
+  T.goto(d.x / 16 + 0.6); EF.tap('up');
+  return { mode: EF.mode, cards: [...document.querySelectorAll('.zone-card')].map(c => c.className.replace('zone-card ', '')), unlocked: EF.unlocked('z3') };
+});
+ok('zone 3 is charted once the Manananggal falls', toZ3.mode === 'travel' && toZ3.unlocked && toZ3.cards.join() === 'open,here,open', JSON.stringify(toZ3));
+await page.waitForTimeout(120);
+await shot('50-travel-z3-open');
+await page.click('.zone-card[data-zone="z3"]');
+const z3 = await page.evaluate(() => { for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; } return { zone: EF.zone, era: EF.S.era, label: EF.eraLabel(), ground: EF.P.onGround }; });
+ok('zone 3 Station Bakunawa loads (PRESENT / FUTURE)', z3.zone.id === 'z3' && z3.zone.mw === 180 && z3.zone.eras.join() === '1,2' && z3.era === 1 && z3.label === 'PRESENT · 2087' && z3.ground, JSON.stringify(z3));
+await page.waitForTimeout(200);
+await shot('51-z3-present-landing');
+
+// zone 3 gate 1: the hull breach can only be crossed on the coral grown over it by 2391
+const breach = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies();
+  EF.teleport(27, g - 1); EF.step(10); let maxFeet = 0;
+  EF.hold('right', true); for (let i = 0; i < 40; i++) { EF.step(1); EF.P.inv = 9; maxFeet = Math.max(maxFeet, T.feet()); } EF.hold('right', false);
+  for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; maxFeet = Math.max(maxFeet, T.feet()); }
+  const presentX = EF.P.x / 16;
+  EF.teleport(16, g - 1); EF.step(10);
+  T.goto(EF.zone.shrines[0] + 0.5); EF.tap('up');
+  const era = EF.S.era, label = EF.eraLabel(), solid = EF.solid(38, g);
+  T.goto(50);
+  return { maxFeet: +maxFeet.toFixed(2), presentX, era, label, solid, x: EF.P.x / 16, feet: T.feet() };
+});
+ok('zone 3: data-anito terminal switches PRESENT -> FUTURE', breach.era === 2 && breach.label === 'FUTURE · 2391', JSON.stringify(breach));
+ok('zone 3 gate: the breach swallows you in the present, the 2391 coral bridge crosses it (real inputs)', breach.maxFeet > 50.5 && breach.presentX < 47 && breach.solid && breach.x > 47 && breach.feet <= 50.05, JSON.stringify(breach));
+await page.waitForTimeout(200);
+await shot('52-z3-future-coral');
+// zone 3 gate 2: the bulkhead is grown shut in 2391 and open in 2087
+const bulk = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies();
+  EF.teleport(100, g - 1); EF.step(10);
+  T.goto(112); const blocked = EF.P.x / 16;
+  T.goto(EF.zone.shrines[1] + 0.5); EF.tap('up');
+  const era = EF.S.era;
+  T.goto(112);
+  return { blocked, era, x: EF.P.x / 16 };
+});
+ok('zone 3 gate: the overgrown bulkhead blocks 2391, passes in 2087 (real inputs)', bulk.blocked < 108 && bulk.era === 1 && bulk.x > 110, JSON.stringify(bulk));
+// secrets: present-only catwalks to the server loft, cracked panel to the vault
+const loft = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies();
+  EF.teleport(49, g - 1); EF.step(20);
+  const log = T.climb([[53.5, 'right'], [58.5, 'right'], [53.5, 'left'], [58.5, 'right'], [53.5, 'left']]);
+  T.run('right', 26, true); T.goto(64.5);
+  const top = T.feet();
+  EF.teleport(118, g - 1); EF.P.face = 1; EF.step(10);
+  for (let i = 0; i < 4; i++) { EF.tap('attack'); for (let j = 0; j < 14; j++) { EF.step(1); EF.P.inv = 9; } }
+  T.goto(127.5);
+  return { log, top, loft: EF.S.chests.includes('z3loft'), vault: EF.S.chests.includes('z3vault') };
+});
+ok('zone 3 secrets: catwalk loft chest (present only) and the vault behind the cracked panel', loft.top <= 50 - 18 + 0.05 && loft.loft && loft.vault, JSON.stringify(loft));
+const fut = await page.evaluate(() => { T.toEra(2); return { cat: EF.tile(52, EF.zone.gy - 3), oneWay: !EF.solid(52, EF.zone.gy - 3) }; });
+
+const SP3 = { hunter: [[22, -1], [96, -1], [64, -1]], swarm: [[18, -5], [114, -6]], flyer: [[24, -11], [134, -11]], giant: [[88, -1], [136, -1]], scav: [[52, -1], [100, -1]] };
+const s3 = await spawnCheck(SP3);
+ok('zone 3: each present species spawns (Bantay, Service Mites, Lambana, Bungisngis, Alimango)', NI.every(n => s3[n].old.length === 1 && s3[n].old[0] === s3[n].want[0]), JSON.stringify(NI.map(n => s3[n].old)));
+ok('zone 3: each future species spawns', NI.every(n => s3[n].neu.length === 1 && s3[n].neu[0] === s3[n].want[1]), JSON.stringify(NI.map(n => s3[n].neu)));
+await page.evaluate(() => { const e = EF.enemies.find(e => e.d.beh === 'giant') || EF.enemies[0]; if (e) EF.teleport(e.x / 16 - 5, EF.zone.gy - 1); EF.step(3); });
+await page.waitForTimeout(150);
+await shot('53-z3-future-species');
+const ext3 = await page.evaluate(() => {
+  const g = EF.zone.gy; T.toEra(1); EF.clearEnemies(); EF.S.pastKills.giant = 9;
+  EF.teleport(90, g - 1); EF.step(5);
+  const k = EF.spawnAt('bungisngis', 92, g); const dead = T.meleeKill(k, 2000);
+  const r = { dead, kills: EF.S.pastKills.giant, at: EF.S.spiritAt.bungisngis };
+  T.toEra(2); EF.respawn();
+  r.succ = [...new Set(T.findSpawn(e => e.d.niche === 'giant', [[88, g - 1], [136, g - 1]]))];
+  return r;
+});
+ok('zone 3: ten PRESENT kills drive the Bungisngis Loader extinct; the Reactor Titan rules the FUTURE', ext3.dead && ext3.kills === 10 && ext3.at !== undefined && ext3.succ.length === 1 && ext3.succ[0] === 'reactortitan', JSON.stringify(ext3));
+const succAll3 = await page.evaluate(([NI, spots]) => {
+  const keep = Object.assign({}, EF.S.pastKills); const out = {};
+  for (const n of NI) if (n !== 'giant') { EF.S.pastKills[n] = 10; EF.respawn(); out[n] = [...new Set(T.findSpawn(e => e.d.niche === n, spots[n].map(([x, dy]) => [x, EF.zone.gy + dy])))]; }
+  Object.assign(EF.S.pastKills, keep);
+  return out;
+}, [NI, SP3]);
+ok('zone 3: every successor spawns once its niche is extinct', NI.filter(n => n !== 'giant').every(n => succAll3[n].length === 1 && succAll3[n][0] === s3[n].want[2]), JSON.stringify(succAll3));
+await page.evaluate(() => { const e = EF.enemies.find(e => e.sp === 'reactortitan') || EF.enemies[0]; if (e) EF.teleport(e.x / 16 - 5, EF.zone.gy - 1); EF.step(3); });
+
+// Bakunawa: zero-g arena, swallows the light, hunts the moons, attacks from the dark
+const b3 = await page.evaluate(() => {
+  const g = EF.zone.gy; EF.clearEnemies(); T.toEra(1);
+  // jump height outside vs inside the zero-g arena
+  const apex = x => { EF.teleport(x, g - 1); for (let i = 0; i < 20; i++) EF.step(1); const y0 = EF.P.y; let m = y0; EF.hold('jump', true); for (let i = 0; i < 70; i++) { EF.step(1); EF.P.inv = 9; m = Math.min(m, EF.P.y); } EF.hold('jump', false); for (let i = 0; i < 90; i++) EF.step(1); return y0 - m; };
+  const out = apex(140);
+  EF.teleport(155, g - 1); EF.step(5);
+  const started = !!EF.boss && EF.boss.kind === 'baku';
+  for (let i = 0; i < 100; i++) { EF.step(1); EF.P.inv = 9; }
+  const inArena = apex(160);
+  const b = EF.boss;
+  return { started, out: Math.round(out), inArena: Math.round(inArena), moons: b && b.moons.length, dark: b && +b.dark.toFixed(2) };
+});
+ok('Bakunawa fight starts in a zero-g arena (higher jumps) with three moons', b3.started && b3.inArena > b3.out * 1.4 && b3.moons === 3 && b3.dark >= 0.45, JSON.stringify(b3));
+await page.evaluate(() => { for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; } });
+await page.waitForTimeout(100);
+await shot('54-z3-bakunawa');
+// let it hunt a moon undisturbed: the moon is swallowed and the arena gets darker
+const hunt = await page.evaluate(() => {
+  const b = EF.boss, d0 = b.dark, lit0 = b.moons.filter(m => m.lit).length; let seen = b.st === 'devour', ate = false, maxDark = 0;
+  EF.teleport(152, EF.zone.gy - 1);
+  for (let i = 0; i < 60 * 30 && !ate; i++) { EF.step(1); EF.P.inv = 9; EF.P.x = 152 * 16; if (b.st === 'devour') seen = true; ate = b.moons.filter(m => m.lit).length < lit0; maxDark = Math.max(maxDark, b.dark); }
+  for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; maxDark = Math.max(maxDark, b.dark); }
+  return { seen, ate, d0: +d0.toFixed(2), maxDark: +maxDark.toFixed(2), lit0, lit: b.moons.filter(m => m.lit).length };
+});
+ok('Bakunawa hunts the moons; a swallowed moon darkens the arena', hunt.seen && hunt.ate && hunt.maxDark > hunt.d0 + 0.08 && hunt.lit === hunt.lit0 - 1, JSON.stringify(hunt));
+await page.waitForTimeout(100);
+await shot('55-z3-bakunawa-dark');
+// protect a moon: hit the serpent while it swims for one
+const prot = await page.evaluate(() => {
+  const b = EF.boss; let saved = false;
+  for (let i = 0; i < 60 * 40 && !saved; i++) {
+    EF.P.inv = 9;
+    if (b.st === 'devour') { EF.P.x = b.x - 14; EF.P.y = b.y + b.h - EF.P.h; EF.P.vy = 0; EF.P.face = 1; if (i % 8 === 0) { EF.tap('attack'); continue; } }
+    else EF.P.x = 152 * 16;
+    EF.step(1);
+    if (b.saved > 0) saved = true;
+  }
+  return { saved, st: b.st, lit: b.moons.filter(m => m.lit).length };
+});
+ok('hitting the Bakunawa as it swims for a moon drives it off (moon protected)', prot.saved, JSON.stringify(prot));
+const f3 = await page.evaluate(() => {
+  const seen = new Set(); let maxStage = 0, frames = 0, shards = false, maxDark = 0;
+  while (EF.boss && frames < 60 * 150) {
+    const b = EF.boss; seen.add(b.st); maxStage = Math.max(maxStage, b.stage); maxDark = Math.max(maxDark, b.dark);
+    if (EF.projs.some(p => p.type === 'shard')) shards = true;
+    EF.P.inv = 9;
+    EF.P.x = b.x + (EF.P.x < b.x ? -14 : b.w + 2); EF.P.y = b.y + b.h - EF.P.h; EF.P.vy = 0; EF.P.face = EF.P.x < b.x ? 1 : -1;
+    if (frames % 10 === 0) EF.tap('attack'); else EF.step(1);
+    frames++;
+  }
+  return { seen: [...seen], maxStage, frames, mode: EF.mode, done: EF.S.bossDone, beaten: EF.S.beaten.slice(), shards, maxDark: +maxDark.toFixed(2), core: EF.S.mats.z3_core || 0 };
+});
+ok('Bakunawa uses several attacks (devour, lunge from the dark, shards, eclipse)', f3.seen.includes('lunge') && f3.seen.includes('eyes') && f3.seen.length >= 6, JSON.stringify(f3));
+ok('Bakunawa escalates stages and can be defeated', f3.maxStage >= 3 && f3.done && f3.mode === 'win' && f3.core === 1 && f3.beaten.join() === 'z1,z2,z3', JSON.stringify(f3));
+await page.waitForTimeout(300);
+await shot('56-z3-win');
+await page.evaluate(() => { document.getElementById('w-again').click(); EF.clearEnemies(); EF.teleport(60, EF.zone.gy - 1); for (let i = 0; i < 40; i++) EF.step(1); EF.menu(true); EF.tab('eco'); });
+await shot('57-z3-eco');
+for (const l of ['fil', 'de']) { await setLangZ(l); await page.evaluate(() => EF.tab('eco')); await shot('58-z3-eco-' + l); }
+await setLangZ('en');
+await page.evaluate(() => { EF.tab('map'); });
+await shot('59-z3-map');
+await page.evaluate(() => EF.menu(false));
+
+// saves restore the zone; travelling back restores zone 1 exactly
+const rest = await page.evaluate(() => {
+  const ex3 = EF.explored();
+  EF.toTitle();
+  document.getElementById('btn-continue').click();
+  const r = { zone: EF.zone.id, mw: EF.zone.mw, era: EF.S.era, done: EF.S.bossDone, bulk: EF.tile(108, EF.zone.gy - 1), ex: EF.explored(), ex3, stash: Object.keys(EF.S.zones).sort().join() };
+  EF.travel('z1');
+  r.z1 = { zone: EF.zone.id, mw: EF.zone.mw, done: EF.S.bossDone, kills: EF.S.pastKills.hunter, ex: EF.explored(), era: EF.S.era, stash: Object.keys(EF.S.zones).sort().join(), dock: !!EF.dock() };
+  return r;
+});
+ok('continue restores zone 3 with its map, era and explored tiles', rest.zone === 'z3' && rest.mw === 180 && rest.done && rest.bulk === 8 && rest.ex === rest.ex3 && rest.ex > 0 && rest.stash === 'z1,z2', JSON.stringify(rest));
+ok('travelling back restores zone 1 (boss, extinctions, explored map)', rest.z1.zone === 'z1' && rest.z1.mw === 200 && rest.z1.done && rest.z1.kills === 10 && rest.z1.ex > 5 && rest.z1.stash === 'z2,z3' && rest.z1.dock, JSON.stringify(rest.z1));
+await page.waitForTimeout(200);
+await shot('60-z1-back-dock');
+
 
 
 // ================= round 3: classes, customization, ascension, summon, hell mode =================

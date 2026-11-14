@@ -1,8 +1,11 @@
 'use strict';
 (() => {
 // ---------- constants ----------
-const TS = 16, MW = 200, VH = 300;
-const PAST = 0, PRESENT = 1;
+const TS = 16, VH = 300;
+let MW = 200; // width of the current zone (zone 1: 200)
+const PAST = 0, PRESENT = 1, FUTURE = 2;
+const ERA_KEYS = ['past', 'present', 'future'], ERA_COL = ['#3ef0b4', '#ff3d8b', '#7ad7ff'];
+const ERA_TINT = ['rgba(7,26,36,.88)', 'rgba(42,15,60,.88)', 'rgba(6,18,40,.88)'];
 const THRESH = 10; // past kills to drive a species extinct
 const SAVE_KEY = 'epochfall.save.v1', HELL_KEY = 'epochfall.hell.v1', ACC_KEY = 'epochfall.account.v1';
 const HELL_MUL = 1.6; // hell mode: enemy HP and damage
@@ -40,10 +43,10 @@ const SPEC = {
   cindershrew:{ niche: 'scav', name: 'Cinder Shrews', hp: 18, spd: 150, dmg: 8, beh: 'thief', w: 13, h: 10, col: '#4a2a2a', eye: '#ff8a3d', mat: 'scavA', xp: 11 }
 };
 const NICHE_IDS = ['hunter', 'swarm', 'flyer', 'giant', 'scav'];
-const NICHES = { hunter: ['sigbin', 'sigbinx', 'tiktik'], swarm: ['salagubang', 'neonmite', 'wisp'], flyer: ['wakwak', 'rotor', 'mantis'],
+let NICHES = { hunter: ['sigbin', 'sigbinx', 'tiktik'], swarm: ['salagubang', 'neonmite', 'wisp'], flyer: ['wakwak', 'rotor', 'mantis'],
   giant: ['kapre', 'kapremech', 'ugat'], scav: ['punso', 'rustling', 'mirrormole'] };
 // a successor that depends on another niche: the scavenger successor feeds on swarm shells while the swarm lives
-const SUCC_ALT = { scav: { dep: 'swarm', dead: 'cindershrew' } };
+let SUCC_ALT = { scav: { dep: 'swarm', dead: 'cindershrew' } };
 const MATS = { hunterP: 'Sigbin Fang', hunterX: 'Chrome Fang', hunterS: 'Tiktik Plume', swarmP: 'Salagubang Shell', swarmX: 'Mite Core',
   swarmS: 'Wisp Static', flyerP: 'Wakwak Feather', flyerX: 'Drone Rotor', flyerS: 'Mantis Lens',
   giantP: 'Kapre Ember', giantX: 'Piston Heart', giantS: 'Heartwood Core', scavP: 'Punso Clay', scavX: 'Salvaged Wire', scavS: 'Mirror Scale', scavA: 'Cinder Tail',
@@ -133,9 +136,9 @@ const FORGE = [
 const FORGE_PCT = 6;
 const OY = 40; // rows added above the original slice (sky rooftops, canopy, cave)
 const GY = OY + 36; // top row of the ground
-const SHRINES = [10, 86, 160];
+let SHRINES = [10, 86, 160];
 const FEATHER = { x: 140 * TS, y: (OY + 18) * TS };
-const SPAWNS = [
+let SPAWNS = [
   { n: 'hunter', x: 28, y: OY + 35 }, { n: 'hunter', x: 92, y: OY + 35 }, { n: 'hunter', x: 125, y: OY + 17 }, { n: 'hunter', x: 138, y: OY + 35 },
   { n: 'hunter', x: 60, y: OY + 35, era: PRESENT },
   { n: 'swarm', x: 22, y: OY + 31 }, { n: 'swarm', x: 120, y: OY + 33 }, { n: 'swarm', x: 146, y: OY + 33 }, { n: 'swarm', x: 50, y: 48, era: PRESENT },
@@ -144,9 +147,9 @@ const SPAWNS = [
   { n: 'giant', x: 128, y: 39 }, { n: 'giant', x: 143, y: OY + 35 }, { n: 'giant', x: 60, y: 51, era: PRESENT },
   { n: 'scav', x: 82, y: OY + 35 }, { n: 'scav', x: 118, y: OY + 17 }, { n: 'scav', x: 90, y: 55, era: PAST }, { n: 'scav', x: 56, y: OY + 35, era: PRESENT }
 ];
-const ARENA = { x0: 168 * TS, x1: 198 * TS, door: 166, trigger: 171 * TS };
+let ARENA = { x0: 168 * TS, x1: 198 * TS, door: 166, trigger: 171 * TS };
 // secret chests: x, y = floor row the chest stands on; era = only there in that era
-const CHESTS = [
+let CHESTS = [
   { id: 'roof', x: 54, y: 37, era: PRESENT, loot: { hunterX: 3, swarmX: 3, flyerX: 2, scavX: 2, giantX: 1 } },
   { id: 'cave', x: 84, y: 56, loot: { hunterP: 3, swarmP: 2, flyerP: 2, giantP: 2, scavP: 3 } }
 ];
@@ -156,8 +159,8 @@ const ROOF_STEPS2 = [[62, 49], [67, 46], [62, 43], [67, 40]];
 const CANOPY_STEPS = [[118, 55], [113, 52], [118, 49], [113, 46], [118, 43]];
 
 // ---------- map ----------
-const MH = OY + 40;
-const map = new Uint8Array(MW * MH);
+let MH = OY + 40;
+let map = new Uint8Array(MW * MH);
 function setT(x, y, v) { if (x >= 0 && x < MW && y >= 0 && y < MH) map[y * MW + x] = v; }
 function fill(x, y, w, h, v) { for (let j = y; j < y + h; j++) for (let i = x; i < x + w; i++) setT(i, j, v); }
 function tileAt(x, y) { if (x < 0 || x >= MW || y >= MH) return 1; if (y < 0) return 0; return map[y * MW + x]; }
@@ -192,8 +195,170 @@ function buildMap() {
   // E: arena
   fill(166, OY + 19, 34, 1, 1); fill(166, OY + 20, 2, 10, 1);
 }
-function isSolid(v) { return v === 1 || v === 6 || ((v === 4 || v === 8) && S.era === PRESENT); }
-function isOneWay(v) { return v === 2 || (v === 3 && S.era === PAST) || (v === 7 && S.era === PRESENT); }
+// era-bound tiles follow the zone's two eras: eras[0] is the older one (past in zone 1), eras[1] the newer one
+function isSolid(v) { return v === 1 || v === 6 || ((v === 4 || v === 8) && S.era === Z.eras[1]); }
+function isOneWay(v) { return v === 2 || (v === 3 && S.era === Z.eras[0]) || (v === 7 && S.era === Z.eras[1]); }
+
+// ---------- zones 2 + 3: species, materials, spirits, maps ----------
+// shape: body drawn by drawShape; mod: 'tech' (colony / station hardware) or 'grown' (overgrown in 2391)
+Object.assign(SPEC, {
+  // Kalayaan Jungle Planet: PAST (primal) / PRESENT (bio-dome colony)
+  amomongo:     { niche: 'hunter', name: 'Amomongo', hp: 34, spd: 70, dmg: 11, beh: 'leaper', w: 18, h: 20, col: '#4a3a2c', eye: '#ffd36a', mat: 'z2_hunterP', xp: 11, shape: 'ape' },
+  amomongoc:    { niche: 'hunter', name: 'Collared Amomongo', hp: 42, spd: 80, dmg: 12, beh: 'leaper', w: 18, h: 20, col: '#5a5e6e', eye: '#3ef0b4', mat: 'z2_hunterX', xp: 13, shape: 'ape', mod: 'tech' },
+  thornstalker: { niche: 'hunter', name: 'Thorn Stalkers', hp: 50, spd: 75, dmg: 14, beh: 'charger', w: 22, h: 14, col: '#2f5a34', eye: '#ff5ac8', mat: 'z2_hunterS', xp: 16, shape: 'stalker' },
+  alitaptap:    { niche: 'swarm', name: 'Alitaptap Swarm', hp: 10, spd: 85, dmg: 6, beh: 'swarm', w: 10, h: 8, col: '#3a4a20', eye: '#d8ff6a', mat: 'z2_swarmP', xp: 5, group: 3, shape: 'firefly' },
+  pollendrone:  { niche: 'swarm', name: 'Pollinator Drones', hp: 13, spd: 95, dmg: 7, beh: 'swarm', w: 10, h: 8, col: '#c9b25a', eye: '#2bd9ff', mat: 'z2_swarmX', xp: 6, group: 3, shape: 'firefly', mod: 'tech' },
+  sporemote:    { niche: 'swarm', name: 'Spore Motes', hp: 15, spd: 105, dmg: 8, beh: 'swarm', w: 10, h: 10, col: '#a46ad8', eye: '#ffffff', mat: 'z2_swarmS', xp: 8, group: 4, shape: 'spore' },
+  tigmamanukan: { niche: 'flyer', name: 'Tigmamanukan', hp: 22, spd: 62, dmg: 9, beh: 'flyer', w: 20, h: 12, col: '#1f4a8a', eye: '#ffe08a', mat: 'z2_flyerP', xp: 9, shape: 'bird' },
+  domeglider:   { niche: 'flyer', name: 'Dome Gliders', hp: 26, spd: 72, dmg: 10, beh: 'flyer', w: 20, h: 12, col: '#5a6a88', eye: '#ff3d8b', mat: 'z2_flyerX', xp: 11, shape: 'bird', mod: 'tech' },
+  lumenkite:    { niche: 'flyer', name: 'Lumen Kites', hp: 30, spd: 92, dmg: 12, beh: 'diver', w: 18, h: 14, col: '#2aa7a0', eye: '#fff6a0', mat: 'z2_flyerS', xp: 14, shape: 'kite' },
+  sarangay:     { niche: 'giant', name: 'Sarangay', hp: 120, spd: 26, dmg: 16, beh: 'giant', w: 26, h: 38, col: '#4a3426', eye: '#ff6a4a', mat: 'z2_giantP', xp: 30, quake: 1, shape: 'bull' },
+  sarangayh:    { niche: 'giant', name: 'Sarangay Hauler', hp: 135, spd: 30, dmg: 18, beh: 'giant', w: 26, h: 38, col: '#5e5a50', eye: '#2bd9ff', mat: 'z2_giantX', xp: 34, quake: 1, shape: 'bull', mod: 'tech' },
+  bloomback:    { niche: 'giant', name: 'Bloomback Behemoth', hp: 155, spd: 22, dmg: 20, beh: 'giant', w: 32, h: 30, col: '#3a5a3a', eye: '#ffb3f0', mat: 'z2_giantS', xp: 42, quake: 2, shape: 'turtle' },
+  duwende:      { niche: 'scav', name: 'Duwende', hp: 14, spd: 120, dmg: 5, beh: 'thief', w: 11, h: 13, col: '#7a4a2a', eye: '#ffe08a', mat: 'z2_scavP', xp: 7, shape: 'imp' },
+  domescrapper: { niche: 'scav', name: 'Dome Scrappers', hp: 16, spd: 135, dmg: 6, beh: 'thief', w: 11, h: 13, col: '#5c6676', eye: '#3ef0b4', mat: 'z2_scavX', xp: 8, shape: 'imp', mod: 'tech' },
+  mosspicker:   { niche: 'scav', name: 'Moss Pickers', hp: 22, spd: 125, dmg: 7, beh: 'thief', w: 13, h: 11, col: '#4f7a3a', eye: '#ffd36a', mat: 'z2_scavS', xp: 11, shape: 'beetle' },
+  // Station Bakunawa: PRESENT (2087, running station) / FUTURE (2391, derelict and overgrown)
+  bantay:       { niche: 'hunter', name: 'Bantay Hounds', hp: 40, spd: 85, dmg: 12, beh: 'charger', w: 22, h: 14, col: '#3c4660', eye: '#2bd9ff', mat: 'z3_hunterP', xp: 12, shape: 'hound', mod: 'tech' },
+  feralbantay:  { niche: 'hunter', name: 'Feral Bantay', hp: 48, spd: 95, dmg: 13, beh: 'charger', w: 22, h: 14, col: '#4a5a40', eye: '#ff8a3d', mat: 'z3_hunterX', xp: 14, shape: 'hound', mod: 'grown' },
+  voidlurker:   { niche: 'hunter', name: 'Void Lurkers', hp: 54, spd: 70, dmg: 15, beh: 'leaper', w: 16, h: 20, col: '#2a1e40', eye: '#c7a2ff', mat: 'z3_hunterS', xp: 17, shape: 'lurker' },
+  servmite:     { niche: 'swarm', name: 'Service Mites', hp: 12, spd: 95, dmg: 7, beh: 'swarm', w: 9, h: 8, col: '#8a96b0', eye: '#ffc65a', mat: 'z3_swarmP', xp: 6, group: 3, shape: 'mite', mod: 'tech' },
+  rustchoir:    { niche: 'swarm', name: 'Rust Choir', hp: 14, spd: 100, dmg: 8, beh: 'swarm', w: 9, h: 8, col: '#a0582e', eye: '#ffe0a0', mat: 'z3_swarmX', xp: 7, group: 3, shape: 'mite', mod: 'grown' },
+  starmoth:     { niche: 'swarm', name: 'Starlight Moths', hp: 16, spd: 110, dmg: 8, beh: 'swarm', w: 10, h: 10, col: '#e0d8ff', eye: '#7ad7ff', mat: 'z3_swarmS', xp: 9, group: 4, shape: 'moth' },
+  lambana:      { niche: 'flyer', name: 'Lambana Drones', hp: 26, spd: 70, dmg: 10, beh: 'flyer', w: 20, h: 12, col: '#6a7aa0', eye: '#7ad7ff', mat: 'z3_flyerP', xp: 11, shape: 'fairy', mod: 'tech' },
+  hollowlambana:{ niche: 'flyer', name: 'Hollow Lambana', hp: 30, spd: 76, dmg: 11, beh: 'flyer', w: 20, h: 12, col: '#4a6a50', eye: '#ff6a8a', mat: 'z3_flyerX', xp: 12, shape: 'fairy', mod: 'grown' },
+  cometray:     { niche: 'flyer', name: 'Comet Rays', hp: 32, spd: 95, dmg: 12, beh: 'diver', w: 22, h: 12, col: '#2a3a6a', eye: '#ffe3f0', mat: 'z3_flyerS', xp: 15, shape: 'ray' },
+  bungisngis:   { niche: 'giant', name: 'Bungisngis Loader', hp: 140, spd: 28, dmg: 18, beh: 'giant', w: 28, h: 40, col: '#5a5040', eye: '#ffc65a', mat: 'z3_giantP', xp: 34, quake: 1, shape: 'cyclops', mod: 'tech' },
+  mossngis:     { niche: 'giant', name: 'Overgrown Bungisngis', hp: 155, spd: 24, dmg: 20, beh: 'giant', w: 28, h: 40, col: '#3e5a38', eye: '#ff8a3d', mat: 'z3_giantX', xp: 38, quake: 1, shape: 'cyclops', mod: 'grown' },
+  reactortitan: { niche: 'giant', name: 'Reactor Titan', hp: 170, spd: 22, dmg: 22, beh: 'giant', w: 30, h: 40, col: '#2a2f4a', eye: '#7ad7ff', mat: 'z3_giantS', xp: 46, quake: 2, shape: 'titan' },
+  alimango:     { niche: 'scav', name: 'Alimango Salvagers', hp: 18, spd: 115, dmg: 6, beh: 'thief', w: 14, h: 10, col: '#a0402e', eye: '#ffe08a', mat: 'z3_scavP', xp: 8, shape: 'crab' },
+  hermithull:   { niche: 'scav', name: 'Hermit Hulls', hp: 22, spd: 120, dmg: 7, beh: 'thief', w: 14, h: 10, col: '#6a7088', eye: '#3ef0b4', mat: 'z3_scavX', xp: 9, shape: 'crab', mod: 'grown' },
+  staticeel:    { niche: 'scav', name: 'Static Eels', hp: 24, spd: 140, dmg: 8, beh: 'thief', w: 16, h: 8, col: '#2a5a7a', eye: '#7ad7ff', mat: 'z3_scavS', xp: 12, shape: 'eel' }
+});
+Object.assign(MATS, {
+  z2_hunterP: 'Amomongo Claw', z2_hunterX: 'Tracker Collar', z2_hunterS: 'Thorn Barb', z2_swarmP: 'Alitaptap Glow', z2_swarmX: 'Pollen Cell', z2_swarmS: 'Spore Dust',
+  z2_flyerP: 'Omen Feather', z2_flyerX: 'Glider Vane', z2_flyerS: 'Kite Membrane', z2_giantP: 'Sarangay Gem', z2_giantX: 'Harness Plate', z2_giantS: 'Bloom Shell',
+  z2_scavP: 'Duwende Trinket', z2_scavX: 'Scrap Bundle', z2_scavS: 'Moss Wad', z2_core: 'Manananggal Wing',
+  z3_hunterP: 'Guard Chip', z3_hunterX: 'Feral Fang', z3_hunterS: 'Void Hide', z3_swarmP: 'Mite Gear', z3_swarmX: 'Rust Bell', z3_swarmS: 'Moth Dust',
+  z3_flyerP: 'Lambana Wing', z3_flyerX: 'Hollow Core', z3_flyerS: 'Comet Tail', z3_giantP: 'Loader Eye', z3_giantX: 'Moss Piston', z3_giantS: 'Reactor Rod',
+  z3_scavP: 'Salvage Claw', z3_scavX: 'Helmet Shell', z3_scavS: 'Eel Coil', z3_core: 'Moon Pearl'
+});
+// spirits of extinct species from zones 2 and 3: simple, always-on stat effects (no tables in the HUD needed)
+const SPIRIT_FX = {
+  amomongo: { dmg: 1.08, crit: 0.06 }, alitaptap: { heal: 1.5, en: 10 }, tigmamanukan: { spd: 1.12 }, sarangay: { taken: 0.88, hp: 15 }, duwende: { magnet: 170 },
+  bantay: { crit: 0.12, dmg: 1.05 }, servmite: { regen: 4 }, lambana: { dashCd: 0.7 }, bungisngis: { hp: 40 }, alimango: { taken: 0.85 }
+};
+const SPIRIT_ZONE = { amomongo: 'z2', alitaptap: 'z2', tigmamanukan: 'z2', sarangay: 'z2', duwende: 'z2', bantay: 'z3', servmite: 'z3', lambana: 'z3', bungisngis: 'z3', alimango: 'z3' };
+SPIRITS.push(...Object.keys(SPIRIT_ZONE));
+Object.assign(SPIRIT_COL, { amomongo: '#ffcf8a', alitaptap: '#d8ff6a', tigmamanukan: '#7aa8ff', sarangay: '#ff8a6a', duwende: '#e6c08a',
+  bantay: '#7ad7ff', servmite: '#ffd27a', lambana: '#b8d8ff', bungisngis: '#ffe08a', alimango: '#ff9a7a' });
+
+// zone 2 map: 170 x 60, ground row 56
+const Z2G = 56;
+const Z2_LEAVES = [[58, Z2G - 3], [63, Z2G - 6], [58, Z2G - 9], [63, Z2G - 12], [58, Z2G - 15]];
+function buildZ2() {
+  const g = Z2G;
+  map.fill(0);
+  fill(0, g, MW, 4, 1); fill(0, 0, 1, MH, 1); fill(MW - 1, 0, 1, MH, 1);
+  fill(22, g - 3, 5, 3, 1);
+  // A: the sinkhole: colony walkway in the present, fallen vine logs in the past
+  fill(34, g, 19, 3, 0); fill(34, g + 2, 19, 1, 5); fill(34, g, 19, 1, 4);
+  fill(37, g - 1, 3, 1, 3); fill(43, g - 2, 3, 1, 3); fill(49, g - 1, 3, 1, 3);
+  // giant-leaf stairs (both eras) to the mesa; the last gap needs the double jump
+  Z2_LEAVES.forEach(([x, y]) => fill(x, y, 4, 1, 2));
+  fill(60, g - 21, 13, 1, 2);
+  // B: the bio-dome wall: sealed glass in the present (tile 8), a gap between the roots in the past
+  fill(96, 0, 2, g - 4, 1); fill(96, g - 4, 2, 4, 8);
+  // C: rock outcrop with a hollow behind cracked stone
+  fill(108, g - 4, 3, 1, 2);
+  fill(112, g - 7, 14, 7, 1); fill(114, g - 5, 9, 5, 0); fill(112, g - 5, 2, 5, 6);
+  // D: arena (tall, the upper body flies) with two perches
+  fill(140, g - 24, 30, 1, 1); fill(140, g - 23, 2, 17, 1);
+  fill(148, g - 5, 4, 1, 2); fill(160, g - 5, 4, 1, 2);
+}
+const Z2_SPAWNS = [
+  { n: 'hunter', x: 26, y: Z2G - 1 }, { n: 'hunter', x: 66, y: Z2G - 1 }, { n: 'hunter', x: 104, y: Z2G - 1 }, { n: 'hunter', x: 132, y: Z2G - 1 }, { n: 'hunter', x: 46, y: Z2G - 1, era: PRESENT },
+  { n: 'swarm', x: 20, y: Z2G - 5 }, { n: 'swarm', x: 72, y: Z2G - 9 }, { n: 'swarm', x: 106, y: Z2G - 6 }, { n: 'swarm', x: 62, y: 38 },
+  { n: 'flyer', x: 36, y: Z2G - 9 }, { n: 'flyer', x: 86, y: Z2G - 11 }, { n: 'flyer', x: 122, y: Z2G - 13 }, { n: 'flyer', x: 66, y: 30 },
+  { n: 'giant', x: 74, y: Z2G - 1 }, { n: 'giant', x: 130, y: Z2G - 1 }, { n: 'giant', x: 28, y: Z2G - 1, era: PAST },
+  { n: 'scav', x: 56, y: Z2G - 1 }, { n: 'scav', x: 102, y: Z2G - 1 }, { n: 'scav', x: 118, y: Z2G - 8 }, { n: 'scav', x: 88, y: Z2G - 1, era: PRESENT }
+];
+// zone 3 map: 180 x 54, ground row 50
+const Z3G = 50;
+const Z3_CAT = [[52, Z3G - 3], [57, Z3G - 6], [52, Z3G - 9], [57, Z3G - 12], [52, Z3G - 15]];
+function buildZ3() {
+  const g = Z3G;
+  map.fill(0);
+  fill(0, g, MW, 4, 1); fill(0, 0, 1, MH, 1); fill(MW - 1, 0, 1, MH, 1); fill(0, 0, MW, 2, 1);
+  // A: hull breach: plasma vents in the present, a coral bridge grown over it by 2391
+  fill(30, g, 17, 3, 0); fill(30, g + 2, 17, 1, 5); fill(30, g, 17, 1, 4);
+  // present-only maintenance catwalks up to the server loft
+  Z3_CAT.forEach(([x, y]) => fill(x, y, 4, 1, 3));
+  fill(56, g - 18, 12, 1, 2);
+  // 2391: roots and coral climb the hall (future-only one-way growth)
+  [[70, g - 4], [75, g - 7], [70, g - 10]].forEach(([x, y]) => fill(x, y, 4, 1, 7));
+  fill(74, g - 13, 8, 1, 7);
+  // B: pressure bulkhead: open in the present, grown shut by 2391
+  fill(108, 2, 2, g - 6, 1); fill(108, g - 4, 2, 4, 8);
+  // C: cracked hull panel in front of a crawlspace vault
+  fill(116, g - 4, 3, 1, 2);
+  fill(120, g - 7, 14, 7, 1); fill(122, g - 5, 9, 5, 0); fill(120, g - 5, 2, 5, 6);
+  // D: zero-g arena with three floating gantries
+  fill(148, g - 20, 32, 1, 1); fill(148, g - 19, 2, 13, 1);
+  fill(156, g - 6, 4, 1, 2); fill(170, g - 6, 4, 1, 2); fill(163, g - 11, 4, 1, 2);
+}
+const Z3_SPAWNS = [
+  { n: 'hunter', x: 22, y: Z3G - 1 }, { n: 'hunter', x: 64, y: Z3G - 1 }, { n: 'hunter', x: 96, y: Z3G - 1 }, { n: 'hunter', x: 126, y: Z3G - 8 }, { n: 'hunter', x: 78, y: Z3G - 1, era: FUTURE },
+  { n: 'swarm', x: 18, y: Z3G - 5 }, { n: 'swarm', x: 70, y: Z3G - 11 }, { n: 'swarm', x: 114, y: Z3G - 6 }, { n: 'swarm', x: 90, y: 30, era: PRESENT },
+  { n: 'flyer', x: 24, y: Z3G - 11 }, { n: 'flyer', x: 82, y: Z3G - 13 }, { n: 'flyer', x: 134, y: Z3G - 11 }, { n: 'flyer', x: 62, y: 26 },
+  { n: 'giant', x: 88, y: Z3G - 1 }, { n: 'giant', x: 136, y: Z3G - 1 }, { n: 'giant', x: 62, y: Z3G - 1, era: FUTURE },
+  { n: 'scav', x: 52, y: Z3G - 1 }, { n: 'scav', x: 100, y: Z3G - 1 }, { n: 'scav', x: 114, y: Z3G - 1 }, { n: 'scav', x: 20, y: Z3G - 1, era: PRESENT }
+];
+const ZONES = {
+  z1: { id: 'z1', mw: 200, mh: MH, gy: GY, eras: [PAST, PRESENT], arrive: PRESENT, years: ['yearPast', 'yearPresent'], start: 4, dock: 182, boss: 'tik', core: 'tikCore',
+    shrines: SHRINES, spawns: SPAWNS, arena: ARENA, chests: CHESTS, niches: NICHES, alt: SUCC_ALT, build: buildMap },
+  z2: { id: 'z2', mw: 170, mh: Z2G + 4, gy: Z2G, eras: [PAST, PRESENT], arrive: PRESENT, years: ['yearPrimal', 'yearPresent'], start: 8, dock: 1, boss: 'mana', core: 'z2_core',
+    shrines: [12, 80, 134], spawns: Z2_SPAWNS, arena: { x0: 142 * TS, x1: 169 * TS, door: 140, trigger: 145 * TS },
+    chests: [{ id: 'z2mesa', x: 68, y: Z2G - 21, loot: { z2_hunterX: 3, z2_swarmX: 3, z2_flyerX: 2, z2_giantX: 2, z2_scavX: 2 } },
+      { id: 'z2hollow', x: 118, y: Z2G, loot: { z2_hunterP: 3, z2_swarmP: 3, z2_flyerP: 2, z2_giantP: 2, z2_scavP: 3 } }],
+    niches: { hunter: ['amomongo', 'amomongoc', 'thornstalker'], swarm: ['alitaptap', 'pollendrone', 'sporemote'], flyer: ['tigmamanukan', 'domeglider', 'lumenkite'],
+      giant: ['sarangay', 'sarangayh', 'bloomback'], scav: ['duwende', 'domescrapper', 'mosspicker'] }, alt: {}, build: buildZ2,
+    chestCol: ['#4a3a24', '#6a5432', '#d8ff6a'], crackX: 112 },
+  z3: { id: 'z3', mw: 180, mh: Z3G + 4, gy: Z3G, eras: [PRESENT, FUTURE], arrive: PRESENT, years: ['yearPresent', 'yearFuture'], start: 8, dock: 1, boss: 'baku', core: 'z3_core',
+    shrines: [12, 84, 140], spawns: Z3_SPAWNS, arena: { x0: 150 * TS, x1: 179 * TS, door: 148, trigger: 153 * TS },
+    chests: [{ id: 'z3loft', x: 64, y: Z3G - 18, loot: { z3_hunterP: 3, z3_swarmP: 3, z3_flyerP: 2, z3_giantP: 2, z3_scavP: 3 } },
+      { id: 'z3vault', x: 127, y: Z3G, loot: { z3_hunterX: 3, z3_swarmX: 3, z3_flyerX: 2, z3_giantX: 2, z3_scavX: 2 } }],
+    niches: { hunter: ['bantay', 'feralbantay', 'voidlurker'], swarm: ['servmite', 'rustchoir', 'starmoth'], flyer: ['lambana', 'hollowlambana', 'cometray'],
+      giant: ['bungisngis', 'mossngis', 'reactortitan'], scav: ['alimango', 'hermithull', 'staticeel'] }, alt: {}, build: buildZ3,
+    chestCol: ['#2c3448', '#3c4660', '#7ad7ff'], crackX: 120 }
+};
+const ZONE_IDS = ['z1', 'z2', 'z3'];
+const ZONE_BOSS_NAME = { z1: 'Tikbalang', z2: 'Manananggal', z3: 'Bakunawa' };
+// the save fields that belong to one zone; the current zone's values live at the top level of S
+const ZONE_KEYS = ['era', 'shrine', 'pastKills', 'bossMem', 'bossDone', 'ex', 'spiritAt'];
+let Z = ZONES.z1;
+function freshZoneState(z) {
+  return { era: z.arrive, shrine: 0, pastKills: { hunter: 0, swarm: 0, flyer: 0, giant: 0, scav: 0 },
+    bossMem: { attempts: 0, wins: 0, left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0, maxStage: 1 }, bossDone: false, ex: '', spiritAt: {} };
+}
+// role keys (forge recipes, skill-tree costs) point at the materials of the zone you stand in
+function zm(m) { return Z.id === 'z1' ? m : m === 'tikCore' ? Z.core : Z.id + '_' + m; }
+function matZone(m) { return m.startsWith('z2_') ? 'z2' : m.startsWith('z3_') ? 'z3' : 'z1'; }
+function eraLabel(era) { const i = Z.eras.indexOf(era); return t(ERA_KEYS[era]) + ' · ' + t(Z.years[i < 0 ? 0 : i]); }
+function bossKey(k) { return Z.id === 'z1' ? k : k + '_' + Z.id; }
+function zoneUnlocked(id) { const i = ZONE_IDS.indexOf(id); return i === 0 || (i > 0 && S.beaten.includes(ZONE_IDS[i - 1])); }
+function dockSpot() { if (Z.id === 'z1' && !S.beaten.includes('z1')) return null; return { x: (Z.dock + 2) * TS, y: Z.gy * TS }; }
+function lowGrav() { return Z.id === 'z3' && P.x > ARENA.x0; }
+function loadZone(id) {
+  Z = ZONES[id] || ZONES.z1;
+  if (MW !== Z.mw || MH !== Z.mh) { MW = Z.mw; MH = Z.mh; map = new Uint8Array(MW * MH); }
+  SHRINES = Z.shrines; SPAWNS = Z.spawns; ARENA = Z.arena; CHESTS = Z.chests; NICHES = Z.niches; SUCC_ALT = Z.alt;
+  const w = Math.ceil(MW / EXC), h = Math.ceil(MH / EXC);
+  if (w !== EXW || h !== EXH) { EXW = w; EXH = h; explored = new Uint8Array(EXW * EXH); }
+  if (mmCanvas.width !== MW || mmCanvas.height !== MH) { mmCanvas.width = MW; mmCanvas.height = MH; mmImg = mmCtx.createImageData(MW, MH); mmPix = new Uint32Array(mmImg.data.buffer); }
+  Z.build();
+  exDirty = true; exCell = -1;
+}
 
 // ---------- state ----------
 let S, P, enemies = [], projs = [], parts = [], texts = [], items = [], boss = null;
@@ -206,7 +371,9 @@ function freshSave(cls = 'esk') {
   return { v: 1, cls, look: defLook(cls), name: '', hell: false, lvl: 1, xp: 0, sp: 1, nodes: [TREES[cls][0].id], mats: {}, pastKills: { hunter: 0, swarm: 0, flyer: 0, giant: 0, scav: 0 }, dj: false,
     shrine: 0, era: PRESENT, bossMem: { attempts: 0, wins: 0, left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0, maxStage: 1 },
     bossDone: false, deaths: 0, time: 0, lang: null,
-    spirits: ['diwata'], spirit: 'diwata', spiritAt: {}, forge: 0, chests: [], ex: '', minimap: false };
+    spirits: ['diwata'], spirit: 'diwata', spiritAt: {}, forge: 0, chests: [], ex: '', minimap: false,
+    // zones: the fields in ZONE_KEYS above always hold the current zone; the other zones wait in `zones`
+    zone: 'z1', zones: {}, beaten: [] };
 }
 function load(key = SAVE_KEY) {
   try {
@@ -220,7 +387,9 @@ function load(key = SAVE_KEY) {
         s.look = Object.assign(defLook(s.cls), d.look);
         s.pastKills = Object.assign(freshSave().pastKills, d.pastKills);
         // older saves: extinct niches whose spirit was never offered wait at the middle shrine
-        for (const n of NICHE_IDS) { const id = NICHES[n][0]; if (s.pastKills[n] >= THRESH && !s.spirits.includes(id) && s.spiritAt[id] === undefined) s.spiritAt[id] = 1; }
+        if (s.zone === 'z1') for (const n of NICHE_IDS) { const id = ZONES.z1.niches[n][0]; if (s.pastKills[n] >= THRESH && !s.spirits.includes(id) && s.spiritAt[id] === undefined) s.spiritAt[id] = 1; }
+        if (!ZONES[s.zone]) s.zone = 'z1';
+        if (s.zone === 'z1' && s.bossDone && !s.beaten.includes('z1')) s.beaten.push('z1');
         return s;
       }
     }
@@ -228,18 +397,20 @@ function load(key = SAVE_KEY) {
   return null;
 }
 // explored map: cells of EXC x EXC tiles, stored in the save as a '0'/'1' string
-const EXC = 4, EXW = Math.ceil(MW / EXC), EXH = Math.ceil(MH / EXC);
-const explored = new Uint8Array(EXW * EXH);
+const EXC = 4;
+let EXW = Math.ceil(MW / EXC), EXH = Math.ceil(MH / EXC);
+let explored = new Uint8Array(EXW * EXH);
 let exDirty = true, exCell = -1;
 function loadExplored() { explored.fill(0); const s = S.ex || ''; for (let i = 0; i < explored.length && i < s.length; i++) explored[i] = s.charCodeAt(i) === 49 ? 1 : 0; exDirty = true; exCell = -1; }
 // minimap: one pixel per tile for explored cells, redrawn only when something new is explored or the era changes
 const mmCanvas = document.createElement('canvas'); mmCanvas.width = MW; mmCanvas.height = MH;
-const mmCtx = mmCanvas.getContext('2d'), mmImg = mmCtx.createImageData(MW, MH), mmPix = new Uint32Array(mmImg.data.buffer);
+const mmCtx = mmCanvas.getContext('2d');
+let mmImg = mmCtx.createImageData(MW, MH), mmPix = new Uint32Array(mmImg.data.buffer);
 function rgba(r, g, b, a) { return (a << 24) | (b << 16) | (g << 8) | r; }
 const MM_COL = { air: rgba(26, 34, 54, 200), solidP: rgba(90, 140, 90, 255), solidX: rgba(120, 100, 170, 255), plat: rgba(236, 230, 214, 255), shrine: rgba(62, 240, 180, 255), chest: rgba(255, 198, 90, 255) };
 function redrawMinimap() {
   exDirty = false;
-  const solid = S.era === PAST ? MM_COL.solidP : MM_COL.solidX;
+  const solid = S.era === Z.eras[0] ? MM_COL.solidP : MM_COL.solidX;
   for (let y = 0; y < MH; y++) for (let x = 0; x < MW; x++) {
     const i = y * MW + x;
     if (!explored[Math.floor(y / EXC) * EXW + Math.floor(x / EXC)]) { mmPix[i] = 0; continue; }
@@ -247,14 +418,14 @@ function redrawMinimap() {
     mmPix[i] = isSolid(v) ? solid : isOneWay(v) ? MM_COL.plat : MM_COL.air;
   }
   const mark = (x, y, c) => { for (let j = -1; j <= 0; j++) for (let k = 0; k <= 1; k++) { const xx = x + k, yy = y + j; if (xx >= 0 && yy >= 0 && xx < MW && yy < MH && explored[Math.floor(yy / EXC) * EXW + Math.floor(xx / EXC)]) mmPix[yy * MW + xx] = c; } };
-  SHRINES.forEach(sx => mark(sx, GY - 1, MM_COL.shrine));
+  SHRINES.forEach(sx => mark(sx, Z.gy - 1, MM_COL.shrine));
   CHESTS.forEach(c => { if (!S.chests.includes(c.id) && (c.era === undefined || c.era === S.era)) mark(c.x, c.y - 1, MM_COL.chest); });
   mmCtx.putImageData(mmImg, 0, 0);
 }
 function exploredPct() { let n = 0; for (let i = 0; i < explored.length; i++) n += explored[i]; return Math.round(n / explored.length * 100); }
 function save() {
   try { S.ex = explored.join(''); localStorage.setItem(S.hell ? HELL_KEY : SAVE_KEY, JSON.stringify(S)); } catch (e) {}
-  if (!S.hell && !ACC.hellOk && (S.bossDone || S.lvl >= 10)) { ACC.hellOk = true; saveAcc(); }
+  if (!S.hell && !ACC.hellOk && (S.bossDone || S.beaten.length || S.lvl >= 10)) { ACC.hellOk = true; saveAcc(); }
 }
 // account: shared by the normal and the hell character, never lost on permadeath
 function freshAcc() { return { v: 1, tala: 0, dust: 0, pity: 0, pulls: 0, cos: {}, spirits: [], equip: {}, gift: '', fallen: [], hellOk: false, last: [] }; }
@@ -266,7 +437,7 @@ let ACC = loadAcc();
 function saveAcc() { try { localStorage.setItem(ACC_KEY, JSON.stringify(ACC)); } catch (e) {} }
 function addTala(n) { ACC.tala += n; saveAcc(); }
 function ownsSpirit(id) { return S.spirits.includes(id) || ACC.spirits.includes(id); }
-function hellUnlocked() { if (ACC.hellOk) return true; const n = load(SAVE_KEY); return !!(n && (n.bossDone || n.lvl >= 10)); }
+function hellUnlocked() { if (ACC.hellOk) return true; const n = load(SAVE_KEY); return !!(n && (n.bossDone || n.beaten.length || n.lvl >= 10)); }
 function hm() { return S && S.hell ? HELL_MUL : 1; }
 function has(id) { return S.nodes.includes(id); }
 function popPct(n) { return Math.max(0, THRESH - S.pastKills[n]) / THRESH; }
@@ -292,7 +463,7 @@ function press(k) { if (!held[k]) pressed[k] = true; held[k] = true; }
 function release(k) { held[k] = false; }
 addEventListener('keydown', e => {
   if (e.target && e.target.tagName === 'INPUT') return;
-  if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Tab') { e.preventDefault(); if (mode === 'play') toggleMenu(); return; }
+  if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Tab') { e.preventDefault(); if (mode === 'play') toggleMenu(); else if (mode === 'travel') closeTravel(); return; }
   const k = KEYMAP[e.code]; if (k) { e.preventDefault(); press(k); }
   if (mode === 'title' && document.getElementById('pick').hidden && (e.code === 'Enter' || e.code === 'Space')) titleContinue();
 });
@@ -367,23 +538,23 @@ function newPlayer(x, y) {
 }
 function forgeMult(lv) { return 1 + FORGE_PCT / 100 * lv; }
 function stats() {
-  const asc = has('asc') ? 1.1 : 1, sp = S.spirit, bab = S.cls === 'bab', bk = sp === 'bakunawa' ? 1.15 : 1;
+  const asc = has('asc') ? 1.1 : 1, sp = S.spirit, bab = S.cls === 'bab', bk = sp === 'bakunawa' ? 1.15 : 1, fx = SPIRIT_FX[sp] || {};
   return {
-    spd: (has('swift') ? 1.15 : 1) * (sp === 'minokawa' ? 1.1 : 1) * asc,
+    spd: (has('swift') ? 1.15 : 1) * (sp === 'minokawa' ? 1.1 : 1) * asc * (fx.spd || 1),
     maxCombo: has('fourth') ? 4 : 3,
     // the Babaylan staff is weaker than the Eskrimador blades
-    dmg: (bab ? 9 : 12) * (has('edge') ? 1.2 : 1) * asc * bk * forgeMult(S.forge),
+    dmg: (bab ? 9 : 12) * (has('edge') ? 1.2 : 1) * asc * bk * forgeMult(S.forge) * (fx.dmg || 1),
     magic: asc * bk,
-    maxhp: (100 + (has('roots') || has('chant') ? 25 : 0) + (sp === 'kapre' ? 30 : 0)) * asc,
-    maxen: (bab ? 60 : 50) + (has('well') ? 25 : 0) + (has('grace') ? 30 : 0),
-    regen: (has('well') || has('grace') ? 9 : 5) + (sp === 'wakwak' ? 3 : 0),
-    crit: sp === 'sigbin' ? 0.18 : 0.04,
-    magnet: sp === 'punso' ? 190 : 70,
+    maxhp: (100 + (has('roots') || has('chant') ? 25 : 0) + (sp === 'kapre' ? 30 : 0) + (fx.hp || 0)) * asc,
+    maxen: (bab ? 60 : 50) + (has('well') ? 25 : 0) + (has('grace') ? 30 : 0) + (fx.en || 0),
+    regen: (has('well') || has('grace') ? 9 : 5) + (sp === 'wakwak' ? 3 : 0) + (fx.regen || 0),
+    crit: (sp === 'sigbin' ? 0.18 : 0.04) + (fx.crit || 0),
+    magnet: Math.max(sp === 'punso' ? 190 : 70, fx.magnet || 0),
     dashInv: has('step') || has('trance') ? 0.28 : 0.16,
-    dashCd: has('step') || has('trance') ? 0.32 : 0.5,
+    dashCd: (has('step') || has('trance') ? 0.32 : 0.5) * (fx.dashCd || 1),
     airdash: has('airdash') || has('trance'),
     breaker: has('breaker') || has('quake'),
-    taken: (has('iron') || has('ward') ? 0.85 : 1) / asc
+    taken: (has('iron') || has('ward') ? 0.85 : 1) / asc * (fx.taken || 1)
   };
 }
 function hurtPlayer(dmg, fromX) {
@@ -409,7 +580,7 @@ function die() {
   if (boss && boss.active) endBossFight(false);
   toast(t('died'));
   const sx = SHRINES[S.shrine] * TS;
-  P = newPlayer(sx, (OY + 34) * TS - 26 + 16);
+  P = newPlayer(sx, (Z.gy - 2) * TS - 10);
   const st = stats(); P.maxhp = P.hp = st.maxhp; P.maxen = P.en = st.maxen;
   P.inv = 1.2; flash = 0.5; flashCol = '#ff3d8b';
   enemies = []; projs = []; resetSpawns();
@@ -423,7 +594,7 @@ function succOf(niche) {
 }
 function speciesFor(niche) {
   const [past, pres] = NICHES[niche], succ = succOf(niche), p = popPct(niche);
-  if (S.era === PAST) return p > 0 ? past : null;
+  if (S.era === Z.eras[0]) return p > 0 ? past : null;
   if (p <= 0) return succ;
   if (p <= 0.5) return Math.random() < 0.5 ? succ : pres;
   return pres;
@@ -612,7 +783,7 @@ function killEnemy(e) {
   if (e.loot) e.loot.forEach((m, i) => dropItem(dropX + (i - 1) * 8, e.y, m));
   gainXp(d.xp);
   // ecosystem
-  if (e.era === PAST && NICHES[d.niche][0] === e.sp) {
+  if (e.era === Z.eras[0] && NICHES[d.niche][0] === e.sp) {
     const before = popPct(d.niche);
     S.pastKills[d.niche] = Math.min(THRESH, S.pastKills[d.niche] + 1);
     const after = popPct(d.niche);
@@ -620,7 +791,7 @@ function killEnemy(e) {
       // the ghost of the extinct species waits at the next Anito shrine ahead of the player
       let si = SHRINES.findIndex(sx => sx * TS > P.x + P.w); if (si < 0) si = SHRINES.length - 1;
       if (!S.spirits.includes(e.sp)) S.spiritAt[e.sp] = si;
-      toast(t('extinctToast', spName(e.sp), spName(succOf(d.niche))) + (S.spirits.includes(e.sp) ? '' : ' ' + t('spiritAppear', spiritName(e.sp))), 5);
+      toast(t(Z.eras[1] === FUTURE ? 'extinctToastF' : 'extinctToast', spName(e.sp), spName(succOf(d.niche))) + (S.spirits.includes(e.sp) ? '' : ' ' + t('spiritAppear', spiritName(e.sp))), 5);
       flash = 0.4; flashCol = '#ff3d8b'; shake = 8; sfx(90, 0.6, 'sawtooth', 0.07, -40);
       enemies.forEach(o => { if (o.sp === e.sp && !o.dead) { o.dead = true; burst(o.x, o.y, 12, '#ff3d8b'); } });
       spawnState.forEach(s => { if (s.n === d.niche) s.alive = 0; });
@@ -646,20 +817,21 @@ function gainXp(x) {
 // ---------- boss: Tikbalang with learning stages ----------
 function bossBaseStage() { const s = Math.min(3, 1 + Math.floor(S.bossMem.attempts / 2)); return S.hell ? Math.max(3, s) : s; }
 function startBossFight() {
-  fill(ARENA.door, OY + 30, 2, 6, 1);
+  fill(ARENA.door, Z.gy - 6, 2, 6, 1);
   const base = bossBaseStage();
+  if (Z.boss !== 'tik') { startZoneBoss(base); return; }
   boss = { active: true, x: 188 * TS, y: GY * TS - 64, w: 36, h: 64, vx: 0, vy: 0, hp: 520 * hm(), max: 520 * hm(), face: -1, onGround: false,
     st: 'intro', t: 0, stage: base, base, flashT: 0, next: null, last: [], tele: 0, plan: null,
     mem: { left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0 }, telePX: 0, hitThis: null, alpha: 1 };
   enemies = [];
-  toast(t('bossMem', base), 3.2);
+  toast(t(bossKey('bossMem'), base), 3.2);
   shake = 10; sfx(70, 0.9, 'sawtooth', 0.08, -20);
 }
 function endBossFight(won) {
   const m = S.bossMem, b = boss;
   if (b) { m.left += b.mem.left; m.right += b.mem.right; m.air += b.mem.air; m.ground += b.mem.ground; m.bolts += b.mem.bolts; m.melee += b.mem.melee; m.maxStage = Math.max(m.maxStage, b.stage); }
-  if (won) { m.wins++; S.bossDone = true; } else m.attempts++;
-  fill(ARENA.door, OY + 30, 2, 6, 0);
+  if (won) { m.wins++; S.bossDone = true; if (!S.beaten.includes(Z.id)) S.beaten.push(Z.id); } else m.attempts++;
+  fill(ARENA.door, Z.gy - 6, 2, 6, 0);
   boss = null;
   save();
 }
@@ -688,13 +860,14 @@ function favoredSide() {
 function bossProj(o) { projs.push(Object.assign({ from: 'boss', life: 3, hit: null }, o)); }
 function updateBoss(dt) {
   const b = boss;
+  if (b.kind) { updateZoneBoss(dt); return; }
   const spd = 1 + 0.12 * (b.stage - 1);
   const px = P.x + P.w / 2, bx = b.x + b.w / 2;
   b.t += dt; if (b.flashT > 0) b.flashT -= dt;
   bossLearn(dt);
   // stage escalation inside the fight
   const want = Math.min(5, b.base + (b.hp < b.max * 0.66 ? 1 : 0) + (b.hp < b.max * 0.33 ? 1 : 0));
-  if (want > b.stage) { b.stage = want; toast(t('bossLearn', b.stage)); flash = 0.3; flashCol = '#3ef0b4'; shake = 8; sfx(110, 0.5, 'sawtooth', 0.07, 60); }
+  if (want > b.stage) { b.stage = want; toast(t(bossKey('bossLearn'), b.stage)); flash = 0.3; flashCol = '#3ef0b4'; shake = 8; sfx(110, 0.5, 'sawtooth', 0.07, 60); }
   b.vy = Math.min(700, b.vy + 1100 * dt);
   switch (b.st) {
     case 'intro': b.vx = 0; if (b.t > 1.2) { b.st = 'idle'; b.t = 0; } break;
@@ -780,6 +953,7 @@ function updateBoss(dt) {
 }
 function damageBoss(dmg, isBolt) {
   const b = boss; if (!b || b.st === 'dead' || b.st === 'intro' || b.alpha < 0.5) return;
+  if (b.kind) { damageZoneBoss(dmg, isBolt); return; }
   b.hp -= dmg; b.flashT = 0.08;
   if (isBolt) b.mem.bolts++; else b.mem.melee++;
   popText(b.x + b.w / 2, b.y - 4, Math.round(dmg), isBolt ? '#3ef0b4' : '#ffc65a');
@@ -797,8 +971,8 @@ function winGame() {
   endBossFight(true);
   mode = 'win';
   const sec = Math.floor(S.time), mm = Math.floor(sec / 60), ss = String(sec % 60).padStart(2, '0');
-  document.getElementById('w-title').textContent = t('win');
-  document.getElementById('w-sub').textContent = t('winSub');
+  document.getElementById('w-title').textContent = t(bossKey('win'));
+  document.getElementById('w-sub').textContent = t(Z.id === 'z1' ? 'winShip' : bossKey('winSub'));
   document.getElementById('w-stats').textContent = t('winStats', mm + ':' + ss, S.deaths, stage);
   document.getElementById('w-again').textContent = t('again');
   document.getElementById('win').hidden = false;
@@ -831,7 +1005,8 @@ function updatePlayer(dt) {
     const max = P.chan >= 0 ? 70 : 140, acc = P.onGround ? 1400 : 900;
     if (dir) { P.vx += dir * acc * dt; if (Math.abs(P.vx) > max) P.vx = Math.sign(P.vx) * max; if (P.atkT <= 0) P.face = dir; }
     else { const fr = P.onGround ? 1600 : 500; P.vx = Math.abs(P.vx) <= fr * dt ? 0 : P.vx - Math.sign(P.vx) * fr * dt; }
-    P.vy = Math.min(620, P.vy + 980 * dt);
+    const gm = lowGrav() ? 0.55 : 1; // zero-g boss arena on Station Bakunawa
+    P.vy = Math.min(620 * gm, P.vy + 980 * gm * dt);
     if (!held.jump && P.vy < -120) P.vy += 1400 * dt; // short hop
     if (P.jbuf > 0) {
       if (P.coyote > 0) { P.vy = -340; P.jbuf = 0; P.coyote = 0; P.jumps = 1; sfx(380, 0.08, 'square', 0.03, 200); burst(P.x + P.w / 2, P.y + P.h, 5, '#ece6d6', 60, 0.3); }
@@ -867,6 +1042,7 @@ function updatePlayer(dt) {
         hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, P.finisher ? 5 : 2);
       }
       if (boss && !P.hitIds.has('boss') && overlap(hb, boss)) { P.hitIds.add('boss'); damageBoss(st.dmg * mult * rnd(0.92, 1.08), false); hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, 3); }
+      if (boss && boss.lower && !boss.lower.dead && !P.hitIds.has('lower') && overlap(hb, boss.lower)) { P.hitIds.add('lower'); damageLower(st.dmg * mult * rnd(0.92, 1.08)); hitstop = 0.045; }
       if (P.finisher && st.breaker && !P.hitIds.has('wall')) {
         const x0 = Math.floor(hb.x / TS), x1 = Math.floor((hb.x + hb.w) / TS), y0 = Math.floor(hb.y / TS), y1 = Math.floor((hb.y + hb.h) / TS);
         let broke = false;
@@ -951,24 +1127,25 @@ function projHit(p, e) {
 }
 
 // ---------- world update ----------
-let nearShrine = -1;
+let nearShrine = -1, nearDock = false;
 const timeBtn = document.getElementById('b-time');
 function switchEra() {
-  S.era = S.era === PAST ? PRESENT : PAST;
+  S.era = S.era === Z.eras[0] ? Z.eras[1] : Z.eras[0];
   S.shrine = nearShrine;
   enemies = []; projs = projs.filter(p => p.from === 'player'); resetSpawns();
   // never leave the player inside a solid tile
   for (let i = 0; i < 4 && (isSolid(tileAt(Math.floor((P.x + 2) / TS), Math.floor((P.y + P.h - 2) / TS))) || isSolid(tileAt(Math.floor((P.x + P.w - 2) / TS), Math.floor((P.y + P.h - 2) / TS)))); i++) P.y -= TS;
-  flash = 0.7; flashCol = S.era === PAST ? '#3ef0b4' : '#ff3d8b'; shake = 6;
-  sfx(S.era === PAST ? 300 : 600, 0.5, 'sine', 0.06, S.era === PAST ? -150 : 300);
+  const old = S.era === Z.eras[0];
+  flash = 0.7; flashCol = ERA_COL[S.era]; shake = 6;
+  sfx(old ? 300 : 600, 0.5, 'sine', 0.06, old ? -150 : 300);
   burst(P.x + P.w / 2, P.y + P.h / 2, 40, flashCol, 260, 0.9, 2, 0);
-  toast(S.era === PAST ? t('past') + ' · ' + t('yearPast') : t('present') + ' · ' + t('yearPresent'), 1.6);
+  toast(eraLabel(S.era), 1.6);
   wipeT = WIPE; wipeCol = flashCol; exDirty = true;
   save();
 }
 // ---------- spirits ----------
 const SPR = { x: 0, y: 0 };
-function spiritSpot(si) { return { x: SHRINES[si] * TS + 34, y: GY * TS - 34 }; }
+function spiritSpot(si) { return { x: SHRINES[si] * TS + 34, y: Z.gy * TS - 34 }; }
 function equipSpirit(id) {
   if (!ownsSpirit(id)) return false;
   S.spirit = id; P.shieldCd = 0; P.biteCd = 0;
@@ -994,6 +1171,7 @@ function updateSpirit(dt) {
   if (P.shieldCd > 0) P.shieldCd -= dt;
   if (P.biteCd > 0) P.biteCd -= dt;
   if (sp === 'diwata') P.hp = Math.min(P.maxhp, P.hp + 1.2 * dt);
+  else if (SPIRIT_FX[sp] && SPIRIT_FX[sp].heal) P.hp = Math.min(P.maxhp, P.hp + SPIRIT_FX[sp].heal * dt);
   else if (sp === 'wakwak') {
     P.dartCd -= dt;
     if (P.dartCd <= 0) {
@@ -1069,23 +1247,27 @@ function update(dt) {
   if (wipeT > 0) wipeT -= dt;
   // shrines
   nearShrine = -1;
-  SHRINES.forEach((sx, i) => { if (Math.abs(P.x + P.w / 2 - (sx * TS + 8)) < 22 && P.y > (OY + 30) * TS) nearShrine = i; });
-  timeBtn.hidden = nearShrine < 0 || !!(boss && boss.active);
-  if (!timeBtn.hidden) timeBtn.textContent = t('shrineBtn') + ' ⟲';
+  SHRINES.forEach((sx, i) => { if (Math.abs(P.x + P.w / 2 - (sx * TS + 8)) < 22 && P.y > (Z.gy - 6) * TS) nearShrine = i; });
+  const dk = dockSpot();
+  nearDock = !!dk && Math.abs(P.x + P.w / 2 - dk.x) < 30 && P.y > (Z.gy - 6) * TS;
+  timeBtn.hidden = (nearShrine < 0 && !nearDock) || !!(boss && boss.active);
+  if (!timeBtn.hidden) timeBtn.textContent = nearDock ? t('shipBtn') + ' ➤' : t('shrineBtn') + ' ⟲';
+  if (pressed.up && nearDock && !(boss && boss.active)) { openTravel(); for (const k in pressed) pressed[k] = false; return; }
   if (pressed.up && nearShrine >= 0 && !(boss && boss.active)) switchEra();
   if (nearShrine >= 0 && S.shrine !== nearShrine) { S.shrine = nearShrine; save(); }
   // feather
-  if (!S.dj && Math.abs(P.x - FEATHER.x) < 16 && Math.abs(P.y + P.h - FEATHER.y) < 30) {
+  if (!S.dj && Z.id === 'z1' && Math.abs(P.x - FEATHER.x) < 16 && Math.abs(P.y + P.h - FEATHER.y) < 30) {
     S.dj = true; toast(t('feather'), 3.2); flash = 0.4; flashCol = '#ff8a3d'; burst(FEATHER.x, FEATHER.y - 8, 30, '#ff8a3d', 200, 0.9); sfx(660, 0.4, 'triangle', 0.06, 400); save();
   }
   // hints
-  if (hintCd <= 0) {
+  if (hintCd <= 0 && Z.id !== 'z1') zoneHints();
+  else if (hintCd <= 0) {
     if (!stats().breaker && P.x > 149 * TS && P.x < 154 * TS && P.y > (OY + 30) * TS) { toast(t(S.cls === 'bab' ? 'crackedBab' : 'cracked'), 3); hintCd = 8; }
     else if (S.era === PAST && P.x > 38 * TS && P.x < 44 * TS && P.y > (OY + 30) * TS) { toast(t('noCross'), 3); hintCd = 8; }
     else if (S.era === PRESENT && P.x > 96 * TS && P.x < 104 * TS && P.y > (OY + 30) * TS) { toast(t('sealed'), 3.5); hintCd = 12; }
   }
   // boss arena
-  if (!boss && !S.bossDone && P.x > ARENA.trigger && P.y > (OY + 20) * TS) startBossFight();
+  if (!boss && !S.bossDone && P.x > ARENA.trigger && P.y > (Z.gy - 16) * TS) startBossFight();
   if (boss) updateBoss(dt);
   else updateSpawns(dt);
   for (const e of enemies) if (!e.dead) updateEnemy(e, dt);
@@ -1103,7 +1285,8 @@ function update(dt) {
       parts.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, vx: 0, vy: 0, life: 0.18, max: 0.18, col, size: 3, grav: 0 });
       for (const e of enemies) if (!e.dead && !p.hit.has(e.id) && overlap(p, e)) { p.hit.add(e.id); damageEnemy(e, p.dmg, Math.sign(p.vx) || 1, true); projHit(p, e); if (!p.pierce) p.life = 0; }
       if (boss && !p.hit.has('boss') && overlap(p, boss) && boss.alpha > 0.5) { p.hit.add('boss'); damageBoss(p.dmg, true); projHit(p, boss); if (!p.pierce) p.life = 0; }
-    } else if (overlap(p, P) && P.dashT <= 0) { hurtPlayer(p.dmg, p.x); if (p.type === 'leaf') p.life = 0; }
+      if (boss && boss.lower && !boss.lower.dead && !p.hit.has('lower') && overlap(p, boss.lower)) { p.hit.add('lower'); damageLower(p.dmg); if (!p.pierce) p.life = 0; }
+    } else if (overlap(p, P) && P.dashT <= 0) { hurtPlayer(p.dmg, p.x); if (p.type === 'leaf' || p.type === 'acid' || p.type === 'shard') p.life = 0; }
     if (p.type === 'wave') { const v = tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h + 2) / TS)); if (!isSolid(v) && !isOneWay(v)) p.life = 0; }
     else if (p.type !== 'spirit' && isSolid(tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h / 2) / TS)))) p.life = 0;
   }
@@ -1135,6 +1318,7 @@ const rain = Array.from({ length: 120 }, () => ({ x: Math.random(), y: Math.rand
 const flies = Array.from({ length: 40 }, () => ({ x: Math.random(), y: rnd(0.35, 0.9), p: rnd(0, 6) }));
 
 function drawBG(time) {
+  if (Z.id !== 'z1') { Z.bg(time); return; }
   const past = S.era === PAST, cy = cam.y - OY * TS; // parallax relative to the original ground camera
   const g = ctx.createLinearGradient(0, 0, 0, VH);
   if (past) { g.addColorStop(0, '#071a24'); g.addColorStop(0.55, '#0d3a3c'); g.addColorStop(1, '#16514a'); }
@@ -1191,6 +1375,7 @@ function drawBG(time) {
   }
 }
 function drawTiles(time) {
+  if (Z.id !== 'z1') { drawTilesZ(time); return; }
   const past = S.era === PAST;
   const x0 = Math.floor(cam.x / TS), x1 = Math.ceil((cam.x + VW) / TS), y0 = Math.floor(cam.y / TS), y1 = Math.ceil((cam.y + VH) / TS);
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
@@ -1241,6 +1426,7 @@ function drawTiles(time) {
 }
 // landmarks drawn behind the tiles: balete tree / scaffold, rooftop facades, the den's glow
 function drawDecor(time) {
+  if (Z.id !== 'z1') { Z.decor(time); return; }
   const past = S.era === PAST;
   // balete canopy trunk (x 122..130, rows 40..58)
   let x = 122 * TS - cam.x, y = 40 * TS - cam.y;
@@ -1286,10 +1472,12 @@ function drawDecor(time) {
   }
 }
 function drawShrines(time) {
+  drawDock(time);
   SHRINES.forEach((sx, i) => {
-    const x = sx * TS - cam.x, y = GY * TS - cam.y;
+    const x = sx * TS - cam.x, y = Z.gy * TS - cam.y;
     if (x < -40 || x > VW + 40) return;
     const near = nearShrine === i, glow = near ? 0.6 + 0.3 * Math.sin(time * 5) : 0.25;
+    if (Z.id !== 'z1') { drawZoneShrine(x, y, near, glow, time); return; }
     ctx.fillStyle = `rgba(62,240,180,${glow * 0.35})`; ctx.beginPath(); ctx.ellipse(x + 8, y - 18, 20, 26, 0, 0, 7); ctx.fill();
     // carved anito figure: squat body, hands on knees, big head
     ctx.fillStyle = '#5a3a22'; ctx.fillRect(x + 1, y - 22, 14, 22); ctx.fillRect(x - 1, y - 36, 18, 15);
@@ -1301,7 +1489,7 @@ function drawShrines(time) {
       ctx.fillStyle = '#3ef0b4'; ctx.fillText('▲ ' + t('shrine'), x + 8, y - 44); ctx.textAlign = 'left';
     }
   });
-  if (!S.dj) {
+  if (!S.dj && Z.id === 'z1') {
     const x = FEATHER.x - cam.x, y = FEATHER.y - cam.y - 12 + Math.sin(time * 3) * 3;
     ctx.fillStyle = 'rgba(255,138,61,.25)'; ctx.beginPath(); ctx.arc(x, y, 12, 0, 7); ctx.fill();
     ctx.fillStyle = '#ff8a3d'; ctx.beginPath(); ctx.ellipse(x, y, 3, 9, 0.5, 0, 7); ctx.fill();
@@ -1320,10 +1508,10 @@ function drawShrines(time) {
     const x = c.x * TS - cam.x, y = c.y * TS - cam.y, open = S.chests.includes(c.id);
     if (x < -20 || x > VW + 20 || y < -20 || y > VH + 20) continue;
     if (!open) { ctx.fillStyle = `rgba(255,198,90,${0.15 + 0.1 * Math.sin(time * 4)})`; ctx.fillRect(x - 4, y - 16, 24, 16); }
-    const pastStyle = S.era === PAST;
-    ctx.fillStyle = pastStyle ? '#6b4426' : '#2c3354'; ctx.fillRect(x + 1, y - 9, 14, 9);
-    ctx.fillStyle = pastStyle ? '#8a5a34' : '#3b4466'; if (open) ctx.fillRect(x + 1, y - 14, 14, 3); else ctx.fillRect(x + 1, y - 12, 14, 4);
-    ctx.fillStyle = pastStyle ? '#c99a5a' : '#2bd9ff'; ctx.fillRect(x + 1, y - 9, 14, 1); ctx.fillRect(x + 7, y - 10, 2, 3);
+    const pastStyle = S.era === PAST, cc = Z.chestCol;
+    ctx.fillStyle = cc ? cc[0] : pastStyle ? '#6b4426' : '#2c3354'; ctx.fillRect(x + 1, y - 9, 14, 9);
+    ctx.fillStyle = cc ? cc[1] : pastStyle ? '#8a5a34' : '#3b4466'; if (open) ctx.fillRect(x + 1, y - 14, 14, 3); else ctx.fillRect(x + 1, y - 12, 14, 4);
+    ctx.fillStyle = cc ? cc[2] : pastStyle ? '#c99a5a' : '#2bd9ff'; ctx.fillRect(x + 1, y - 9, 14, 1); ctx.fillRect(x + 7, y - 10, 2, 3);
   }
 }
 function drawEnemy(e, time) {
@@ -1339,6 +1527,8 @@ function drawEnemy(e, time) {
 }
 // species bodies, drawn around the origin facing +x; plain = no accent colours (hit flash, spirit ghost)
 function drawBody(sp, tm, st, body, eye, plain) {
+  const sd = SPEC[sp];
+  if (sd && sd.shape) { drawShape(sd.shape, sd.mod, tm, st, body, eye, plain); return; }
   ctx.fillStyle = body;
   switch (sp) {
     case 'sigbin': case 'sigbinx': {
@@ -1505,6 +1695,7 @@ function drawSpiritGhost(id, x, y, face, time, scale) {
   ctx.restore();
 }
 function drawBoss(time) {
+  if (boss.kind) { drawZoneBoss(time); return; }
   const b = boss, x = Math.round(b.x - cam.x), y = Math.round(b.y - cam.y);
   ctx.save(); ctx.globalAlpha = b.alpha;
   if (b.st === 'tele') {
@@ -1625,6 +1816,8 @@ function drawProj() {
     else if (p.type === 'spirit') drawSpiritGhost(p.sid, x + p.w / 2, y + p.h / 2, p.vx >= 0 ? 1 : -1, performance.now() / 1000, 0.9);
     else if (p.type === 'feather') { ctx.fillStyle = '#ffd37a'; ctx.save(); ctx.translate(x + 3, y + 3); ctx.rotate(Math.atan2(p.vy, p.vx)); ctx.fillRect(-5, -1, 10, 2); ctx.restore(); }
     else if (p.type === 'dart') { ctx.fillStyle = 'rgba(143,227,255,.35)'; ctx.fillRect(x - 2, y - 2, p.w + 4, p.h + 4); ctx.fillStyle = '#8fe3ff'; ctx.fillRect(x, y, p.w, p.h); }
+    else if (p.type === 'acid') { ctx.fillStyle = 'rgba(199,162,255,.35)'; ctx.beginPath(); ctx.arc(x + 5, y + 5, 7, 0, 7); ctx.fill(); ctx.fillStyle = '#9a5ad8'; ctx.beginPath(); ctx.arc(x + 5, y + 5, 4, 0, 7); ctx.fill(); ctx.fillStyle = '#d8ff6a'; ctx.fillRect(x + 4, y + 3, 2, 2); }
+    else if (p.type === 'shard') { ctx.save(); ctx.translate(x + 4, y + 4); ctx.rotate(Math.atan2(p.vy, p.vx)); ctx.fillStyle = 'rgba(122,215,255,.35)'; ctx.fillRect(-7, -3, 14, 6); ctx.fillStyle = '#c8e8ff'; ctx.beginPath(); ctx.moveTo(6, 0); ctx.lineTo(0, -3); ctx.lineTo(-6, 0); ctx.lineTo(0, 3); ctx.fill(); ctx.restore(); }
     else if (p.type === 'wave') { ctx.fillStyle = 'rgba(168,139,90,.85)'; ctx.beginPath(); ctx.moveTo(x, y + p.h); ctx.lineTo(x + p.w / 2, y); ctx.lineTo(x + p.w, y + p.h); ctx.fill(); ctx.fillStyle = 'rgba(255,61,139,.6)'; ctx.fillRect(x, y + p.h - 2, p.w, 2); }
   }
 }
@@ -1662,11 +1855,11 @@ function drawHUD(time) {
   if (ACC.equip.ttl) { ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = RAR_COL[gItem(ACC.equip.ttl).r]; ctx.fillText(t('g_' + ACC.equip.ttl), ox, ty); ty += 11; }
   if (S.hell) { ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = '#ff5a3d'; ctx.fillText(t('hellTag'), ox, ty); }
   // era pill
-  const past = S.era === PAST, label = (past ? t('past') : t('present')) + ' · ' + (past ? t('yearPast') : t('yearPresent'));
+  const label = eraLabel(S.era);
   ctx.font = '700 10px "Chakra Petch", sans-serif';
   const w = ctx.measureText(label).width + 16, cx = VW / 2 - w / 2;
-  ctx.fillStyle = past ? 'rgba(62,240,180,.18)' : 'rgba(255,61,139,.18)'; ctx.fillRect(cx, oy - 2, w, 16);
-  ctx.fillStyle = past ? '#3ef0b4' : '#ff3d8b'; ctx.fillRect(cx, oy - 2, 2, 16); ctx.fillText(label, cx + 9, oy + 9);
+  ctx.fillStyle = ['rgba(62,240,180,.18)', 'rgba(255,61,139,.18)', 'rgba(122,215,255,.18)'][S.era]; ctx.fillRect(cx, oy - 2, w, 16);
+  ctx.fillStyle = ERA_COL[S.era]; ctx.fillRect(cx, oy - 2, 2, 16); ctx.fillText(label, cx + 9, oy + 9);
   // population chips (drop to a second row when the era pill would touch them on narrow screens)
   let px = VW - 60 - NICHE_IDS.length * 34, cy = oy;
   if (px < VW / 2 + w / 2 + 6) { px = VW - 12 - NICHE_IDS.length * 34; cy = oy + 18; }
@@ -1686,10 +1879,20 @@ function drawHUD(time) {
   }
   if (boss) {
     const bw = Math.min(360, VW - 120), bx = VW / 2 - bw / 2, by = VH - 26;
-    ctx.font = '700 11px "Chakra Petch", sans-serif'; ctx.fillStyle = '#ffc65a'; ctx.fillText(t('bossName'), bx, by - 5);
+    ctx.font = '700 11px "Chakra Petch", sans-serif'; ctx.fillStyle = '#ffc65a'; ctx.fillText(t(bossKey('bossName')), bx, by - 5);
     const st = t('bossStage', boss.stage); ctx.fillStyle = '#3ef0b4'; ctx.fillText(st, bx + bw - ctx.measureText(st).width, by - 5);
     bar(bx, by, bw, 6, boss.hp / boss.max, '#ffc65a');
     for (let i = 1; i <= 5; i++) { ctx.fillStyle = i <= boss.stage ? '#3ef0b4' : 'rgba(236,230,214,.2)'; ctx.fillRect(bx + (i - 1) * (bw / 5) + 1, by + 9, bw / 5 - 2, 2); }
+    if (boss.lower) {
+      // lower half: its own bar, and whether the upper body is regenerating
+      const L = boss.lower, lw = 70, lx = bx - lw - 10;
+      ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = L.dead ? '#9aa3c0' : '#e6d8ff'; ctx.fillText(t('manaLower'), lx, by - 5);
+      bar(lx, by, lw, 6, L.hp / L.max, '#c7a2ff');
+      ctx.fillStyle = boss.regen ? '#3ef0b4' : '#9aa3c0'; ctx.fillText(boss.regen ? t('manaRegen') : t('manaNoRegen'), lx, by + 16);
+    } else if (boss.moons) {
+      const n = boss.moons.filter(m => m.lit).length;
+      ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = '#ffe3f0'; ctx.fillText(t('moonsLeft', n, boss.moons.length), bx - 82, by + 6);
+    }
   }
 }
 function render(time) {
@@ -1704,6 +1907,7 @@ function render(time) {
   for (const e of enemies) drawEnemy(e, time);
   if (boss) drawBoss(time);
   drawPlayer(time);
+  if (boss && boss.kind === 'baku') drawDark(time);
   if (S.spirit) {
     drawSpiritGhost(S.spirit, SPR.x - cam.x, SPR.y - cam.y, P.face, time, 0.7);
     if (S.spirit === 'salagubang' && P.shieldCd <= 0) { ctx.strokeStyle = `rgba(255,224,138,${0.35 + 0.15 * Math.sin(time * 5)})`; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.ellipse(P.x + P.w / 2 - cam.x, P.y + P.h / 2 - cam.y, 13, 18, 0, 0, 7); ctx.stroke(); }
@@ -1715,9 +1919,9 @@ function render(time) {
   for (const x of texts) { ctx.globalAlpha = Math.min(1, x.life * 2); ctx.font = '700 10px "Chakra Petch", sans-serif'; ctx.fillStyle = '#0b0e1a'; ctx.fillText(x.txt, x.x - cam.x + 1, x.y - cam.y + 1); ctx.fillStyle = x.col; ctx.fillText(x.txt, x.x - cam.x, x.y - cam.y); }
   ctx.globalAlpha = 1; ctx.textAlign = 'left';
   // the den stays hidden behind rock until the player is inside it in the past
-  const inDen = S.era === PAST && P.x + P.w > 82 * TS && P.x < 100 * TS && P.y + P.h > 47 * TS && P.y < 57 * TS;
+  const inDen = Z.id === 'z1' && S.era === PAST && P.x + P.w > 82 * TS && P.x < 100 * TS && P.y + P.h > 47 * TS && P.y < 57 * TS;
   denReveal = clamp(denReveal + (inDen ? 0.05 : -0.05), 0, 1);
-  if (denReveal < 1) {
+  if (denReveal < 1 && Z.id === 'z1') {
     const x = 82 * TS - cam.x, y = 47 * TS - cam.y;
     if (x < VW && x + 16 * TS > 0 && y < VH && y + 9 * TS > 0) {
       ctx.globalAlpha = 1 - denReveal; ctx.fillStyle = S.era === PAST ? '#3a352a' : '#232842'; ctx.fillRect(x, y, 16 * TS, 9 * TS);
@@ -1730,7 +1934,7 @@ function render(time) {
   if (wipeT > 0) {
     // era wipe: a bright band sweeps left to right; the old era's tint still covers what it has not reached
     const pr = 1 - wipeT / WIPE, bx = -80 + pr * (VW + 160);
-    ctx.fillStyle = S.era === PAST ? 'rgba(42,15,60,.88)' : 'rgba(7,26,36,.88)';
+    ctx.fillStyle = ERA_TINT[S.era === Z.eras[0] ? Z.eras[1] : Z.eras[0]];
     ctx.beginPath(); ctx.moveTo(bx + 40, 0); ctx.lineTo(VW, 0); ctx.lineTo(VW, VH); ctx.lineTo(bx - 40, VH); ctx.fill();
     ctx.fillStyle = wipeCol; ctx.globalAlpha = 0.85;
     ctx.beginPath(); ctx.moveTo(bx + 28, 0); ctx.lineTo(bx + 40, 0); ctx.lineTo(bx - 40, VH); ctx.lineTo(bx - 52, VH); ctx.fill();
@@ -1778,12 +1982,12 @@ function canLearn(n) {
   if (n.req && !has(n.req)) return false;
   if (S.sp < n.cost) return false;
   if (n.lvl && S.lvl < n.lvl) return false;
-  if (n.mats) for (const m in n.mats) if ((S.mats[m] || 0) < n.mats[m]) return false;
+  if (n.mats) for (const m in n.mats) if ((S.mats[zm(m)] || 0) < n.mats[m]) return false;
   return true;
 }
 function learn(id) {
   const n = tree().find(x => x.id === id); if (!n || !canLearn(n)) return false;
-  S.sp -= n.cost; if (n.mats) for (const m in n.mats) S.mats[m] -= n.mats[m];
+  S.sp -= n.cost; if (n.mats) for (const m in n.mats) S.mats[zm(m)] -= n.mats[m];
   S.nodes.push(id);
   const st = stats(); P.maxhp = st.maxhp; P.maxen = st.maxen; P.hp = Math.min(P.hp + 25, P.maxhp);
   sfx(660, 0.2, 'triangle', 0.06, 200);
@@ -1801,7 +2005,7 @@ function nodeHTML(n) {
   if (!got) {
     if (n.cost) need.push(n.cost + ' SP');
     if (n.lvl) need.push(t('lvl') + ' ' + n.lvl);
-    if (n.mats) for (const m in n.mats) need.push(n.mats[m] + 'x ' + matName(m) + ' (' + (S.mats[m] || 0) + ')');
+    if (n.mats) for (const m in n.mats) need.push(n.mats[m] + 'x ' + matName(zm(m)) + ' (' + (S.mats[zm(m)] || 0) + ')');
   }
   return `<div class="node ${got ? 'have' : can ? 'can' : ''}"><span class="nm">${t('n_' + n.id)}</span><span class="ds">${t('d_' + n.id)}</span>` +
     (got ? `<span class="st">${t('learned')}</span>` : can ? `<button type="button" data-learn="${n.id}">${t('learn')} · ${need.join(' · ')}</button>` : `<span class="st lock">${t('needs')}: ${need.join(' · ')}${n.req && !has(n.req) ? ' · ' + t('n_' + n.req) : ''}</span>`) + '</div>';
@@ -1811,14 +2015,14 @@ let forgeMsg = null;
 function forgeCan() {
   if (S.forge >= FORGE.length) return false;
   const f = FORGE[S.forge];
-  for (const m in f.mats) if ((S.mats[m] || 0) < f.mats[m]) return false;
+  for (const m in f.mats) if ((S.mats[zm(m)] || 0) < f.mats[m]) return false;
   return true;
 }
 // one upgrade attempt: the materials are always consumed; success raises the level, failure never lowers it
 function forgeUpgrade() {
   if (!forgeCan()) return null;
   const f = FORGE[S.forge];
-  for (const m in f.mats) S.mats[m] -= f.mats[m];
+  for (const m in f.mats) S.mats[zm(m)] -= f.mats[m];
   const ok = rng() * 100 < f.chance;
   if (ok) S.forge++;
   forgeMsg = { ok, lv: S.forge };
@@ -1830,7 +2034,8 @@ function portrait(cnv, id) {
   const c2 = cnv.getContext('2d'), old = ctx;
   c2.clearRect(0, 0, cnv.width, cnv.height);
   ctx = c2;
-  try { drawSpiritGhost(id, cnv.width / 2 + (id === 'sigbin' ? 2 : 0), cnv.height / 2 + 2, 1, 1.3, id === 'kapre' ? 0.9 : id === 'sigbin' || id === 'wakwak' ? 1.2 : 1.5); } finally { ctx = old; }
+  const d = SPEC[id] && SPEC[id].shape ? SPEC[id] : null, sc = d ? (d.beh === 'giant' ? 0.85 : d.w >= 18 || d.h >= 18 ? 1.2 : 1.5) : id === 'kapre' ? 0.9 : id === 'sigbin' || id === 'wakwak' ? 1.2 : 1.5;
+  try { drawSpiritGhost(id, cnv.width / 2 + (id === 'sigbin' ? 2 : 0), cnv.height / 2 + 2, 1, 1.3, sc); } finally { ctx = old; }
 }
 function renderMenu() {
   document.querySelectorAll('.tabs [data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === tab); b.textContent = t(TABS[b.dataset.tab]); });
@@ -1843,12 +2048,13 @@ function renderMenu() {
     mBody.innerHTML = h;
     mBody.querySelectorAll('[data-learn]').forEach(b => b.addEventListener('click', () => { learn(b.dataset.learn); renderMenu(); }));
   } else if (tab === 'eco') {
-    let h = `<p class="eco-hint">${t('ecoHint')}</p><div class="eco">`;
+    const e0 = t(ERA_KEYS[Z.eras[0]]), e1 = t(ERA_KEYS[Z.eras[1]]);
+    let h = (Z.id !== 'z1' ? `<div class="sp-line"><span>${t('zn_' + Z.id)}</span></div>` : '') + `<p class="eco-hint">${t(Z.eras[1] === FUTURE ? 'ecoHintF' : 'ecoHint')}</p><div class="eco">`;
     for (const n of NICHE_IDS) {
       const [pa, pr] = NICHES[n], su = succOf(n), p = popPct(n), alt = SUCC_ALT[n];
-      h += `<div class="niche"><h4>${t('niche_' + n)}</h4><div class="row"><span>${t('past')}: ${spName(pa)}</span><span>${p <= 0 ? `<span class="ext">${t('extinct')}</span>` : Math.round(p * 100) + '%'}</span></div>` +
+      h += `<div class="niche"><h4>${t('niche_' + n)}</h4><div class="row"><span>${e0}: ${spName(pa)}</span><span>${p <= 0 ? `<span class="ext">${t('extinct')}</span>` : Math.round(p * 100) + '%'}</span></div>` +
         `<div class="bar"><i style="width:${Math.round(p * 100)}%"></i></div>` +
-        `<div class="row"><span>${t('present')}:</span><span>${p <= 0 ? spName(su) : p <= 0.5 ? spName(pr) + ' + ' + spName(su) : spName(pr)}</span></div>` +
+        `<div class="row"><span>${e1}:</span><span>${p <= 0 ? spName(su) : p <= 0.5 ? spName(pr) + ' + ' + spName(su) : spName(pr)}</span></div>` +
         `<div class="row"><span>${t('drops')}</span><span>${p <= 0 ? matName(SPEC[su].mat) : p <= 0.5 ? matName(SPEC[pr].mat) + ', ' + matName(SPEC[su].mat) : matName(SPEC[pr].mat)}</span></div>` +
         (alt ? `<div class="dep">${t('succDep', t('niche_' + alt.dep), spName(NICHES[n][2]), spName(alt.dead))}</div>` : '') + '</div>';
     }
@@ -1856,14 +2062,18 @@ function renderMenu() {
   } else if (tab === 'spirits') {
     let h = `<p class="eco-hint">${t('spiritHint')}</p><div class="spirits">`;
     for (const id of SPIRITS) {
-      const got = ownsSpirit(id), on = S.spirit === id, wait = S.spiritAt[id], gs = SUMMON_SPIRITS.includes(id);
+      const sz = SPIRIT_ZONE[id];
+      if (sz && !zoneUnlocked(sz)) continue;
+      const got = ownsSpirit(id), on = S.spirit === id, wz = sz && sz !== Z.id ? S.zones[sz] : null, wait = sz && sz !== Z.id ? undefined : S.spiritAt[id], gs = SUMMON_SPIRITS.includes(id);
+      const wzAt = !!(wz && wz.spiritAt && wz.spiritAt[id] !== undefined);
       let st;
       if (on) st = `<span class="st">${t('spiritActive')}</span>`;
       else if (got) st = `<button type="button" data-equip="${id}">${t('equip')}</button>`;
       else if (wait !== undefined) st = `<span class="st wait">${t('spiritWaiting', wait + 1)}</span>`;
+      else if (wzAt) st = `<span class="st wait">${t('spiritWaitZone', t('zn_' + sz))}</span>`;
       else if (gs) st = `<span class="st lock">${t('spiritSummonOnly', gItem(id).r)}</span>`;
       else st = `<span class="st lock">${t('spiritLocked', spName(id))}</span>`;
-      h += `<div class="spirit ${on ? 'have' : got ? 'can' : ''} ${got || wait !== undefined ? '' : 'dim'}"><canvas width="56" height="44" data-por="${id}"></canvas><div class="sp-txt"><span class="nm" style="color:${SPIRIT_COL[id]}">${spiritName(id)}</span><span class="ds">${t('spd_' + id)}</span>${st}</div></div>`;
+      h += `<div class="spirit ${on ? 'have' : got ? 'can' : ''} ${got || wait !== undefined || wzAt ? '' : 'dim'}"><canvas width="56" height="44" data-por="${id}"></canvas><div class="sp-txt"><span class="nm" style="color:${SPIRIT_COL[id]}">${spiritName(id)}</span><span class="ds">${t('spd_' + id)}</span>${st}</div></div>`;
     }
     mBody.innerHTML = h + '</div>';
     mBody.querySelectorAll('[data-por]').forEach(c => portrait(c, c.dataset.por));
@@ -1875,7 +2085,7 @@ function renderMenu() {
     else {
       const f = FORGE[lv], can = forgeCan();
       h += `<div class="fg-next"><div class="fg-odds"><span>${t('forgeNext', lv + 1, (lv + 1) * FORGE_PCT)}</span><span>${t('forgeChance')}: <b>${f.chance}%</b></span></div><div class="fg-cost">`;
-      for (const m in f.mats) { const have = S.mats[m] || 0; h += `<span class="${have >= f.mats[m] ? '' : 'short'}">${f.mats[m]}x ${matName(m)} (${have})</span>`; }
+      for (const m in f.mats) { const have = S.mats[zm(m)] || 0; h += `<span class="${have >= f.mats[m] ? '' : 'short'}">${f.mats[m]}x ${matName(zm(m))} (${have})</span>`; }
       h += `</div><p class="fg-rule">${t('forgeRule')}</p>` +
         (can ? `<button type="button" data-forge="1">${t('forgeBtn')} · ${f.chance}%</button>` : `<span class="st lock">${t('forgeMissing')}</span>`) + '</div>';
     }
@@ -1907,14 +2117,14 @@ function renderMenu() {
     if (window.EFShop) window.EFShop.summonTab(mBody);
   } else if (tab === 'map') {
     if (exDirty) redrawMinimap();
-    mBody.innerHTML = `<div class="map-line"><span>${t('explored', exploredPct())}</span><label><input type="checkbox" id="mm-toggle" ${S.minimap ? 'checked' : ''}> ${t('minimapToggle')}</label></div><canvas id="map-cv" width="${MW * 3}" height="${MH * 3}"></canvas><p class="eco-hint">${t('mapLegend')}</p>`;
+    mBody.innerHTML = `<div class="map-line"><span>${t('zn_' + Z.id)} · ${t('explored', exploredPct())}</span><label><input type="checkbox" id="mm-toggle" ${S.minimap ? 'checked' : ''}> ${t('minimapToggle')}</label></div><canvas id="map-cv" width="${MW * 3}" height="${MH * 3}"></canvas><p class="eco-hint">${t('mapLegend')}</p>`;
     const mc = document.getElementById('map-cv'), c2 = mc.getContext('2d');
     c2.imageSmoothingEnabled = false; c2.fillStyle = '#0b0e1a'; c2.fillRect(0, 0, mc.width, mc.height); c2.drawImage(mmCanvas, 0, 0, mc.width, mc.height);
     c2.fillStyle = '#ffffff'; c2.fillRect((P.x + P.w / 2) / TS * 3 - 3, (P.y + P.h / 2) / TS * 3 - 3, 6, 6);
     document.getElementById('mm-toggle').addEventListener('change', e => { S.minimap = e.target.checked; save(); });
   } else {
     let h = '<div class="mats">';
-    for (const m in MATS) { const c = S.mats[m] || 0; h += `<div class="${c ? '' : 'zero'}"><span>${matName(m)}</span><span>${c}</span></div>`; }
+    for (const m in MATS) { const c = S.mats[m] || 0; if (!c && matZone(m) !== Z.id) continue; h += `<div class="${c ? '' : 'zero'}"><span>${matName(m)}</span><span>${c}</span></div>`; }
     mBody.innerHTML = h + '</div>';
   }
 }
@@ -2071,9 +2281,9 @@ function startGame(fresh, o = {}) {
     S = freshSave(cls); S.hell = hell; S.name = o.name || DEF_NAME[cls];
     if (o.look) for (const k in LOOK_KEYS) S.look[k] = clamp(o.look[k] | 0, 0, LOOK_KEYS[k] - 1);
   }
-  buildMap();
-  const sx = S.bossDone ? SHRINES[2] : (S.shrine || S.time ? SHRINES[S.shrine] : 4);
-  P = newPlayer(sx * TS, GY * TS - 26);
+  loadZone(S.zone);
+  const sx = S.bossDone ? SHRINES[2] : (S.shrine || S.time ? SHRINES[S.shrine] : Z.start);
+  P = newPlayer(sx * TS, Z.gy * TS - 26);
   const st = stats(); P.maxhp = P.hp = st.maxhp; P.maxen = P.en = st.maxen;
   enemies = []; projs = []; items = []; parts = []; texts = []; boss = null; cutT = 0;
   resetSpawns(); loadExplored(); wipeT = 0;
@@ -2083,13 +2293,13 @@ function startGame(fresh, o = {}) {
   document.getElementById('b-sum').hidden = S.cls !== 'bab';
   mode = 'play'; paused = false;
   if (touchWanted) touchEl.hidden = false;
-  if (!S.time) toast(t('present') + ' · ' + t('yearPresent') + (S.hell ? ' · ' + t('hellTag') : ''), 2.2);
+  if (!S.time) toast(eraLabel(S.era) + (S.hell ? ' · ' + t('hellTag') : ''), 2.2);
   dailyGift();
   save();
 }
 function showTitle() {
   S = null; P = null; boss = null; enemies = []; projs = []; cutT = 0;
-  mode = 'title'; paused = false; menuEl.hidden = true; touchEl.hidden = true; timeBtn.hidden = true;
+  mode = 'title'; paused = false; menuEl.hidden = true; touchEl.hidden = true; timeBtn.hidden = true; travelEl.hidden = true;
   document.getElementById('win').hidden = true; pickEl.hidden = true; titleEl.hidden = false;
   applyLang();
 }
@@ -2120,6 +2330,7 @@ function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
   if (mode === 'fallen') endHell();
   if (mode !== 'play' && toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.classList.remove('show'); }
+  if (mode === 'travel') drawStarmap(now / 1000);
   if (mode === 'play' && !paused) { acc += dt; let n = 0; while (acc >= STEP && n < 5) { update(STEP); acc -= STEP; n++; } if (n === 5) acc = 0; }
   if (S && P) render(now / 1000);
   else titleRender(now / 1000);
@@ -2127,11 +2338,889 @@ function frame(now) {
 }
 function titleRender(time) {
   ctx.setTransform(K, 0, 0, K, 0, 0);
-  if (!S) { S = freshSave(); S.era = Math.floor(time / 4) % 2; cam.x = (time * 30) % 1000; cam.y = OY * TS; drawBG(time); S = null; }
+  if (!S) { const z = Z; Z = ZONES.z1; S = freshSave(); S.era = Math.floor(time / 4) % 2; cam.x = (time * 30) % 1000; cam.y = OY * TS; drawBG(time); S = null; Z = z; }
 }
 try { const l = localStorage.getItem('epochfall.lang'); if (l && I[l]) lang = l; else { const n = (navigator.language || 'en').toLowerCase(); lang = n.startsWith('de') ? 'de' : (n.startsWith('fil') || n.startsWith('tl')) ? 'fil' : 'en'; } } catch (e) {}
 applyLang();
 requestAnimationFrame(frame);
+
+
+// ================= zones 2 + 3: hints, drawing, bosses, Balangay travel =================
+function zoneHints() {
+  const gy = Z.gy, low = P.y > (gy - 6) * TS, x = P.x / TS;
+  if (!stats().breaker && low && x > Z.crackX - 4 && x < Z.crackX) { toast(t(S.cls === 'bab' ? 'crackedBab' : 'cracked'), 3); hintCd = 8; }
+  else if (Z.id === 'z2' && S.era === PRESENT && low && x > 90 && x < 96) { toast(t('domeSealed'), 3.5); hintCd = 10; }
+  else if (Z.id === 'z3' && S.era === PRESENT && low && x > 23 && x < 30) { toast(t('breach'), 3.5); hintCd = 10; }
+  else if (Z.id === 'z3' && S.era === FUTURE && low && x > 101 && x < 108) { toast(t('grownShut'), 3.5); hintCd = 10; }
+}
+// tile palettes: [older era, newer era]
+const ZPAL = {
+  z2: [
+    { r: '#2a2418', r2: '#3a3020', sp: '#221c12', top: '#5fae4a', top2: '#c77dff', pl: '#2f6a32', plT: '#7ad04a', v3: '#4c7a2e', v3T: '#9ad04a', sk: '#8a5a9a', ghost: 'rgba(62,240,180,.22)', open: '#3f8a4a' },
+    { r: '#1c2430', r2: '#26303e', sp: '#18202a', top: '#3ef0b4', pl: '#2c4a52', plT: '#9fffe0', t4: '#2c4048', t4T: '#3ef0b4', sk: '#5a6a80', t7: '#24384a', t7T: '#3ef0b4', seal: '#2a4a5a', sealL: 'rgba(160,255,240,.4)', ghost: 'rgba(255,61,139,.22)' }
+  ],
+  z3: [
+    { r: '#2a2e3e', r2: '#353a4e', sp: '#23273a', top: '#7ad7ff', pl: '#4a5068', plT: '#a8b0c8', v3: '#5a6078', v3T: '#c8d0e8', sk: '#ff5a3d', ghost: 'rgba(122,215,255,.2)', open: '#4a5068', rivet: '#4a5068' },
+    { r: '#1e2422', r2: '#28302c', sp: '#3a2a22', top: '#4c8a5a', top2: '#ffb3d0', pl: '#3a4038', plT: '#9ad08a', t4: '#8a4a62', t4T: '#ffb3d0', sk: '#7a3a2a', t7: '#4a6a32', t7T: '#9ad08a', seal: '#2e4a2e', sealL: 'rgba(154,208,138,.55)', ghost: 'rgba(255,61,139,.2)' }
+  ]
+};
+function drawTilesZ(time) {
+  const old = S.era === Z.eras[0], p = ZPAL[Z.id][old ? 0 : 1], ghostCol = old ? ZPAL[Z.id][1].ghost : ZPAL[Z.id][0].ghost;
+  const x0 = Math.floor(cam.x / TS), x1 = Math.ceil((cam.x + VW) / TS), y0 = Math.floor(cam.y / TS), y1 = Math.ceil((cam.y + VH) / TS);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const v = tileAt(x, y); if (!v) continue;
+    const px = Math.round(x * TS - cam.x), py = Math.round(y * TS - cam.y);
+    if (v === 1 || v === 6) {
+      ctx.fillStyle = p.r; ctx.fillRect(px, py, TS, TS);
+      ctx.fillStyle = p.r2; ctx.fillRect(px + 1, py + 1, TS - 2, TS - 2);
+      if ((x * 7 + y * 3) % 5 === 0) { ctx.fillStyle = p.sp; ctx.fillRect(px + 4, py + 5, 5, 3); }
+      if (p.rivet && (x + y) % 2 === 0) { ctx.fillStyle = p.rivet; ctx.fillRect(px + 2, py + 2, 1, 1); ctx.fillRect(px + 13, py + 13, 1, 1); }
+      const ab = tileAt(x, y - 1);
+      if (!isSolid(ab) && !isOneWay(ab)) {
+        ctx.fillStyle = p.top; ctx.fillRect(px, py, TS, Z.id === 'z3' && old ? 2 : 3);
+        if (p.top2 && (x * 5 + y) % 7 === 0) { ctx.fillStyle = p.top2; ctx.fillRect(px + 6, py - 3, 3, 3); }
+        if (Z.id === 'z3' && old && x % 6 === 0) { ctx.fillStyle = `rgba(122,215,255,${0.25 + 0.2 * Math.sin(time * 2 + x)})`; ctx.fillRect(px, py - 3, TS, 3); }
+      }
+      if (v === 6) { ctx.strokeStyle = '#0c0c10'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px + 3, py + 2); ctx.lineTo(px + 8, py + 8); ctx.lineTo(px + 5, py + 14); ctx.moveTo(px + 8, py + 8); ctx.lineTo(px + 13, py + 10); ctx.stroke(); }
+    } else if (v === 2) {
+      ctx.fillStyle = p.pl; ctx.fillRect(px, py, TS, 4);
+      ctx.fillStyle = p.plT; ctx.fillRect(px, py, TS, 1);
+      if (Z.id === 'z2' && old && x % 2) { ctx.fillStyle = p.pl; ctx.fillRect(px + 4, py + 4, 6, 2); }
+    } else if (v === 3) {
+      if (old) {
+        ctx.fillStyle = p.v3; ctx.fillRect(px, py, TS, 4); ctx.fillStyle = p.v3T; ctx.fillRect(px, py, TS, 1);
+        if (Z.id === 'z3') { ctx.fillStyle = '#23273a'; for (let i = 2; i < TS; i += 4) ctx.fillRect(px + i, py + 1, 2, 2); ctx.fillStyle = p.v3; ctx.fillRect(px + 7, py + 4, 2, 6); }
+        else { ctx.fillStyle = '#2f5a1e'; ctx.fillRect(px + 6, py + 4, 2, 6 + (x % 3) * 3); }
+      } else { ctx.strokeStyle = ghostCol; ctx.setLineDash([3, 3]); ctx.strokeRect(px + 0.5, py + 0.5, TS - 1, 4); ctx.setLineDash([]); }
+    } else if (v === 4) {
+      if (!old) {
+        ctx.fillStyle = p.t4; ctx.fillRect(px, py, TS, TS); ctx.fillStyle = p.t4T; ctx.fillRect(px, py, TS, 2);
+        if (Z.id === 'z3') { ctx.fillStyle = 'rgba(255,179,208,.35)'; ctx.beginPath(); ctx.arc(px + 4 + (x % 3) * 3, py + 9, 2.5, 0, 7); ctx.fill(); ctx.fillStyle = '#5a2a40'; ctx.fillRect(px + 10, py + 4, 2, 10); }
+        else { ctx.fillStyle = 'rgba(62,240,180,.25)'; ctx.fillRect(px, py + 6, TS, 1); if (x % 4 === 0) { ctx.fillStyle = '#ffc65a'; ctx.fillRect(px + 7, py + 10, 2, 2); } }
+      } else { ctx.strokeStyle = ghostCol; ctx.setLineDash([3, 3]); ctx.strokeRect(px + 0.5, py + 0.5, TS - 1, TS - 1); ctx.setLineDash([]); }
+    } else if (v === 5) {
+      ctx.fillStyle = p.sk;
+      for (let i = 0; i < 3; i++) { ctx.beginPath(); ctx.moveTo(px + i * 5 + 1, py + TS); ctx.lineTo(px + i * 5 + 3, py + 3); ctx.lineTo(px + i * 5 + 5, py + TS); ctx.fill(); }
+      if (Z.id === 'z3' && old) { const a = 0.35 + 0.3 * Math.sin(time * 9 + x); ctx.fillStyle = `rgba(255,140,60,${a})`; ctx.fillRect(px, py - 6 - (x % 3) * 2, TS, 6); }
+    } else if (v === 7) {
+      if (!old) {
+        ctx.fillStyle = p.t7; ctx.fillRect(px, py, TS, 5); ctx.fillStyle = p.t7T; ctx.fillRect(px, py, TS, 1);
+        if (Z.id === 'z3') { ctx.strokeStyle = p.t7; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(px + 5, py + 5); ctx.quadraticCurveTo(px + 7 + Math.sin(time + x) * 2, py + 10, px + 4, py + 14); ctx.stroke(); }
+        else { ctx.fillStyle = 'rgba(62,240,180,.14)'; ctx.fillRect(px, py + 5, TS, 3); }
+      } else { ctx.strokeStyle = ghostCol; ctx.setLineDash([2, 4]); ctx.strokeRect(px + 0.5, py + 0.5, TS - 1, 4); ctx.setLineDash([]); }
+    } else if (v === 8) {
+      if (!old) {
+        ctx.fillStyle = p.seal; ctx.fillRect(px, py, TS, TS);
+        ctx.strokeStyle = p.sealL; ctx.lineWidth = 1; ctx.beginPath();
+        if (Z.id === 'z2') { ctx.moveTo(px, py + 8); ctx.lineTo(px + 8, py); ctx.lineTo(px + 16, py + 8); ctx.lineTo(px + 8, py + 16); ctx.closePath(); }
+        else { for (let i = 0; i < 3; i++) { ctx.moveTo(px + 3 + i * 5, py); ctx.quadraticCurveTo(px + 1 + i * 5, py + 8, px + 4 + i * 5, py + 16); } }
+        ctx.stroke();
+      } else if (Z.id === 'z2') {
+        ctx.strokeStyle = p.open; ctx.lineWidth = 1.5; ctx.beginPath();
+        for (let i = 0; i < 4; i++) { const sx = px + 2 + i * 4, sw = Math.sin(time * 1.5 + x + i) * 1.5; ctx.moveTo(sx, py); ctx.quadraticCurveTo(sx + sw, py + 8, sx - sw * 0.5, py + TS); }
+        ctx.stroke();
+      } else { ctx.fillStyle = '#4a5068'; ctx.fillRect(px, py, 2, TS); ctx.fillRect(px + TS - 2, py, 2, TS); ctx.fillStyle = 'rgba(122,215,255,.12)'; ctx.fillRect(px + 2, py, TS - 4, TS); }
+    }
+  }
+}
+// ---- backgrounds ----
+const z2trees = Array.from({ length: 22 }, (_, i) => ({ x: i * 67 % 700, h: 80 + (i * 37 % 70), w: 26 + (i * 13 % 26), k: i % 3 }));
+const motes = Array.from({ length: 50 }, () => ({ x: Math.random(), y: Math.random(), p: rnd(0, 6), s: rnd(0.5, 1.2) }));
+const trusses = Array.from({ length: 30 }, (_, i) => ({ w: 60 + (i * 41 % 90), h: 8 + (i * 17 % 20), y: 0.2 + (i * 29 % 50) / 100, broken: i % 4 === 1 }));
+function skyGrad(a, b, c) { const g = ctx.createLinearGradient(0, 0, 0, VH); g.addColorStop(0, a); g.addColorStop(0.55, b); g.addColorStop(1, c); ctx.fillStyle = g; ctx.fillRect(0, 0, VW, VH); }
+function bgZ2(time) {
+  const past = S.era === PAST, cy = cam.y - (Z.gy - 36) * TS;
+  if (past) skyGrad('#0d1426', '#1a3a34', '#3e5a2a'); else skyGrad('#071420', '#123040', '#1e4a4a');
+  for (const s of stars) { ctx.fillStyle = 'rgba(236,230,214,.4)'; ctx.fillRect((s.x * VW - cam.x * 0.02 + VW) % VW, s.y * VH * 0.7, s.s, s.s); }
+  // gas giant with a ring and a small moon
+  const gx = VW * 0.72 - cam.x * 0.02, gyp = 74 - cy * 0.02;
+  ctx.save(); ctx.beginPath(); ctx.arc(gx, gyp, 44, 0, 7); ctx.clip();
+  ctx.fillStyle = past ? '#c48a5a' : '#9a7a7a'; ctx.fillRect(gx - 46, gyp - 46, 92, 92);
+  ctx.fillStyle = past ? 'rgba(120,60,40,.45)' : 'rgba(80,60,80,.45)'; for (let i = 0; i < 4; i++) ctx.fillRect(gx - 46, gyp - 30 + i * 18, 92, 6);
+  ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.beginPath(); ctx.arc(gx + 18, gyp + 10, 44, 0, 7); ctx.fill();
+  ctx.restore();
+  ctx.strokeStyle = past ? 'rgba(255,220,170,.5)' : 'rgba(200,220,255,.4)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(gx, gyp, 70, 12, -0.25, 0, 7); ctx.stroke();
+  ctx.fillStyle = '#e8f0d8'; ctx.beginPath(); ctx.arc(gx - 110, gyp - 26, 5, 0, 7); ctx.fill();
+  // far canopy ridges
+  const cols = past ? ['#123024', '#0c241a', '#081a12'] : ['#0e2a30', '#0a2026', '#06161c'];
+  ridges.forEach((rg, l) => {
+    const par = 0.08 + l * 0.12, base = VH * (0.6 + l * 0.11) - cy * par * 0.3;
+    ctx.fillStyle = cols[l]; ctx.beginPath(); ctx.moveTo(0, VH);
+    for (let i = 0; i <= 40; i++) { const x = i * (VW / 20) - (cam.x * par) % (VW / 20 * 20); ctx.lineTo(x, base - rg[(i + 7) % 40] * 60 - Math.abs(Math.sin(i * 1.7)) * 18); }
+    ctx.lineTo(VW, VH); ctx.fill();
+  });
+  // mid layer: mushroom trees in the primal past, habitat pods on stilts under the dome in the present
+  for (const tr of z2trees) {
+    const x = ((tr.x - cam.x * 0.35) % 700 + 700) % 700 - 60, base = VH * 0.95 - cy * 0.12;
+    if (past) {
+      ctx.fillStyle = '#0a1c12'; ctx.fillRect(x + tr.w / 2 - 3, base - tr.h, 6, tr.h);
+      ctx.fillStyle = tr.k ? '#14301e' : '#1c2a3a'; ctx.beginPath(); ctx.ellipse(x + tr.w / 2, base - tr.h, tr.w, tr.w * 0.45, 0, Math.PI, 0); ctx.fill();
+      ctx.fillStyle = `rgba(216,255,106,${0.35 + 0.25 * Math.sin(time * 2 + tr.x)})`; for (let i = 0; i < 3; i++) ctx.fillRect(x + tr.w / 2 - tr.w * 0.6 + i * tr.w * 0.55, base - tr.h - 4 - (i % 2) * 5, 2, 2);
+    } else if (tr.k !== 2) {
+      ctx.fillStyle = '#0c2028'; ctx.fillRect(x + tr.w / 2 - 2, base - tr.h * 0.6, 4, tr.h * 0.6);
+      ctx.fillStyle = '#16323c'; ctx.beginPath(); ctx.ellipse(x + tr.w / 2, base - tr.h * 0.6, tr.w * 0.8, 12, 0, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(255,198,90,.6)'; for (let i = 0; i < 3; i++) ctx.fillRect(x + tr.w / 2 - 10 + i * 8, base - tr.h * 0.6 - 2, 3, 2);
+    }
+  }
+  if (!past) {
+    // the dome: a lattice of arcs over the whole sky
+    ctx.strokeStyle = 'rgba(160,255,240,.1)'; ctx.lineWidth = 1; ctx.beginPath();
+    const ox = -(cam.x * 0.1) % 80;
+    for (let i = -1; i < VW / 80 + 2; i++) { ctx.moveTo(ox + i * 80, 0); ctx.quadraticCurveTo(ox + i * 80 + 40, VH * 0.5, ox + i * 80, VH); }
+    for (let j = 1; j < 5; j++) { ctx.moveTo(0, j * 52 - 10); ctx.quadraticCurveTo(VW / 2, j * 52 - 30, VW, j * 52 - 10); }
+    ctx.stroke();
+  }
+  for (const m of motes) {
+    const a = 0.3 + 0.4 * Math.sin(time * 2 + m.p); ctx.fillStyle = past ? `rgba(216,255,106,${a})` : `rgba(255,224,138,${a * 0.7})`;
+    ctx.fillRect(((m.x * VW * 2 - cam.x * 0.5 + Math.sin(time * 0.5 + m.p) * 10) % VW + VW) % VW, (m.y * VH - time * 6 * m.s % VH + VH) % VH, 2, 2);
+  }
+}
+function bgZ3(time) {
+  const fut = S.era === FUTURE, cy = cam.y - (Z.gy - 36) * TS;
+  skyGrad('#02030a', '#070b1e', fut ? '#140a16' : '#0a1430');
+  for (const s of stars) { ctx.fillStyle = 'rgba(236,230,214,.8)'; ctx.fillRect((s.x * VW - cam.x * 0.01 + VW) % VW, s.y * VH * 1.4, s.s, s.s); }
+  // the archipelago below: a blue world with green islands
+  const px = VW * 0.25 - cam.x * 0.015, py = VH * 1.25 - cy * 0.03, r = VH * 0.75;
+  ctx.fillStyle = 'rgba(122,215,255,.12)'; ctx.beginPath(); ctx.arc(px, py, r + 10, 0, 7); ctx.fill();
+  ctx.save(); ctx.beginPath(); ctx.arc(px, py, r, 0, 7); ctx.clip();
+  ctx.fillStyle = fut ? '#1a3050' : '#1e4a8a'; ctx.fillRect(px - r, py - r, r * 2, r * 2);
+  ctx.fillStyle = fut ? '#2a4a3a' : '#3a8a5a';
+  for (let i = 0; i < 9; i++) { ctx.beginPath(); ctx.ellipse(px - 60 + i * 26 + (i % 3) * 6, py - r + 30 + (i * 13 % 40), 8 + (i % 4) * 4, 4 + (i % 3) * 2, 0.4, 0, 7); ctx.fill(); }
+  if (fut) { ctx.fillStyle = 'rgba(255,198,90,.7)'; for (let i = 0; i < 14; i++) ctx.fillRect(px - 70 + i * 17, py - r + 34 + (i * 7 % 30), 1, 1); }
+  ctx.fillStyle = 'rgba(255,255,255,.18)'; ctx.fillRect(px - r, py - r + 22, r * 2, 3); ctx.fillRect(px - r, py - r + 50, r * 2, 2);
+  ctx.restore();
+  // far moon (the last one left)
+  ctx.fillStyle = '#ffe3f0'; ctx.beginPath(); ctx.arc(VW * 0.82 - cam.x * 0.02, 50, 10, 0, 7); ctx.fill();
+  // the serpent, far away, circling the station in 2391
+  if (fut) {
+    const sx = ((time * 22) % (VW + 400)) - 200, sy = 80 + Math.sin(time * 0.4) * 20;
+    ctx.strokeStyle = 'rgba(20,30,60,.85)'; ctx.lineWidth = 7; ctx.beginPath();
+    for (let i = 0; i < 14; i++) { const xx = sx - i * 12, yy = sy + Math.sin(time * 1.5 - i * 0.5) * 8; if (i) ctx.lineTo(xx, yy); else ctx.moveTo(xx, yy); }
+    ctx.stroke(); ctx.fillStyle = 'rgba(255,227,240,.7)'; ctx.fillRect(sx + 2, sy - 2, 2, 2);
+  }
+  // station trusses (two parallax layers)
+  for (let l = 0; l < 2; l++) {
+    const par = 0.15 + l * 0.2; let x = -((cam.x * par) % 1600);
+    for (let i = 0; x < VW + 100; i++) {
+      const tr = trusses[(i + l * 11) % trusses.length], y = tr.y * VH - cy * par * 0.3 + l * 40;
+      ctx.fillStyle = l ? '#1a2034' : '#121828';
+      if (!(fut && tr.broken)) { ctx.fillRect(x, y, tr.w, 4); ctx.fillRect(x, y + tr.h, tr.w, 3); for (let k = 0; k < tr.w; k += 14) ctx.fillRect(x + k, y, 2, tr.h + 3); }
+      else { ctx.save(); ctx.translate(x, y); ctx.rotate(0.15); ctx.fillRect(0, 0, tr.w * 0.6, 4); ctx.restore(); }
+      if (Math.sin(time * 3 + i * 1.7) > 0.3) { ctx.fillStyle = fut ? '#ff5a3d' : (i % 2 ? '#7ad7ff' : '#ffc65a'); ctx.fillRect(x + tr.w - 3, y - 1, 2, 2); }
+      if (fut && tr.broken) { ctx.strokeStyle = 'rgba(76,138,90,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x + 10, y + 3); ctx.quadraticCurveTo(x + 14, y + 20, x + 8, y + 34); ctx.stroke(); }
+      x += tr.w + 50;
+    }
+  }
+  if (fut) for (const m of motes) { ctx.fillStyle = 'rgba(160,140,120,.5)'; ctx.fillRect(((m.x * VW - time * 8 * m.s - cam.x * 0.3) % VW + VW) % VW, m.y * VH, 2, 1); }
+}
+// landmarks behind the tiles
+function decorZ2(time) {
+  const past = S.era === PAST, g = Z.gy;
+  // the dome wall's face: glass panels in the present, a root wall in the past
+  let x = 96 * TS - cam.x, y = 0 - cam.y;
+  if (x > -200 && x < VW + 100) {
+    if (!past) { ctx.fillStyle = 'rgba(160,255,240,.06)'; ctx.fillRect(x - 120, y, 120, (g - 4) * TS); ctx.strokeStyle = 'rgba(160,255,240,.18)'; ctx.lineWidth = 1; ctx.beginPath(); for (let j = 0; j < g; j += 4) { ctx.moveTo(x - 120, y + j * TS); ctx.lineTo(x, y + j * TS + 30); } ctx.stroke(); }
+    else { ctx.strokeStyle = '#1e3a20'; ctx.lineWidth = 4; ctx.beginPath(); for (let i = 0; i < 5; i++) { ctx.moveTo(x - 20 + i * 14, y); ctx.bezierCurveTo(x - 30 + i * 10, y + 300, x + 10 + i * 6, y + 600, x - 6 + i * 8, y + (g - 4) * TS); } ctx.stroke(); }
+  }
+  // colony sign near the second shrine / a carved boulder in the past
+  x = 84 * TS - cam.x; y = (g - 9) * TS - cam.y;
+  if (x > -140 && x < VW + 20 && y > -30 && y < VH) {
+    if (!past) { const on = Math.sin(time * 2.1) > -0.8; ctx.font = '700 9px "Chakra Petch", sans-serif'; ctx.globalAlpha = on ? 0.95 : 0.4; ctx.fillStyle = '#3ef0b4'; ctx.fillRect(x, y, 110, 13); ctx.fillStyle = '#0b0e1a'; ctx.fillText('KALAYAAN · DOME 3', x + 5, y + 10); ctx.globalAlpha = 1; }
+    else { ctx.fillStyle = '#2a3020'; ctx.beginPath(); ctx.ellipse(x + 30, y + 80, 26, 20, 0, Math.PI, 0); ctx.fill(); ctx.fillStyle = 'rgba(216,255,106,.5)'; ctx.fillRect(x + 22, y + 66, 3, 3); ctx.fillRect(x + 34, y + 70, 3, 3); }
+  }
+  // hollow glow
+  x = 114 * TS - cam.x; y = (g - 5) * TS - cam.y;
+  if (x > -200 && x < VW && y > -100 && y < VH) { ctx.fillStyle = 'rgba(216,255,106,.06)'; ctx.fillRect(x, y, 9 * TS, 5 * TS); }
+}
+function decorZ3(time) {
+  const fut = S.era === FUTURE, g = Z.gy;
+  // conduits along the hall
+  const yy = (g - 22) * TS - cam.y;
+  if (yy > -20 && yy < VH) {
+    ctx.fillStyle = fut ? '#1c2420' : '#1e2436'; ctx.fillRect(0, yy, VW, 6);
+    for (let x = -((cam.x) % 64); x < VW; x += 64) { ctx.fillStyle = fut ? '#2a3028' : '#2c3450'; ctx.fillRect(x, yy - 2, 6, 10); if (!fut || Math.sin(time * 7 + x) > 0.6) { ctx.fillStyle = fut ? '#ff5a3d' : '#7ad7ff'; ctx.fillRect(x + 2, yy + 1, 2, 2); } }
+    if (fut) { ctx.strokeStyle = 'rgba(76,138,90,.7)'; ctx.lineWidth = 1.5; ctx.beginPath(); for (let x = -((cam.x * 1) % 48); x < VW; x += 48) { ctx.moveTo(x + 10, yy + 6); ctx.quadraticCurveTo(x + 14 + Math.sin(time + x) * 2, yy + 20, x + 8, yy + 34); } ctx.stroke(); }
+  }
+  let x = 86 * TS - cam.x, y = (g - 10) * TS - cam.y;
+  if (x > -150 && x < VW + 20 && y > -30 && y < VH) {
+    const on = fut ? Math.sin(time * 9) > 0.4 : Math.sin(time * 2) > -0.8; ctx.font = '700 9px "Chakra Petch", sans-serif';
+    ctx.globalAlpha = on ? 0.95 : 0.35; ctx.fillStyle = fut ? '#ff5a3d' : '#7ad7ff'; ctx.fillRect(x, y, 128, 13); ctx.fillStyle = '#0b0e1a'; ctx.fillText(fut ? 'BAKUNAWA STN · ???' : 'BAKUNAWA STN · RING 2', x + 5, y + 10); ctx.globalAlpha = 1;
+  }
+  x = 122 * TS - cam.x; y = (g - 5) * TS - cam.y;
+  if (x > -200 && x < VW && y > -100 && y < VH) { ctx.fillStyle = 'rgba(122,215,255,.06)'; ctx.fillRect(x, y, 9 * TS, 5 * TS); }
+}
+ZONES.z2.bg = bgZ2; ZONES.z2.decor = decorZ2; ZONES.z3.bg = bgZ3; ZONES.z3.decor = decorZ3;
+// Anito shrine of the jungle (moss stone) and the data-anito terminal of the station
+function drawZoneShrine(x, y, near, glow, time) {
+  if (Z.id === 'z2') {
+    ctx.fillStyle = `rgba(216,255,106,${glow * 0.3})`; ctx.beginPath(); ctx.ellipse(x + 8, y - 18, 20, 26, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = '#4a5a48'; ctx.fillRect(x + 1, y - 22, 14, 22); ctx.fillRect(x - 1, y - 36, 18, 15);
+    ctx.fillStyle = '#323e30'; ctx.fillRect(x + 3, y - 12, 4, 10); ctx.fillRect(x + 9, y - 12, 4, 10); ctx.fillRect(x + 2, y - 30, 12, 2);
+    ctx.fillStyle = '#5fae4a'; ctx.fillRect(x - 1, y - 37, 18, 2); ctx.fillRect(x + 13, y - 20, 3, 6);
+    ctx.fillStyle = near ? '#d8ff6a' : '#a8c890'; ctx.fillRect(x + 3, y - 33, 3, 3); ctx.fillRect(x + 10, y - 33, 3, 3);
+  } else {
+    ctx.fillStyle = `rgba(122,215,255,${glow * 0.3})`; ctx.beginPath(); ctx.ellipse(x + 8, y - 20, 20, 28, 0, 0, 7); ctx.fill();
+    ctx.fillStyle = S.era === FUTURE ? '#2a302c' : '#2c3450'; ctx.fillRect(x + 2, y - 30, 12, 30); ctx.fillRect(x - 2, y - 40, 20, 14);
+    ctx.fillStyle = '#0b0e1a'; ctx.fillRect(x, y - 38, 16, 10);
+    const c = near ? '#7ad7ff' : '#4a7aa0', fl = S.era === FUTURE && Math.sin(time * 11) > 0.7;
+    if (!fl) { ctx.fillStyle = c; ctx.fillRect(x + 3, y - 36, 3, 3); ctx.fillRect(x + 10, y - 36, 3, 3); ctx.fillRect(x + 4, y - 31, 8, 1); ctx.fillRect(x + 7, y - 34, 2, 2); }
+    ctx.fillStyle = '#ffc65a'; ctx.fillRect(x + 6, y - 20, 4, 2);
+    if (S.era === FUTURE) { ctx.strokeStyle = '#4c8a5a'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(x - 2, y - 40); ctx.quadraticCurveTo(x - 6, y - 24, x + 1, y - 6); ctx.stroke(); }
+  }
+  if (near) {
+    ctx.font = '700 10px "Chakra Petch", sans-serif'; ctx.textAlign = 'center';
+    ctx.fillStyle = Z.id === 'z3' ? '#7ad7ff' : '#d8ff6a'; ctx.fillText('▲ ' + t(Z.id === 'z3' ? 'terminal' : 'shrine'), x + 8, y - 46); ctx.textAlign = 'left';
+  }
+}
+// the Balangay: an outrigger ship with upswept ends, a slanted tanja sail and jade thrusters
+function drawDock(time) {
+  const d = dockSpot(); if (!d) return;
+  const x = Math.round(d.x - cam.x), y = Math.round(d.y - cam.y);
+  if (x < -90 || x > VW + 90 || y < -60 || y > VH + 80) return;
+  const bob = Math.sin(time * 1.6) * 1.5, a = 0.55 + 0.3 * Math.sin(time * 3);
+  ctx.fillStyle = '#4a3a26'; ctx.fillRect(x - 44, y - 3, 88, 3); ctx.fillRect(x - 40, y - 3, 3, 8); ctx.fillRect(x + 37, y - 3, 3, 8);
+  ctx.save(); ctx.translate(x, y - 14 + bob);
+  ctx.fillStyle = `rgba(62,240,180,${a * 0.35})`; ctx.beginPath(); ctx.ellipse(0, 8, 34, 4, 0, 0, 7); ctx.fill();
+  ctx.fillStyle = '#6b4426'; ctx.beginPath(); ctx.moveTo(-38, -10); ctx.quadraticCurveTo(-30, 6, 0, 6); ctx.quadraticCurveTo(30, 6, 38, -10); ctx.lineTo(30, -4); ctx.lineTo(-30, -4); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#8a5a34'; ctx.fillRect(-28, -5, 56, 2);
+  ctx.strokeStyle = '#8a5a34'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-36, -8); ctx.quadraticCurveTo(-46, -18, -41, -27); ctx.moveTo(36, -8); ctx.quadraticCurveTo(46, -18, 41, -27); ctx.stroke();
+  ctx.fillStyle = `rgba(62,240,180,${a})`; ctx.fillRect(-24, 1, 48, 1.5);
+  ctx.strokeStyle = '#a37a46'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-20, -2); ctx.lineTo(-26, 9); ctx.moveTo(20, -2); ctx.lineTo(26, 9); ctx.stroke();
+  ctx.fillStyle = '#3a2a1a'; ctx.fillRect(-32, 8, 64, 2);
+  ctx.strokeStyle = '#5a3a22'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -4); ctx.lineTo(0, -48); ctx.stroke();
+  ctx.fillStyle = 'rgba(236,230,214,.9)'; ctx.beginPath(); ctx.moveTo(2, -46); ctx.lineTo(26, -41); ctx.lineTo(19, -12); ctx.lineTo(2, -15); ctx.closePath(); ctx.fill();
+  ctx.fillStyle = '#ff3d8b'; ctx.fillRect(4, -36, 18, 2); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(4, -26, 16, 2);
+  ctx.fillStyle = `rgba(122,215,255,${a})`; ctx.beginPath(); ctx.arc(-18, 7, 2.5, 0, 7); ctx.arc(18, 7, 2.5, 0, 7); ctx.fill();
+  ctx.restore();
+  if (nearDock) { ctx.font = '700 10px "Chakra Petch", sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#3ef0b4'; ctx.fillText('▲ ' + t('dock'), x, y - 70); ctx.textAlign = 'left'; }
+}
+// ---- creatures of zones 2 and 3, drawn around the origin facing +x ----
+function drawShape(sh, mod, tm, st, body, eye, plain) {
+  const tech = mod === 'tech' && !plain, grown = mod === 'grown' && !plain, up = st === 'wind';
+  ctx.fillStyle = body;
+  switch (sh) {
+    case 'ape': {
+      // Amomongo: hunched, long-armed climber with pale hooked nails
+      const lg = Math.sin(tm * 12) * 2;
+      ctx.fillRect(-6, -6, 11, 12); ctx.fillRect(1, -10, 7, 6); ctx.fillRect(-5, 5, 3, 5 + lg); ctx.fillRect(2, 5, 3, 5 - lg);
+      ctx.fillRect(5, -4, 3, up ? 6 : 11); ctx.fillRect(-8, -4, 3, 10);
+      if (!plain) { ctx.fillStyle = '#e8e0c8'; ctx.fillRect(7, up ? 1 : 6, 1, 3); ctx.fillRect(8, up ? 0 : 5, 1, 3); ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(-6, 2, 11, 2); }
+      if (tech) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(1, -5, 7, 1); ctx.fillStyle = Math.sin(tm * 6) > 0 ? '#3ef0b4' : '#0b0e1a'; ctx.fillRect(3, -4, 2, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(5, -8, 2, 2);
+      break;
+    }
+    case 'stalker': {
+      // Thorn Stalker: a low vine predator with a ridge of thorns
+      const lg = Math.sin(tm * 14) * 2;
+      ctx.fillRect(-11, -3, 20, 7); ctx.fillRect(7, -2, 6, 5);
+      ctx.fillRect(-8, 3, 2, 4 + lg); ctx.fillRect(-2, 3, 2, 4 - lg); ctx.fillRect(4, 3, 2, 4 + lg);
+      ctx.beginPath(); for (let i = 0; i < 5; i++) { ctx.moveTo(-10 + i * 4, -3); ctx.lineTo(-8 + i * 4, -8 - (i % 2) * 2); ctx.lineTo(-6 + i * 4, -3); } ctx.fill();
+      if (!plain) { ctx.fillStyle = '#ff5ac8'; ctx.fillRect(-12, -1, 2, 2); ctx.fillRect(-4, -8, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(10, -1, 2, 2);
+      break;
+    }
+    case 'firefly': {
+      ctx.beginPath(); ctx.ellipse(1, 0, 4, 3, 0, 0, 7); ctx.fill();
+      const ga = ctx.globalAlpha, gl = 0.6 + 0.4 * Math.sin(tm * 6);
+      if (!plain) { ctx.fillStyle = tech ? `rgba(43,217,255,${gl})` : `rgba(216,255,106,${gl})`; ctx.beginPath(); ctx.arc(-4, 1, 3, 0, 7); ctx.fill(); ctx.globalAlpha = ga * 0.3; ctx.beginPath(); ctx.arc(-4, 1, 6, 0, 7); ctx.fill(); ctx.globalAlpha = ga; }
+      ctx.fillStyle = 'rgba(236,230,214,.45)'; const wv = Math.abs(Math.sin(tm * 40)) * 3; ctx.fillRect(-2, -3 - wv, 4, 2); ctx.fillRect(1, -3 - wv, 4, 2);
+      if (tech) { ctx.fillStyle = '#2b2f42'; ctx.fillRect(-1, 2, 4, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(4, -1, 1, 1);
+      break;
+    }
+    case 'spore': {
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
+      ctx.strokeStyle = body; ctx.lineWidth = 1; ctx.beginPath();
+      for (let i = 0; i < 8; i++) { const a = i * 0.785 + tm * 2; ctx.moveTo(Math.cos(a) * 4, Math.sin(a) * 4); ctx.lineTo(Math.cos(a) * 7, Math.sin(a) * 7); }
+      ctx.stroke();
+      ctx.fillStyle = eye; ctx.fillRect(1, -1, 2, 2);
+      break;
+    }
+    case 'bird': {
+      // Tigmamanukan: a slim blue omen bird with a crest and two long tail streamers
+      const flap = Math.sin(tm * (st === 'dive' ? 4 : 11)) * 6;
+      ctx.beginPath(); ctx.ellipse(0, 0, 7, 4, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(-9, -8 - flap); ctx.lineTo(3, -1); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(6, -2); ctx.lineTo(12, 0); ctx.lineTo(6, 2); ctx.fill();
+      ctx.strokeStyle = body; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-6, 1); ctx.quadraticCurveTo(-12, 4 + Math.sin(tm * 5) * 2, -16, 2); ctx.moveTo(-6, 2); ctx.quadraticCurveTo(-11, 7, -15, 6 + Math.sin(tm * 5 + 1) * 2); ctx.stroke();
+      if (!plain) { ctx.fillStyle = tech ? '#ff3d8b' : '#ffe08a'; ctx.fillRect(3, -6, 1, 3); ctx.fillRect(5, -5, 1, 2); }
+      if (tech) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-5, 3, 10, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(4, -2, 2, 2);
+      break;
+    }
+    case 'kite': {
+      // Lumen Kite: a living kite of glowing membrane
+      const w = Math.sin(tm * 4) * 2;
+      ctx.beginPath(); ctx.moveTo(9, 0); ctx.lineTo(0, -7 - w); ctx.lineTo(-7, 0); ctx.lineTo(0, 7 + w); ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = body; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-7, 0); ctx.quadraticCurveTo(-12, 4 + w, -16, 1); ctx.stroke();
+      if (!plain) { ctx.fillStyle = 'rgba(255,246,160,.6)'; ctx.fillRect(-3, -1, 9, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(4, -1, 2, 2);
+      break;
+    }
+    case 'bull': {
+      // Sarangay: a towering bull guardian with a jewel at its brow
+      const wk = st === 'walk' ? Math.sin(tm * 4) * 1.5 : 0;
+      ctx.fillRect(-8, 6, 6, 13 + wk); ctx.fillRect(2, 6, 6, 13 - wk);
+      ctx.fillRect(-11, -12, 22, 20);
+      if (up) { ctx.fillRect(-16, -28, 5, 18); ctx.fillRect(11, -28, 5, 18); } else { ctx.fillRect(-16, -10, 5, 20); ctx.fillRect(11, -10, 5, 20); }
+      ctx.fillRect(-2, -22, 13, 11);
+      if (!plain) {
+        ctx.fillStyle = '#e8dcc0'; ctx.beginPath(); ctx.moveTo(0, -21); ctx.quadraticCurveTo(-6, -26, -4, -31); ctx.lineTo(-2, -26); ctx.fill(); ctx.beginPath(); ctx.moveTo(8, -21); ctx.quadraticCurveTo(14, -26, 12, -31); ctx.lineTo(10, -26); ctx.fill();
+        ctx.fillStyle = tech ? '#2bd9ff' : '#ff3d8b'; ctx.fillRect(4, -20, 3, 3);
+        ctx.fillStyle = 'rgba(0,0,0,.25)'; ctx.fillRect(-11, 2, 22, 3);
+        if (tech) { for (let i = 0; i < 5; i++) { ctx.fillStyle = i % 2 ? '#111' : '#ffc65a'; ctx.fillRect(-11 + i * 4.4, -4, 4.4, 3); } ctx.fillStyle = '#2b2f42'; ctx.fillRect(-14, -14, 4, 12); }
+      }
+      ctx.fillStyle = eye; ctx.fillRect(8, -17, 2, 2);
+      break;
+    }
+    case 'turtle': {
+      // Bloomback: a slow shelled giant with a garden growing on its back
+      const wk = st === 'walk' ? Math.sin(tm * 3) * 1.5 : 0;
+      ctx.fillRect(-12, 8, 6, 7 + wk); ctx.fillRect(6, 8, 6, 7 - wk);
+      ctx.beginPath(); ctx.ellipse(0, 4, 16, up ? 14 : 12, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(-16, 3, 32, 6);
+      ctx.fillRect(13, up ? -4 : 0, 8, 7);
+      if (!plain) {
+        ctx.strokeStyle = 'rgba(0,0,0,.3)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-10, 2); ctx.lineTo(-4, -6); ctx.lineTo(4, -6); ctx.lineTo(10, 2); ctx.stroke();
+        for (let i = 0; i < 4; i++) { ctx.fillStyle = i % 2 ? '#ffb3f0' : '#d8ff6a'; ctx.fillRect(-9 + i * 6, -9 - (i % 2) * 2 + Math.sin(tm * 2 + i), 2, 2); ctx.fillStyle = '#4c7a2e'; ctx.fillRect(-9 + i * 6, -7 - (i % 2) * 2, 1, 3); }
+      }
+      ctx.fillStyle = eye; ctx.fillRect(18, up ? -2 : 2, 2, 2);
+      break;
+    }
+    case 'imp': {
+      // Duwende: a small earth dweller in a tall pointed cap, carrying a found trinket
+      const leg = Math.sin(tm * 22) * 1.5;
+      ctx.fillRect(-3, 3, 2, 3 + leg); ctx.fillRect(1, 3, 2, 3 - leg);
+      ctx.fillRect(-4, -3, 8, 7);
+      ctx.beginPath(); ctx.moveTo(-5, -3); ctx.lineTo(1, -12); ctx.lineTo(5, -3); ctx.fill();
+      if (!plain) { ctx.fillStyle = tech ? '#3ef0b4' : '#c9a24a'; ctx.fillRect(-6, 0, 3, 3); ctx.fillStyle = '#e8dcc0'; ctx.fillRect(0, -1, 4, 2); if (tech) { ctx.fillStyle = '#2bd9ff'; ctx.fillRect(-1, -9, 1, 4); } }
+      ctx.fillStyle = eye; ctx.fillRect(2, -3, 1, 1);
+      break;
+    }
+    case 'beetle': {
+      const leg = Math.sin(tm * 20) * 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(-7, 0, 14, 2);
+      ctx.fillRect(-5, 2, 2, 3 + leg); ctx.fillRect(3, 2, 2, 3 - leg); ctx.fillRect(6, -2, 3, 3);
+      if (!plain) { ctx.fillStyle = '#7ad04a'; ctx.fillRect(-4, -6, 3, 2); ctx.fillRect(0, -7, 3, 3); ctx.fillStyle = '#ffd36a'; ctx.fillRect(1, -8, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(7, -1, 1, 1);
+      break;
+    }
+    case 'hound': {
+      // Bantay: a station guard hound with a sensor antenna (feral and mossy in 2391)
+      const leg = Math.sin(tm * 14) * 2;
+      ctx.fillRect(-10, -4, 18, 8); ctx.fillRect(6, -6, 7, 6);
+      ctx.fillRect(-8, 4, 3, 4 + leg); ctx.fillRect(-3, 4, 3, 4 - leg); ctx.fillRect(3, 4, 3, 4 + leg);
+      ctx.fillRect(-13, -6, 4, 2);
+      if (tech) { ctx.fillStyle = '#7ad7ff'; ctx.fillRect(-8, -4, 14, 1); ctx.fillStyle = '#2b2f42'; ctx.fillRect(8, -11, 1, 5); ctx.fillStyle = Math.sin(tm * 8) > 0 ? '#ff3d8b' : '#7ad7ff'; ctx.fillRect(7, -12, 3, 2); }
+      if (grown) { ctx.fillStyle = '#6aa04a'; ctx.fillRect(-9, -6, 5, 2); ctx.fillRect(-2, -5, 4, 1); ctx.fillStyle = '#ffb3d0'; ctx.fillRect(-7, -7, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(10, -4, 2, 2);
+      break;
+    }
+    case 'lurker': {
+      // Void Lurker: a tall shadow from the dark between the modules, many small eyes
+      ctx.globalAlpha *= 0.92;
+      ctx.beginPath(); ctx.moveTo(-6, 10); ctx.quadraticCurveTo(-8, -6, 0, -10); ctx.quadraticCurveTo(8, -6, 6, 10); ctx.closePath(); ctx.fill();
+      ctx.fillRect(-8, 6, 3, 4); ctx.fillRect(5, 6, 3, 4);
+      ctx.globalAlpha /= 0.92;
+      ctx.fillStyle = eye; ctx.fillRect(1, -6, 2, 2); ctx.fillRect(4, -4, 1, 1); ctx.fillRect(-1, -3, 1, 1); ctx.fillRect(3, -1, 1, 1);
+      break;
+    }
+    case 'mite': {
+      const leg = Math.sin(tm * 30) * 1;
+      ctx.beginPath(); ctx.arc(0, 0, 4, 0, 7); ctx.fill();
+      ctx.fillRect(-4, 3, 1, 2 + leg); ctx.fillRect(3, 3, 1, 2 - leg);
+      if (tech) { ctx.fillStyle = '#ffc65a'; ctx.fillRect(-2, -5, 4, 1); ctx.fillStyle = '#2b2f42'; ctx.fillRect(-1, -2, 2, 4); }
+      if (grown) { ctx.fillStyle = '#c86a3a'; ctx.fillRect(-3, -3, 2, 2); ctx.fillStyle = '#4c8a5a'; ctx.fillRect(1, -5, 2, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(2, -1, 2, 2);
+      break;
+    }
+    case 'moth': {
+      const f = Math.abs(Math.sin(tm * 14)) * 4;
+      ctx.beginPath(); ctx.ellipse(-3, -1 - f * 0.4, 4, 2 + f * 0.5, -0.4, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(3, -1 - f * 0.4, 4, 2 + f * 0.5, 0.4, 0, 7); ctx.fill();
+      ctx.fillRect(-1, -2, 2, 5);
+      if (!plain) { ctx.fillStyle = 'rgba(122,215,255,.6)'; ctx.fillRect(-4, -1, 1, 1); ctx.fillRect(3, -1, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(0, -3, 1, 1);
+      break;
+    }
+    case 'fairy': {
+      // Lambana drone: a fairy-sized maintenance drone with four thin wing blades
+      const fl = Math.sin(tm * 18) * 3;
+      ctx.beginPath(); ctx.ellipse(0, 0, 5, 4, 0, 0, 7); ctx.fill();
+      const ga = ctx.globalAlpha; ctx.globalAlpha = ga * 0.5;
+      ctx.beginPath(); ctx.ellipse(-5, -4 - fl * 0.3, 6, 2, -0.5 + fl * 0.05, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(5, -4 - fl * 0.3, 6, 2, 0.5 - fl * 0.05, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(-4, 3, 4, 1.5, 0.4, 0, 7); ctx.fill(); ctx.beginPath(); ctx.ellipse(4, 3, 4, 1.5, -0.4, 0, 7); ctx.fill();
+      ctx.globalAlpha = ga;
+      if (tech) { ctx.fillStyle = '#7ad7ff'; ctx.fillRect(-3, 2, 6, 1); }
+      if (grown) { ctx.fillStyle = '#6aa04a'; ctx.fillRect(-4, -2, 3, 2); ctx.strokeStyle = '#6aa04a'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(0, 4); ctx.quadraticCurveTo(2, 8, -1, 11); ctx.stroke(); }
+      ctx.fillStyle = eye; ctx.fillRect(2, -1, 2, 2);
+      break;
+    }
+    case 'ray': {
+      const w = Math.sin(tm * (st === 'dive' ? 3 : 6)) * 4;
+      ctx.beginPath(); ctx.moveTo(10, 0); ctx.quadraticCurveTo(0, -8 - w, -8, -2); ctx.lineTo(-8, 2); ctx.quadraticCurveTo(0, 8 + w, 10, 0); ctx.fill();
+      ctx.strokeStyle = body; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(-8, 0); ctx.lineTo(-16, Math.sin(tm * 8) * 2); ctx.stroke();
+      if (!plain) { ctx.fillStyle = 'rgba(255,227,240,.7)'; ctx.fillRect(-16, -1 + Math.sin(tm * 8) * 2, 3, 2); ctx.fillRect(-2, -3, 1, 1); ctx.fillRect(2, 2, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(6, -1, 2, 2);
+      break;
+    }
+    case 'cyclops': {
+      // Bungisngis: a one-eyed giant that grins; here a station loader built in its image
+      const wk = st === 'walk' ? Math.sin(tm * 4) * 1.5 : 0;
+      ctx.fillRect(-9, 8, 6, 12 + wk); ctx.fillRect(3, 8, 6, 12 - wk);
+      ctx.fillRect(-12, -18, 24, 27);
+      if (up) { ctx.fillRect(-17, -32, 5, 18); ctx.fillRect(12, -32, 5, 18); } else { ctx.fillRect(-17, -14, 5, 22); ctx.fillRect(12, -14, 5, 22); }
+      if (!plain) {
+        ctx.fillStyle = '#0b0e1a'; ctx.beginPath(); ctx.arc(2, -10, 6, 0, 7); ctx.fill();
+        ctx.strokeStyle = '#e8dcc0'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.moveTo(-6, -1); ctx.quadraticCurveTo(2, 4, 10, -1); ctx.stroke();
+        if (tech) { ctx.fillStyle = '#2b2f42'; ctx.fillRect(-12, 0, 24, 2); for (let i = 0; i < 6; i++) { ctx.fillStyle = i % 2 ? '#111' : '#ffc65a'; ctx.fillRect(-12 + i * 4, 6, 4, 2); } }
+        if (grown) { ctx.fillStyle = '#5a8a3a'; ctx.fillRect(-12, -20, 10, 4); ctx.fillRect(4, -19, 6, 3); ctx.fillRect(-11, 2, 4, 6); ctx.fillStyle = '#ffb3d0'; ctx.fillRect(-8, -22, 2, 2); }
+      }
+      ctx.fillStyle = eye; ctx.beginPath(); ctx.arc(2, -10, 3, 0, 7); ctx.fill();
+      break;
+    }
+    case 'titan': {
+      // Reactor Titan: a walking power core, the light it hoards shining through its ribs
+      const wk = st === 'walk' ? Math.sin(tm * 3) * 1.5 : 0;
+      ctx.fillRect(-10, 8, 7, 12 + wk); ctx.fillRect(3, 8, 7, 12 - wk);
+      ctx.fillRect(-14, -16, 28, 25); ctx.fillRect(-6, -24, 12, 9);
+      if (up) { ctx.fillRect(-20, -30, 6, 18); ctx.fillRect(14, -30, 6, 18); } else { ctx.fillRect(-20, -12, 6, 22); ctx.fillRect(14, -12, 6, 22); }
+      if (!plain) { const g = 0.5 + 0.5 * Math.sin(tm * 5); ctx.fillStyle = `rgba(122,215,255,${0.4 + g * 0.5})`; ctx.fillRect(-6, -10, 12, 12); ctx.fillStyle = '#0b0e1a'; for (let i = 0; i < 3; i++) ctx.fillRect(-6, -9 + i * 4, 12, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(1, -21, 4, 2);
+      break;
+    }
+    case 'crab': {
+      const leg = Math.sin(tm * 24) * 1.5;
+      ctx.beginPath(); ctx.ellipse(0, 0, 7, 4, 0, Math.PI, 0); ctx.fill(); ctx.fillRect(-7, 0, 14, 2);
+      ctx.fillRect(-6, 2, 1, 3 + leg); ctx.fillRect(-3, 2, 1, 3 - leg); ctx.fillRect(2, 2, 1, 3 + leg); ctx.fillRect(5, 2, 1, 3 - leg);
+      ctx.fillRect(7, -4, 4, 3); ctx.fillRect(9, -6, 2, 2);
+      if (grown) { ctx.fillStyle = '#8a92a8'; ctx.beginPath(); ctx.arc(-1, -3, 5, Math.PI, 0); ctx.fill(); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(-3, -5, 4, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(3, -4, 1, 2); ctx.fillRect(5, -4, 1, 2);
+      break;
+    }
+    case 'eel': {
+      ctx.lineWidth = 4; ctx.strokeStyle = body; ctx.beginPath();
+      for (let i = 0; i <= 6; i++) { const sx = -10 + i * 3, sy = Math.sin(tm * 10 + i * 0.9) * 2; if (i) ctx.lineTo(sx, sy); else ctx.moveTo(sx, sy); }
+      ctx.stroke();
+      if (!plain) { ctx.fillStyle = `rgba(122,215,255,${0.5 + 0.5 * Math.sin(tm * 12)})`; for (let i = 0; i < 3; i++) ctx.fillRect(-8 + i * 5, Math.sin(tm * 10 + i * 1.8) * 2 - 1, 1, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(7, -1, 2, 1);
+      break;
+    }
+  }
+}
+// ---------- zone bosses: Manananggal (zone 2) and Bakunawa (zone 3), same learning framework as the Tikbalang ----------
+const BOSS_HP = { mana: 620, baku: 760 };
+function startZoneBoss(base) {
+  const g = Z.gy * TS, kind = Z.boss, hp = BOSS_HP[kind] * hm();
+  const b = { kind, active: true, vx: 0, vy: 0, hp, max: hp, face: -1, onGround: false, st: 'intro', t: 0, stage: base, base, flashT: 0, last: [], plan: null,
+    mem: { left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0 }, alpha: 1, ph: 0 };
+  if (kind === 'mana') Object.assign(b, { x: 158 * TS, y: g - 48, w: 26, h: 24,
+    lower: { x: 158 * TS + 4, y: g - 24, w: 18, h: 24, hp: 150 * hm(), max: 150 * hm(), flashT: 0, sealT: 0, dead: false, cd: 2, kick: 0 }, regen: true, sealedOnce: false });
+  else {
+    const x0 = ARENA.x0, x1 = ARENA.x1;
+    Object.assign(b, { x: (x0 + x1) / 2 - 20, y: g - 200, w: 40, h: 26, alpha: 0, trail: [], dark: 0.3, darkT: 0, dmgWin: 0, tgt: null, relight: 0, eaten: 0, saved: 0,
+      moons: [{ x: x0 + 90, y: g - 150, lit: true }, { x: (x0 + x1) / 2, y: g - 236, lit: true }, { x: x1 - 90, y: g - 150, lit: true }] });
+  }
+  boss = b; enemies = [];
+  toast(t(bossKey('bossMem'), base), 3.2);
+  shake = 10; sfx(70, 0.9, 'sawtooth', 0.08, -20);
+}
+function pickW(w) {
+  const l = boss.last; if (l.length >= 2 && l[0] === l[1]) w[l[0]] = 0;
+  let sum = 0; for (const k in w) sum += w[k];
+  let r = Math.random() * sum; for (const k in w) { r -= w[k]; if (r <= 0) return k; }
+  return Object.keys(w)[0];
+}
+function learnRatios() {
+  const mem = boss.mem, gm = S.bossMem;
+  return { air: (mem.air + gm.air * 0.3) / (mem.air + mem.ground + (gm.air + gm.ground) * 0.3 + 0.01),
+    ranged: (mem.bolts + gm.bolts * 0.3) / (mem.bolts + mem.melee + (gm.bolts + gm.melee) * 0.3 + 1) };
+}
+function bossToward(tx, ty, s, dt) {
+  const b = boss, dx = tx - (b.x + b.w / 2), dy = ty - (b.y + b.h / 2), m = Math.hypot(dx, dy) || 1, k = Math.min(1, s * dt / m);
+  b.x += dx * k; b.y += dy * k; if (Math.abs(dx) > 2) b.face = dx < 0 ? -1 : 1; return m;
+}
+function updateZoneBoss(dt) {
+  const b = boss;
+  b.t += dt; if (b.flashT > 0) b.flashT -= dt;
+  if (b.st !== 'dead') bossLearn(dt);
+  const want = Math.min(5, b.base + (b.hp < b.max * 0.66 ? 1 : 0) + (b.hp < b.max * 0.33 ? 1 : 0));
+  if (want > b.stage && b.st !== 'dead') { b.stage = want; toast(t(bossKey('bossLearn'), b.stage)); flash = 0.3; flashCol = '#3ef0b4'; shake = 8; sfx(110, 0.5, 'sawtooth', 0.07, 60); }
+  if (b.kind === 'mana') updateMana(dt); else updateBaku(dt);
+}
+function bossDies(b) {
+  b.hp = 0; b.st = 'dead'; b.t = 0; shake = 14; flash = 0.6; flashCol = '#ffc65a'; sfx(50, 1.2, 'sawtooth', 0.09, -20);
+  projs = projs.filter(p => p.from !== 'boss');
+  S.mats[Z.core] = (S.mats[Z.core] || 0) + 1;
+  addTala(TALA.boss); popText(b.x + b.w / 2, b.y - 16, t('talaGot', TALA.boss), '#ffd37a', true);
+  gainXp(140);
+  if (b.lower) b.lower.dead = true;
+  if (b.moons) b.moons.forEach(m => { m.lit = true; });
+}
+function damageZoneBoss(dmg, isBolt) {
+  const b = boss;
+  b.hp -= dmg; b.flashT = 0.08;
+  if (isBolt) b.mem.bolts++; else b.mem.melee++;
+  popText(b.x + b.w / 2, b.y - 4, Math.round(dmg), isBolt ? '#3ef0b4' : '#ffc65a');
+  burst(b.x + b.w / 2, b.y + b.h / 3, 6, b.kind === 'mana' ? '#c7a2ff' : '#7ad7ff', 140, 0.3);
+  // hitting the serpent hard enough while it swims for a moon drives it away
+  if (b.kind === 'baku' && b.st === 'devour') {
+    b.dmgWin += dmg;
+    if (b.dmgWin >= b.max * 0.05) { b.st = 'recoil'; b.t = 0; b.tgt = null; b.saved++; toast(t('moonSaved'), 2.2); sfx(660, 0.25, 'triangle', 0.05, 300); }
+  }
+  if (b.hp <= 0) bossDies(b);
+}
+// the lower half: every hit seals it for 6 s (no regeneration); destroyed, it never lets the upper body heal again
+function damageLower(dmg) {
+  const b = boss, L = b && b.lower;
+  if (!L || L.dead || b.st === 'dead' || b.st === 'intro') return;
+  L.hp -= dmg; L.flashT = 0.1; L.sealT = 6;
+  popText(L.x + L.w / 2, L.y - 4, Math.round(dmg), '#e6d8ff');
+  burst(L.x + L.w / 2, L.y + 4, 8, '#ece6d6', 120, 0.4);
+  if (!b.sealedOnce) { b.sealedOnce = true; toast(t('manaSeal'), 3.2); }
+  if (L.hp <= 0) { L.hp = 0; L.dead = true; toast(t('manaLowerDown'), 3.2); burst(L.x + L.w / 2, L.y + L.h / 2, 26, '#ece6d6', 180, 0.8); sfx(140, 0.4, 'sawtooth', 0.06, -60); shake = 8; }
+}
+function updateMana(dt) {
+  const b = boss, L = b.lower, g = Z.gy * TS, spd = 1 + 0.12 * (b.stage - 1);
+  const px = P.x + P.w / 2, py = P.y + P.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2;
+  if (L.flashT > 0) L.flashT -= dt;
+  if (L.sealT > 0) L.sealT -= dt;
+  const hoverY = g - 118 + Math.sin(b.t * 2.2) * 8;
+  b.regen = !L.dead && L.sealT <= 0 && b.st !== 'dead' && b.st !== 'intro';
+  if (b.regen && b.hp < b.max) b.hp = Math.min(b.max, b.hp + b.max * 0.015 * dt);
+  switch (b.st) {
+    case 'intro': if (b.t > 1.1) { b.st = 'split'; b.t = 0; toast(t('manaSplit'), 3); sfx(220, 0.5, 'sawtooth', 0.06, -120); burst(bx, b.y + b.h, 20, '#c7a2ff', 160, 0.6); } break;
+    case 'split': bossToward(bx, hoverY, 160, dt); if (b.t > 0.9) { b.st = 'idle'; b.t = 0; } break;
+    case 'idle': {
+      const side = bx < px ? -1 : 1;
+      bossToward(clamp(px + side * 70, ARENA.x0 + 20, ARENA.x1 - 20), hoverY, 90 * spd, dt);
+      b.face = px < bx ? -1 : 1;
+      if (b.t > Math.max(0.4, 1.0 - 0.12 * b.stage)) {
+        const l = learnRatios();
+        b.plan = pickW({ swoop: 2 + 3 * (1 - l.air), spit: 1 + 3 * l.air, shriek: b.stage >= 3 ? 1 + 4 * l.ranged : 0 });
+        b.last.unshift(b.plan); b.last.length = 3; b.st = 'tele'; b.t = 0;
+      }
+      break;
+    }
+    case 'tele': {
+      if (b.t > Math.max(0.3, 0.6 - 0.06 * (b.stage - 1))) {
+        b.t = 0; const lead = favoredSide() * 34 * (b.stage - 1) / 2;
+        if (b.plan === 'swoop') { b.st = 'swoop'; b.tx = clamp(px + lead, ARENA.x0 + 16, ARENA.x1 - 16); b.ty = g - b.h / 2 - 2; sfx(300, 0.3, 'sawtooth', 0.05, -180); }
+        else if (b.plan === 'spit') { b.st = 'spit'; b.shots = 0; }
+        else b.st = 'shriek';
+      }
+      break;
+    }
+    case 'swoop': { const m = bossToward(b.tx, b.ty, 340 * spd, dt); if (m < 6 || b.t > 1.2) { b.st = 'low'; b.t = 0; shake = 5; burst(bx, g, 14, '#c7a2ff', 150, 0.4); } break; }
+    case 'low': if (b.t > Math.max(0.55, 1.1 - 0.1 * b.stage)) { b.st = 'rise'; b.t = 0; } break;
+    case 'rise': bossToward(bx, hoverY, 150, dt); if (b.t > 0.7) { b.st = 'idle'; b.t = 0; } break;
+    case 'spit': {
+      if (b.t > 0.18) {
+        b.t = 0; b.shots++;
+        const lead = b.stage >= 3 ? P.vx * 0.35 : 0, ax = px + lead - bx, ay = py - by, m = Math.hypot(ax, ay) || 1, s = 200 * spd;
+        bossProj({ x: bx - 5, y: by - 5, w: 10, h: 10, vx: ax / m * s, vy: ay / m * s, dmg: 10, type: 'acid', life: 2.5 });
+        sfx(520, 0.06, 'triangle', 0.03, -260);
+        if (b.shots >= 2 + b.stage) { b.st = 'recover'; b.t = 0; }
+      }
+      break;
+    }
+    case 'shriek': {
+      if (b.t > 0.3) {
+        const n = 8 + b.stage;
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + b.t; bossProj({ x: bx - 5, y: by - 5, w: 10, h: 10, vx: Math.cos(a) * 150, vy: Math.sin(a) * 150, dmg: 9, type: 'acid', life: 2.2 }); }
+        sfx(900, 0.4, 'sawtooth', 0.05, -500); shake = 4; b.st = 'recover'; b.t = 0;
+      }
+      break;
+    }
+    case 'recover': bossToward(bx, hoverY, 80, dt); if (b.t > Math.max(0.35, 0.8 - 0.08 * b.stage)) { b.st = 'idle'; b.t = 0; } break;
+    case 'dead':
+      b.y = Math.min(g - b.h, b.y + 120 * dt);
+      if (Math.random() < 0.5) burst(bx + rnd(-12, 12), b.y + rnd(0, b.h), 3, Math.random() < 0.5 ? '#ffc65a' : '#c7a2ff', 120);
+      if (b.t > 1.8) winGame();
+      break;
+  }
+  b.x = clamp(b.x, ARENA.x0, ARENA.x1 - b.w); b.y = clamp(b.y, (Z.gy - 23) * TS, g - b.h);
+  // the lower half stands where it split; from stage 2 it stamps shockwaves when you come close
+  if (!L.dead && b.st !== 'dead') {
+    L.cd -= dt;
+    if (L.kick > 0) {
+      L.kick -= dt;
+      if (L.kick <= 0) {
+        for (const s of [-1, 1]) bossProj({ x: L.x + L.w / 2 - 8, y: g - 14, w: 16, h: 14, vx: s * 200 * spd, vy: 0, dmg: 12, type: 'wave', life: 1.3 });
+        shake = Math.max(shake, 6); sfx(60, 0.3, 'sawtooth', 0.07, -20);
+      }
+    } else if (b.stage >= 2 && L.cd <= 0 && Math.abs(px - (L.x + L.w / 2)) < 90 && P.onGround && b.st !== 'intro') { L.kick = 0.6; L.cd = Math.max(2.2, 4.5 - 0.4 * b.stage); sfx(120, 0.2, 'square', 0.04, 60); }
+  }
+  if (b.st !== 'dead' && b.st !== 'intro' && overlap(b, P) && P.dashT <= 0) hurtPlayer(b.st === 'swoop' ? 18 : 10, bx);
+}
+function updateBaku(dt) {
+  const b = boss, g = Z.gy * TS, spd = 1 + 0.12 * (b.stage - 1);
+  const px = P.x + P.w / 2, py = P.y + P.h / 2, bx = b.x + b.w / 2, by = b.y + b.h / 2;
+  const top = (Z.gy - 19) * TS, cx = (ARENA.x0 + ARENA.x1) / 2;
+  if (b.alpha > 0.1) { b.trail.unshift({ x: bx, y: by }); if (b.trail.length > 90) b.trail.length = 90; }
+  // it swallows the light: the arena dims with every moon it eats and goes black during an eclipse
+  const eaten = b.moons.filter(m => !m.lit).length;
+  let want = b.st === 'dead' ? 0 : 0.5 + eaten * 0.15;
+  if (b.darkT > 0) { b.darkT -= dt; want = 0.94; }
+  b.dark += (want - b.dark) * Math.min(1, dt * 2.5);
+  if (b.relight > 0) { b.relight -= dt; if (b.relight <= 0) { b.moons.forEach(m => { m.lit = true; }); toast(t('moonsBack'), 2.4); flash = 0.3; flashCol = '#ffe3f0'; } }
+  switch (b.st) {
+    case 'intro': b.alpha = Math.min(1, b.t); bossToward(cx, top + 110, 120, dt); if (b.t > 1.4) { b.st = 'idle'; b.t = 0; } break;
+    case 'idle': {
+      b.ph += dt * 0.9;
+      bossToward(cx + Math.cos(b.ph) * 150, top + 120 + Math.sin(b.ph * 2) * 60, 140 * spd, dt);
+      if (b.t > Math.max(0.5, 1.3 - 0.15 * b.stage)) {
+        const l = learnRatios(), lit = b.moons.some(m => m.lit) && b.relight <= 0;
+        b.plan = pickW({ devour: lit ? 2.5 : 0, lunge: 1 + 3 * (1 - l.air), shards: 1 + 3 * l.air, eclipse: b.stage >= 3 && b.darkT <= 0 ? 1 + 3 * l.ranged : 0 });
+        b.last.unshift(b.plan); b.last.length = 3; b.st = 'tele'; b.t = 0;
+        if (b.plan === 'devour') { let best = null, bd = 1e9; for (const m of b.moons) if (m.lit) { const d = Math.hypot(m.x - bx, m.y - by); if (d < bd) { bd = d; best = m; } } b.tgt = best; }
+      }
+      break;
+    }
+    case 'tele': {
+      if (b.t > Math.max(0.35, 0.75 - 0.07 * (b.stage - 1))) {
+        b.t = 0;
+        if (b.plan === 'devour' && b.tgt) { b.st = 'devour'; b.dmgWin = 0; toast(t('moonHunt'), 2); sfx(160, 0.5, 'sawtooth', 0.05, 80); }
+        else if (b.plan === 'shards') b.st = 'shards';
+        else { if (b.plan === 'eclipse') { b.darkT = 3.2; toast(t('eclipse'), 2.4); } b.st = 'sink'; }
+      }
+      break;
+    }
+    case 'devour': {
+      const m = b.tgt;
+      if (!m || !m.lit) { b.st = 'recover'; b.t = 0; break; }
+      const d = bossToward(m.x, m.y, (100 + 14 * b.stage) * spd, dt);
+      if (d < 18) {
+        m.lit = false; b.eaten++; b.hp = Math.min(b.max, b.hp + b.max * 0.06); b.tgt = null; b.st = 'recover'; b.t = 0;
+        toast(t('moonEaten'), 2.4); flash = 0.35; flashCol = '#05060c'; shake = 6; sfx(70, 0.6, 'sawtooth', 0.07, -30);
+        if (b.moons.every(o => !o.lit)) { toast(t('moonsGone'), 3); if (P.dashT <= 0) { P.inv = 0; hurtPlayer(22, bx); } b.relight = 3; }
+      }
+      break;
+    }
+    case 'recoil': bossToward(bx + (bx < cx ? -60 : 60), top + 30, 230, dt); if (b.t > 0.7) { b.st = 'recover'; b.t = 0; } break;
+    case 'sink':
+      b.alpha = Math.max(0, 1 - b.t / 0.4);
+      if (b.t > 0.45) {
+        const side = favoredSide() || (Math.random() < 0.5 ? -1 : 1);
+        b.x = side < 0 ? ARENA.x0 + 4 : ARENA.x1 - b.w - 4; b.y = clamp(py - b.h / 2, top, g - b.h); b.face = side < 0 ? 1 : -1;
+        b.trail.length = 0; b.st = 'eyes'; b.t = 0; sfx(900, 0.25, 'sine', 0.04, -600);
+      }
+      break;
+    case 'eyes': b.alpha = 0.25; if (b.t > Math.max(0.35, 0.7 - 0.06 * b.stage)) { b.st = 'lunge'; b.t = 0; b.alpha = 1; sfx(200, 0.3, 'sawtooth', 0.06, 120); } break;
+    case 'lunge':
+      b.x += b.face * 360 * spd * dt;
+      if (b.t > 0.25 && (b.x <= ARENA.x0 + 2 || b.x + b.w >= ARENA.x1 - 2)) { b.st = 'recover'; b.t = 0; shake = 6; }
+      break;
+    case 'shards': {
+      if (b.t > 0.3) {
+        const n = 8 + b.stage;
+        for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2 + b.ph; bossProj({ x: bx - 4, y: by - 4, w: 8, h: 8, vx: Math.cos(a) * 140, vy: Math.sin(a) * 140, dmg: 9, type: 'shard', life: 2.4 }); }
+        sfx(1200, 0.3, 'triangle', 0.04, -700); b.st = 'recover'; b.t = 0;
+      }
+      break;
+    }
+    case 'recover': b.alpha = Math.min(1, b.alpha + dt * 3); bossToward(cx, top + 120, 90, dt); if (b.t > Math.max(0.4, 0.9 - 0.08 * b.stage)) { b.st = 'idle'; b.t = 0; } break;
+    case 'dead':
+      b.alpha = Math.max(0, 1 - b.t / 1.8);
+      if (Math.random() < 0.5) burst(bx + rnd(-15, 15), by + rnd(-10, 10), 3, Math.random() < 0.5 ? '#ffe3f0' : '#7ad7ff', 120);
+      if (b.t > 1.8) winGame();
+      break;
+  }
+  b.x = clamp(b.x, ARENA.x0, ARENA.x1 - b.w); b.y = clamp(b.y, top, g - b.h);
+  if (b.st !== 'dead' && b.st !== 'intro' && b.alpha > 0.5 && overlap(b, P) && P.dashT <= 0) hurtPlayer(b.st === 'lunge' ? 18 : 10, bx);
+}
+function drawZoneBoss(time) {
+  const b = boss, x = Math.round(b.x - cam.x), y = Math.round(b.y - cam.y), white = b.flashT > 0;
+  if (b.kind === 'mana') {
+    const L = b.lower;
+    // lower half: hips and legs with a jade seam on top; a ring of ash while it is sealed
+    if (!L.dead) {
+      const lx = Math.round(L.x - cam.x), ly = Math.round(L.y - cam.y);
+      if (L.sealT > 0) { ctx.strokeStyle = `rgba(236,230,214,${0.4 + 0.3 * Math.sin(time * 8)})`; ctx.lineWidth = 1.5; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.ellipse(lx + L.w / 2, ly + L.h / 2, 16, 18, 0, 0, 7); ctx.stroke(); ctx.setLineDash([]); }
+      if (L.kick > 0) { ctx.fillStyle = `rgba(255,61,139,${0.3 + 0.3 * Math.sin(time * 30)})`; ctx.beginPath(); ctx.ellipse(lx + L.w / 2, ly + L.h - 2, 22, 6, 0, 0, 7); ctx.fill(); }
+      ctx.fillStyle = L.flashT > 0 ? '#ffffff' : '#3a2440'; ctx.fillRect(lx + 2, ly, 14, 9); ctx.fillRect(lx + 3, ly + 8, 4, 16); ctx.fillRect(lx + 11, ly + 8, 4, 16);
+      ctx.fillStyle = '#5a2a5a'; ctx.fillRect(lx + 2, ly + 5, 14, 3);
+      ctx.fillStyle = b.regen ? `rgba(62,240,180,${0.6 + 0.4 * Math.sin(time * 6)})` : '#6a6a7a'; ctx.fillRect(lx + 2, ly - 1, 14, 2);
+      if (b.regen && b.st !== 'intro' && b.st !== 'split') { ctx.strokeStyle = 'rgba(62,240,180,.35)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(lx + 9, ly); ctx.quadraticCurveTo(lx + 9 + Math.sin(time * 4) * 8, (ly + y + b.h) / 2, x + b.w / 2, y + b.h); ctx.stroke(); }
+    }
+    ctx.save();
+    if (b.st === 'tele') { const a = 0.3 + 0.3 * Math.sin(time * 30); ctx.fillStyle = b.plan === 'shriek' ? `rgba(62,240,180,${a})` : `rgba(255,61,139,${a})`; ctx.beginPath(); ctx.ellipse(x + b.w / 2, y + b.h / 2, b.w, b.h, 0, 0, 7); ctx.fill(); }
+    ctx.translate(x + b.w / 2, y + b.h); ctx.scale(b.face, 1);
+    // upper body: wide leathery wings, long hair, a glowing seam where it parted
+    const flap = Math.sin(time * (b.st === 'swoop' ? 18 : 7)) * 8, skin = white ? '#ffffff' : '#7a5a7a', wing = white ? '#ffffff' : '#2a1830';
+    ctx.fillStyle = wing;
+    for (const s of [-1, 1]) { ctx.beginPath(); ctx.moveTo(0, -16); ctx.lineTo(s * 30, -30 - flap); ctx.lineTo(s * 26, -18 - flap * 0.5); ctx.lineTo(s * 34, -12 - flap * 0.3); ctx.lineTo(s * 22, -8); ctx.lineTo(s * 26, -2); ctx.lineTo(0, -8); ctx.fill(); }
+    ctx.fillStyle = skin; ctx.fillRect(-6, -18, 12, 16); ctx.fillRect(-4, -26, 9, 9);
+    ctx.fillStyle = white ? '#fff' : '#14121c'; ctx.fillRect(-6, -27, 11, 4); ctx.fillRect(-7, -24, 4, 16 + Math.sin(time * 3) * 2);
+    ctx.fillStyle = white ? '#fff' : (b.stage >= 4 ? '#ff3d8b' : '#c7a2ff'); ctx.fillRect(2, -23, 2, 2);
+    ctx.fillStyle = `rgba(62,240,180,${0.6 + 0.4 * Math.sin(time * 6)})`; ctx.fillRect(-6, -2, 12, 2);
+    ctx.restore();
+    return;
+  }
+  // Bakunawa: moons first, then the long body from the trail, then the head
+  for (const m of b.moons) {
+    const mx = m.x - cam.x, my = m.y - cam.y, hunted = b.tgt === m && (b.st === 'tele' || b.st === 'devour');
+    if (m.lit) {
+      ctx.fillStyle = hunted ? `rgba(255,61,139,${0.25 + 0.2 * Math.sin(time * 20)})` : 'rgba(255,227,240,.18)'; ctx.beginPath(); ctx.arc(mx, my, 20, 0, 7); ctx.fill();
+      ctx.fillStyle = '#ffe3f0'; ctx.beginPath(); ctx.arc(mx, my, 8, 0, 7); ctx.fill();
+      ctx.fillStyle = 'rgba(200,180,210,.6)'; ctx.beginPath(); ctx.arc(mx - 2, my + 2, 2, 0, 7); ctx.fill();
+    } else { ctx.strokeStyle = 'rgba(255,227,240,.25)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(mx, my, 8, 0, 7); ctx.stroke(); }
+  }
+  ctx.save(); ctx.globalAlpha = Math.max(0, b.alpha);
+  for (let i = b.trail.length - 1; i >= 4; i -= 5) {
+    const p = b.trail[i], r = 13 - i / 9;
+    ctx.fillStyle = i % 10 < 5 ? '#1a2a5a' : '#223870'; ctx.beginPath(); ctx.arc(p.x - cam.x, p.y - cam.y, Math.max(3, r), 0, 7); ctx.fill();
+    if (i % 15 === 4) { ctx.fillStyle = '#2b6aa0'; ctx.fillRect(p.x - cam.x - 1, p.y - cam.y - r - 3, 2, 4); }
+  }
+  ctx.translate(x + b.w / 2, y + b.h / 2); ctx.scale(b.face, 1);
+  if (b.st === 'tele') { const a = 0.3 + 0.3 * Math.sin(time * 30); ctx.fillStyle = b.plan === 'devour' ? `rgba(255,227,240,${a})` : `rgba(255,61,139,${a})`; ctx.beginPath(); ctx.ellipse(0, 0, 30, 22, 0, 0, 7); ctx.fill(); }
+  const body = white ? '#ffffff' : '#1e3268', jaw = b.st === 'devour' || b.st === 'lunge' ? 0.35 + 0.15 * Math.sin(time * 14) : 0.12;
+  ctx.fillStyle = body; ctx.beginPath(); ctx.ellipse(-4, 0, 16, 11, 0, 0, 7); ctx.fill();
+  ctx.save(); ctx.rotate(-jaw); ctx.fillRect(4, -9, 18, 8); ctx.restore();
+  ctx.save(); ctx.rotate(jaw); ctx.fillRect(4, 1, 16, 6); ctx.restore();
+  ctx.fillStyle = white ? '#fff' : '#2b6aa0'; for (let i = 0; i < 4; i++) { ctx.beginPath(); ctx.moveTo(-16 + i * 6, -9); ctx.lineTo(-12 + i * 6, -18 - (i % 2) * 4); ctx.lineTo(-9 + i * 6, -9); ctx.fill(); }
+  ctx.fillStyle = '#e8f0ff'; ctx.fillRect(10, -2 - jaw * 10, 2, 3); ctx.fillRect(15, -2 - jaw * 10, 2, 3);
+  ctx.restore();
+}
+// darkness: a quarter-resolution layer with soft holes for the lit moons and around the hero, then the serpent's eyes on top
+const darkCv = document.createElement('canvas'), darkCtx = darkCv.getContext('2d');
+function drawDark(time) {
+  const b = boss; if (b.dark < 0.03) return;
+  const s = 0.25, w = Math.ceil(VW * s), h = Math.ceil(VH * s);
+  if (darkCv.width !== w || darkCv.height !== h) { darkCv.width = w; darkCv.height = h; }
+  const d = darkCtx, ax = (ARENA.x0 - cam.x) * s, ay = ((Z.gy - 20) * TS - cam.y) * s, aw = (ARENA.x1 - ARENA.x0) * s, ah = 20 * TS * s;
+  d.globalCompositeOperation = 'source-over'; d.clearRect(0, 0, w, h);
+  d.fillStyle = `rgba(2,4,14,${b.dark})`; d.fillRect(ax, ay, aw, ah);
+  d.globalCompositeOperation = 'destination-out';
+  const hole = (x, y, r) => { const gr = d.createRadialGradient(x * s, y * s, 0, x * s, y * s, r * s); gr.addColorStop(0, 'rgba(0,0,0,1)'); gr.addColorStop(1, 'rgba(0,0,0,0)'); d.fillStyle = gr; d.fillRect((x - r) * s, (y - r) * s, r * 2 * s, r * 2 * s); };
+  for (const m of b.moons) if (m.lit) hole(m.x - cam.x, m.y - cam.y, 80);
+  hole(P.x + P.w / 2 - cam.x, P.y + P.h / 2 - cam.y, 56);
+  d.globalCompositeOperation = 'source-over';
+  ctx.imageSmoothingEnabled = true; ctx.drawImage(darkCv, 0, 0, w / s, h / s);
+  if (b.st !== 'dead' && (b.alpha > 0.1 || b.st === 'eyes')) {
+    const ex = b.x + b.w / 2 - cam.x + b.face * 12, ey = b.y + b.h / 2 - cam.y - 2, a = b.st === 'eyes' ? 0.7 + 0.3 * Math.sin(time * 25) : 0.8;
+    ctx.fillStyle = `rgba(255,227,240,${a})`; ctx.fillRect(ex - 2, ey - 1, 3, 2); ctx.fillRect(ex + 3 * b.face, ey - 1, 3, 2);
+    ctx.fillStyle = `rgba(255,227,240,${a * 0.25})`; ctx.beginPath(); ctx.arc(ex + 1, ey, 8, 0, 7); ctx.fill();
+  }
+}
+// ---------- the Balangay: travel screen (star map + zone list) ----------
+const travelEl = document.createElement('div');
+travelEl.id = 'travel'; travelEl.className = 'screen'; travelEl.hidden = true;
+travelEl.innerHTML = '<div class="tv-box"><div class="tv-head"><h2 id="tv-title"></h2><span id="tv-sub"></span><button type="button" id="tv-close" class="ghost sm"></button></div>' +
+  '<div class="tv-grid"><canvas id="tv-map" width="960" height="540"></canvas><div id="tv-list"></div></div></div>';
+document.getElementById('app').appendChild(travelEl);
+const tvMap = travelEl.querySelector('#tv-map'), tvCtx = tvMap.getContext('2d');
+const TV_NODE = { z1: [92, 178], z2: [246, 82], z3: [394, 176] };
+travelEl.querySelector('#tv-close').addEventListener('click', () => closeTravel());
+tvMap.addEventListener('click', e => {
+  const r = tvMap.getBoundingClientRect(), mx = (e.clientX - r.left) / r.width * 480, my = (e.clientY - r.top) / r.height * 270;
+  for (const id of ZONE_IDS) { const [nx, ny] = TV_NODE[id]; if (Math.hypot(mx - nx, my - ny) < 40 && id !== Z.id && zoneUnlocked(id)) { travel(id); return; } }
+});
+function openTravel() {
+  if (!S || (boss && boss.active)) return false;
+  mode = 'travel'; travelEl.hidden = false; touchEl.hidden = true; timeBtn.hidden = true;
+  toastEl.classList.remove('show'); toastT = 0;
+  renderTravel(); drawStarmap(performance.now() / 1000);
+  sfx(392, 0.3, 'triangle', 0.05, 200);
+  return true;
+}
+function closeTravel(silent) {
+  travelEl.hidden = true;
+  if (mode === 'travel') mode = 'play';
+  if (touchWanted && mode === 'play') touchEl.hidden = false;
+  if (!silent) sfx(300, 0.15, 'triangle', 0.04, -100);
+}
+function renderTravel() {
+  travelEl.querySelector('#tv-title').textContent = t('travelTitle');
+  travelEl.querySelector('#tv-sub').textContent = t('travelSub');
+  travelEl.querySelector('#tv-close').textContent = t('close');
+  let h = '';
+  ZONE_IDS.forEach((id, i) => {
+    const z = ZONES[id], here = id === Z.id, open = zoneUnlocked(id), done = S.beaten.includes(id);
+    const eras = z.eras.map(e => t(ERA_KEYS[e])).join(' / ');
+    const status = here ? t('travelHere') : !open ? t('travelLocked', ZONE_BOSS_NAME[ZONE_IDS[i - 1]]) : done ? t('travelBeaten', ZONE_BOSS_NAME[id]) : t('travelOpen');
+    h += `<button type="button" class="zone-card ${here ? 'here' : open ? 'open' : 'locked'}" data-zone="${id}" ${here || !open ? 'disabled' : ''}>` +
+      `<span class="nm">${t('zn_' + id)}</span><span class="ds">${t('zd_' + id)}</span><span class="er">${eras}</span><span class="st">${status}${open && !here ? ' · ' + t('travelGo') + ' ➤' : ''}</span></button>`;
+  });
+  const list = travelEl.querySelector('#tv-list');
+  list.innerHTML = h;
+  list.querySelectorAll('[data-zone]').forEach(b => b.addEventListener('click', () => travel(b.dataset.zone)));
+}
+const tvStars = Array.from({ length: 140 }, (_, i) => ({ x: (i * 97.3) % 480, y: (i * 53.7) % 270, s: i % 9 === 0 ? 1.6 : 0.8, p: i * 1.3 }));
+function drawStarmap(time) {
+  const c = tvCtx;
+  c.setTransform(2, 0, 0, 2, 0, 0);
+  const g = c.createLinearGradient(0, 0, 480, 270); g.addColorStop(0, '#060818'); g.addColorStop(1, '#140a26'); c.fillStyle = g; c.fillRect(0, 0, 480, 270);
+  c.fillStyle = 'rgba(199,162,255,.08)'; c.beginPath(); c.ellipse(260, 140, 200, 60, -0.3, 0, 7); c.fill();
+  c.fillStyle = 'rgba(62,240,180,.06)'; c.beginPath(); c.ellipse(140, 90, 120, 40, 0.4, 0, 7); c.fill();
+  for (const s of tvStars) { c.fillStyle = `rgba(236,230,214,${0.4 + 0.4 * Math.sin(time * 1.5 + s.p)})`; c.fillRect(s.x, s.y, s.s, s.s); }
+  // routes
+  c.lineWidth = 1.5; c.setLineDash([4, 5]); c.lineDashOffset = -time * 10;
+  for (let i = 0; i < ZONE_IDS.length - 1; i++) {
+    const a = TV_NODE[ZONE_IDS[i]], b = TV_NODE[ZONE_IDS[i + 1]], open = zoneUnlocked(ZONE_IDS[i + 1]);
+    c.strokeStyle = open ? 'rgba(62,240,180,.75)' : 'rgba(154,163,192,.3)';
+    c.beginPath(); c.moveTo(a[0], a[1]); c.quadraticCurveTo((a[0] + b[0]) / 2, Math.min(a[1], b[1]) - 40, b[0], b[1]); c.stroke();
+  }
+  c.setLineDash([]); c.lineDashOffset = 0;
+  for (const id of ZONE_IDS) {
+    const [x, y] = TV_NODE[id], open = zoneUnlocked(id), here = id === Z.id;
+    c.globalAlpha = open ? 1 : 0.4;
+    if (id === 'z1') {
+      // the archipelago: sea disc, islands, neon city lights
+      c.fillStyle = '#123a6a'; c.beginPath(); c.arc(x, y, 30, 0, 7); c.fill();
+      c.fillStyle = '#3a8a5a'; c.beginPath(); c.ellipse(x - 8, y - 4, 12, 7, 0.5, 0, 7); c.fill(); c.beginPath(); c.ellipse(x + 10, y + 8, 8, 5, -0.3, 0, 7); c.fill(); c.beginPath(); c.ellipse(x + 6, y - 14, 5, 3, 0, 0, 7); c.fill();
+      c.fillStyle = '#ff3d8b'; for (let i = 0; i < 5; i++) c.fillRect(x - 12 + i * 3, y - 4 + (i % 2), 1.5, 1.5);
+    } else if (id === 'z2') {
+      c.fillStyle = '#2a6a3a'; c.beginPath(); c.arc(x, y, 26, 0, 7); c.fill();
+      c.fillStyle = '#1a4a2a'; c.beginPath(); c.ellipse(x - 6, y - 6, 14, 6, 0.3, 0, 7); c.fill(); c.beginPath(); c.ellipse(x + 8, y + 10, 10, 4, -0.2, 0, 7); c.fill();
+      c.fillStyle = 'rgba(160,255,240,.5)'; c.beginPath(); c.arc(x + 10, y - 4, 4, Math.PI, 0); c.fill();
+      c.strokeStyle = 'rgba(255,220,170,.7)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(x, y, 42, 9, -0.3, 0, 7); c.stroke();
+    } else {
+      c.strokeStyle = '#7ad7ff'; c.lineWidth = 4; c.beginPath(); c.ellipse(x, y, 26, 12, 0, 0, 7); c.stroke();
+      c.strokeStyle = '#4a5068'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x - 26, y); c.lineTo(x + 26, y); c.moveTo(x, y - 12); c.lineTo(x, y + 12); c.stroke();
+      c.fillStyle = '#c8d0e8'; c.beginPath(); c.arc(x, y, 5, 0, 7); c.fill();
+      c.strokeStyle = 'rgba(30,50,104,.9)'; c.lineWidth = 3; c.beginPath();
+      for (let i = 0; i < 12; i++) { const a = time * 0.6 + i * 0.25, xx = x + Math.cos(a) * 36, yy = y + Math.sin(a) * 18; if (i) c.lineTo(xx, yy); else c.moveTo(xx, yy); }
+      c.stroke();
+    }
+    c.globalAlpha = 1;
+    if (!open) { c.fillStyle = '#9aa3c0'; c.fillRect(x - 5, y - 2, 10, 8); c.strokeStyle = '#9aa3c0'; c.lineWidth = 1.5; c.beginPath(); c.arc(x, y - 2, 3.5, Math.PI, 0); c.stroke(); }
+    if (S && S.beaten.includes(id)) { c.fillStyle = '#ffc65a'; c.beginPath(); c.arc(x + 26, y - 24, 4, 0, 7); c.fill(); }
+    c.font = '700 11px "Chakra Petch", sans-serif'; c.textAlign = 'center'; c.fillStyle = here ? '#3ef0b4' : open ? '#ece6d6' : '#9aa3c0';
+    c.fillText(t('zn_' + id), x, y + 50); c.textAlign = 'left';
+    if (here) {
+      // the Balangay waiting at the current world
+      const bx = x - 30, by = y - 38 + Math.sin(time * 2) * 2;
+      c.fillStyle = '#8a5a34'; c.beginPath(); c.moveTo(bx - 12, by - 3); c.quadraticCurveTo(bx, by + 4, bx + 12, by - 3); c.lineTo(bx + 9, by - 1); c.lineTo(bx - 9, by - 1); c.fill();
+      c.fillStyle = '#ece6d6'; c.beginPath(); c.moveTo(bx, by - 2); c.lineTo(bx + 8, by - 14); c.lineTo(bx + 1, by - 15); c.fill();
+      c.fillStyle = '#3ef0b4'; c.fillRect(bx - 16, by - 1, 3, 1); c.fillRect(bx - 19, by, 3, 1);
+    }
+  }
+}
+function travel(id) {
+  if (!S || !ZONES[id] || !zoneUnlocked(id) || (boss && boss.active)) return false;
+  closeTravel(true);
+  if (id !== S.zone) {
+    S.ex = explored.join('');
+    const cur = {}; for (const k of ZONE_KEYS) cur[k] = S[k];
+    S.zones[S.zone] = cur;
+    Object.assign(S, S.zones[id] || freshZoneState(ZONES[id]));
+    delete S.zones[id];
+    S.zone = id;
+    loadZone(id);
+    loadExplored();
+  }
+  const d = dockSpot();
+  P.x = d.x + 20; P.y = Z.gy * TS - P.h; P.vx = P.vy = 0; P.safe = { x: P.x, y: P.y };
+  enemies = []; projs = []; items = []; boss = null; resetSpawns();
+  SPR.x = P.x; SPR.y = P.y - 10;
+  cam.x = clamp(P.x - VW / 2, 0, MW * TS - VW); cam.y = clamp(P.y - VH * 0.58, 0, MH * TS - VH);
+  wipeT = WIPE; wipeCol = ERA_COL[S.era]; flash = 0.4; flashCol = '#ece6d6';
+  toast(t('zn_' + id) + ' · ' + eraLabel(S.era), 3);
+  sfx(330, 0.5, 'triangle', 0.06, 400);
+  mode = 'play'; paused = false;
+  if (touchWanted) touchEl.hidden = false;
+  save();
+  return true;
+}
 
 // test / debug hook (used by tools/test.mjs)
 window.EF = {
@@ -2168,6 +3257,10 @@ window.EF = {
     enemies.push(e); return e;
   },
   solid(x, y) { return isSolid(tileAt(x, y)); },
+  // zones
+  get zone() { return { id: Z.id, gy: Z.gy, mw: MW, mh: MH, eras: Z.eras.slice(), shrines: SHRINES.slice(), arena: ARENA, chests: CHESTS.map(c => c.id), dock: Z.dock, crackX: Z.crackX }; },
+  travel, openTravel, closeTravel, unlocked: zoneUnlocked, dock: () => dockSpot(), eraLabel: () => eraLabel(S.era), zm,
+  get niches() { return NICHES; }, spec: id => SPEC[id], lower: d => damageLower(d), respawn() { enemies = []; resetSpawns(); },
   clearEnemies() { enemies = []; spawnState.forEach(s => { s.alive = 0; s.cd = 999; }); }
 };
 })();

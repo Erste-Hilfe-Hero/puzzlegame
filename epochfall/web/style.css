@@ -216,3 +216,26 @@ button:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
 .sh-card button { margin-top: auto; background: var(--gold); color: var(--ink); border: 0; }
 .sh-card.owned button { background: transparent; color: var(--jade); border: 1px solid var(--jade); }
 .sh-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+
+/* zones 2 + 3: Balangay travel screen (star map + zone list) */
+#travel { background: radial-gradient(100% 80% at 30% 0%, rgba(62,240,180,.14), transparent 60%), rgba(6,8,20,.92); }
+.tv-box { width: min(900px, 100%); max-height: calc(100% - 16px); overflow: auto; display: flex; flex-direction: column; gap: 8px; }
+.tv-head { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.tv-head h2 { margin: 0; font-family: var(--display); font-size: 20px; letter-spacing: .14em; color: var(--jade); }
+#tv-sub { color: var(--mute); font-size: 12px; flex: 1 1 200px; min-width: 0; }
+.tv-head .ghost.sm { padding: 6px 14px; font-size: 13px; }
+.tv-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 10px; align-items: start; }
+#tv-map { width: 100%; height: auto; aspect-ratio: 16 / 9; border: 1px solid rgba(62,240,180,.3); border-radius: 6px; display: block; cursor: pointer; }
+#tv-list { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.zone-card { display: flex; flex-direction: column; gap: 2px; text-align: left; background: var(--ink2); border: 1px solid rgba(236,230,214,.18); border-radius: 6px; padding: 7px 10px; min-width: 0; }
+.zone-card .nm { font-family: var(--display); font-weight: 700; font-size: 14px; letter-spacing: .04em; }
+.zone-card .ds { font-family: var(--body); font-size: 11px; color: var(--mute); line-height: 1.3; }
+.zone-card .er { font-size: 10.5px; color: var(--mute); letter-spacing: .08em; }
+.zone-card .st { font-size: 11.5px; color: var(--gold); }
+.zone-card.open { border-color: var(--jade); }
+.zone-card.open:hover { background: rgba(62,240,180,.08); }
+.zone-card.here { border-color: rgba(62,240,180,.4); cursor: default; }
+.zone-card.here .st { color: var(--jade); }
+.zone-card.locked { opacity: .55; cursor: not-allowed; }
+.zone-card.locked .st { color: var(--mute); }
+@media (max-width: 700px) { .tv-grid { grid-template-columns: 1fr; } }
