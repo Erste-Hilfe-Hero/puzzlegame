@@ -22,6 +22,21 @@ await page.waitForTimeout(500);
 const shot = async n => { if (shots) await page.screenshot({ path: path.join(shots, n + '.png') }); };
 await shot('00-title');
 
+// fresh device: hell mode is locked; a save from before the class choice loads as an Eskrimador; daily gift once per day
+const pre = await page.evaluate(() => {
+  const hb = document.getElementById('btn-hell');
+  const locked = hb.disabled && !EF.hellUnlocked();
+  localStorage.setItem('epochfall.save.v1', JSON.stringify({ v: 1, lvl: 3, xp: 0, sp: 2, nodes: ['arnis', 'bolt'], mats: {}, era: 1, shrine: 0, time: 50 }));
+  EF.start(false);
+  const r = { locked, cls: EF.S.cls, nodes: EF.S.nodes.join(','), look: EF.S.look, boltInTree: EF.tree().some(n => n.id === 'bolt'), tala: EF.acc.tala, again: EF.dailyGift() };
+  EF.toTitle();
+  r.stillLocked = document.getElementById('btn-hell').disabled;
+  return r;
+});
+ok('hell mode is locked on a fresh device', pre.locked && pre.stillLocked, JSON.stringify(pre));
+ok('old saves without a class load as Eskrimador', pre.cls === 'esk' && pre.boltInTree && pre.nodes === 'arnis,bolt' && pre.look && pre.look.skin === 2);
+ok('daily gift gives Tala once per day', pre.tala === 100 && pre.again === false, 'tala=' + pre.tala);
+
 await page.evaluate(() => EF.start(true));
 await page.waitForTimeout(300);
 ok('game starts', await page.evaluate(() => EF.mode === 'play'));
@@ -361,6 +376,240 @@ await shot('21-forge-de');
 await page.evaluate(() => { document.querySelector('.langs [data-lang="fil"]').click(); EF.tab('spirits'); });
 await shot('22-spirits-fil');
 await page.evaluate(() => { EF.menu(false); document.querySelector('.langs [data-lang="en"]').click(); });
+
+
+// ================= round 3: classes, customization, ascension, summon, hell mode =================
+const setLang = l => page.evaluate(l => document.querySelector(`.langs [data-lang="${l}"]`).click(), l);
+const earned = await page.evaluate(() => EF.acc.tala);
+ok('Tala is earned from kills, chests and the boss', earned >= 100 + 120 + 60 + 5, 'tala=' + earned);
+
+// hell mode unlocks once the normal save has beaten the Tikbalang
+const unl = await page.evaluate(() => { EF.toTitle(); const b = document.getElementById('btn-hell'); return { dis: b.disabled, txt: b.textContent, title: !document.getElementById('title').hidden }; });
+ok('hell mode unlocks after the Tikbalang is beaten', !unl.dis && unl.title, JSON.stringify(unl));
+await page.waitForTimeout(150);
+await shot('23-title-hell-unlocked');
+
+// class pick screen: both classes, previews, customization; fits 844x390 in every language
+await page.click('#btn-new');
+await page.waitForTimeout(150);
+const fits = {};
+for (const l of ['en', 'fil', 'de']) {
+  await setLang(l);
+  await page.waitForTimeout(120);
+  fits[l] = await page.evaluate(() => { const b = document.querySelector('.pick-box'); const cards = [...document.querySelectorAll('.cls-card')].map(c => c.getBoundingClientRect()); const side = document.querySelector('.pick-side').getBoundingClientRect(); return { scroll: b.scrollHeight - b.clientHeight, sep: cards[0].right <= cards[1].left && cards[1].right <= side.left, bottom: Math.round(b.getBoundingClientRect().bottom) }; });
+  await shot('24-pick-' + l);
+}
+await setLang('en');
+const pk = await page.evaluate(() => ({ vis: !document.getElementById('pick').hidden, cards: [...document.querySelectorAll('.cls-card .nm')].map(e => e.textContent) }));
+ok('new game opens the class pick with both classes', pk.vis && pk.cards.join() === 'Eskrimador,Babaylan', JSON.stringify(pk));
+ok('class pick fits 844x390 without overlap in en, fil, de', Object.values(fits).every(f => f.scroll <= 0 && f.sep && f.bottom <= 390), JSON.stringify(fits));
+await page.click('.cls-card[data-cls="bab"]');
+for (const [c, v] of [['skin', 4], ['hair', 2], ['hairCol', 4], ['acc', 5]]) await page.click(`#pk-cust [data-c="${c}"][data-v="${v}"]`);
+await page.fill('#pk-name', 'Mayumi');
+await page.waitForTimeout(100);
+await shot('25-pick-babaylan-custom');
+await page.click('#pk-go');
+await page.waitForTimeout(200);
+const cust = await page.evaluate(() => {
+  const sv = JSON.parse(localStorage.getItem('epochfall.save.v1'));
+  const cols = EF.heroColors(), L = EF.look;
+  return { cls: EF.S.cls, name: EF.S.name, look: EF.S.look, saved: { cls: sv.cls, look: sv.look, name: sv.name }, nodes: EF.S.nodes, sumBtn: !document.getElementById('b-sum').hidden,
+    drawn: { skin: cols.includes(L.SKINS[4]), hair: cols.includes(L.HAIR_COLS[4]), acc: cols.includes(L.ACCENTS[5]), oldSkin: cols.includes(L.SKINS[2]) } };
+});
+ok('Babaylan chosen from the pick screen', cust.cls === 'bab' && cust.name === 'Mayumi' && cust.nodes.join() === 'tawag' && cust.sumBtn, JSON.stringify(cust));
+ok('customization is stored in the save', cust.saved.cls === 'bab' && cust.saved.name === 'Mayumi' && JSON.stringify(cust.saved.look) === JSON.stringify({ skin: 4, hair: 2, hairCol: 4, acc: 5 }), JSON.stringify(cust.saved));
+ok('customization is drawn on the player sprite', cust.drawn.skin && cust.drawn.hair && cust.drawn.acc && !cust.drawn.oldSkin, JSON.stringify(cust.drawn));
+
+// Babaylan: staff combo, channelled spirit orb, spirit summon
+const bab = await page.evaluate(Y => {
+  EF.clearEnemies(); EF.teleport(30, Y + 35); EF.step(10);
+  const s = EF.spawnAt('sigbin', 33, Y + 36);
+  const staffDmg = EF.stats().dmg;
+  const melee = T.meleeKill(s);
+  // orb: hold the skill button to channel, release to cast
+  EF.clearEnemies(); EF.teleport(30, Y + 35); EF.step(10); EF.P.face = 1; EF.P.en = EF.P.maxen;
+  const k = EF.spawnAt('kapre', 38, Y + 36); k.st = 'rest';
+  EF.hold('skill', true); for (let i = 0; i < 60; i++) { EF.step(1); EF.P.inv = 9; k.x = 38 * 16; }
+  const chan = EF.P.chan, en = EF.P.en;
+  EF.hold('skill', false); EF.step(1);
+  const orb = EF.projs.find(p => p.type === 'orb');
+  const orbInfo = orb ? { charge: +orb.charge.toFixed(2), dmg: Math.round(orb.dmg), w: orb.w } : null;
+  for (let i = 0; i < 60 && k.hp >= k.max; i++) { EF.step(1); EF.P.inv = 9; }
+  const orbHit = k.max - k.hp;
+  // summon: needs Anito Call, the active spirit strikes the nearest foe
+  const noCall = EF.summonStrike();
+  EF.sp(1); const learned = EF.learn('call');
+  EF.clearEnemies(); EF.P.en = EF.P.maxen;
+  const f = EF.spawnAt('wakwak', EF.P.x / 16 + 6, Y + 32);
+  EF.tap('summon');
+  const spiritProj = EF.projs.some(p => p.type === 'spirit');
+  let sumHit = 0; for (let i = 0; i < 90 && !sumHit; i++) { EF.step(1); EF.P.inv = 9; if (f.dead || f.hp < f.max) sumHit = f.max - Math.max(0, f.hp); }
+  return { melee, staffDmg, chan: +chan.toFixed(2), en: Math.round(en), orbInfo, orbHit: Math.round(orbHit), noCall, learned, spiritProj, sumHit: Math.round(sumHit), sumCd: EF.P.sumCd > 0 };
+}, Y);
+ok('Babaylan staff combo kills a Sigbin (weaker than the blades)', bab.melee && bab.staffDmg < 12, JSON.stringify(bab));
+ok('Babaylan channelled spirit orb grows and hits', bab.chan >= 0.99 && bab.orbInfo && bab.orbInfo.charge >= 0.99 && bab.orbInfo.w >= 15 && bab.orbHit >= 30);
+ok('Babaylan summon: the active spirit strikes a foe', !bab.noCall && bab.learned && bab.spiritProj && bab.sumHit >= 20 && bab.sumCd);
+await page.evaluate(Y => { EF.clearEnemies(); EF.teleport(28, Y + 35); EF.step(20); EF.spawnAt('kapre', 36, Y + 36).st = 'rest'; EF.P.face = 1; EF.P.en = EF.P.maxen; EF.hold('skill', true); for (let i = 0; i < 40; i++) { EF.step(1); EF.P.inv = 0; } }, Y);
+await page.waitForTimeout(120);
+await shot('26-babaylan-orb');
+await page.evaluate(() => { EF.hold('skill', false); EF.step(1); });
+
+// own 14-node tree, Legion strikes up to 3 foes
+const tr = await page.evaluate(Y => {
+  const t = EF.tree();
+  EF.sp(40); EF.give('flyerP', 3); EF.give('swarmP', 4); EF.give('hunterP', 4);
+  const res = {}; for (const n of t) if (n.id !== 'asc' && !EF.S.nodes.includes(n.id)) res[n.id] = EF.learn(n.id);
+  EF.clearEnemies(); EF.teleport(30, Y + 35); EF.step(5); EF.P.en = EF.P.maxen; EF.P.sumCd = 0;
+  for (let i = 0; i < 4; i++) EF.spawnAt('sigbin', 33 + i * 2, Y + 36).st = 'wind';
+  EF.tap('summon');
+  return { n: t.length, br: [...new Set(t.map(n => n.br))].join(','), res, nodes: EF.S.nodes.length, spirits: EF.projs.filter(p => p.type === 'spirit').length };
+}, Y);
+ok('Babaylan has its own 14-node tree (Anito, Diwata, Rites, Ascension)', tr.n === 14 && tr.br === 'anito,diwata,rites,asc' && Object.values(tr.res).every(Boolean) && tr.nodes === 13, JSON.stringify(tr));
+ok('Ancestor Legion: the summon strikes 3 foes', tr.spirits === 3, 'spirit strikes=' + tr.spirits);
+await page.evaluate(() => { EF.menu(true); EF.tab('skills'); });
+await page.waitForTimeout(150);
+await shot('27-bab-tree');
+await page.evaluate(() => EF.menu(false));
+
+// ascension: permanent markings + cut-in
+const asc = await page.evaluate(() => {
+  EF.clearEnemies(); const before = EF.heroColors().includes('#7dfff0');
+  EF.lvl(5); EF.sp(2); const ok = EF.learn('asc');
+  EF.step(30);
+  return { before, ok, cut: EF.cut, after: EF.heroColors().includes('#7dfff0') };
+});
+await page.waitForTimeout(60);
+await shot('28-ascension-cutin');
+const asc2 = await page.evaluate(() => { EF.step(200); return { cut: EF.cut, mode: EF.mode }; });
+ok('Ascension I plays a cut-in', asc.ok && asc.cut > 1 && asc2.cut <= 0 && asc2.mode === 'play', JSON.stringify([asc, asc2]));
+ok('Ascension I adds glowing markings to the hero', !asc.before && asc.after);
+await page.waitForTimeout(200);
+await shot('29-ascended-ingame');
+
+// gacha: rates, soft + hard pity, duplicates, spirits, odds table (deterministic through EF.rng)
+const g = await page.evaluate(() => {
+  const A = EF.acc;
+  // mulberry32: small seeded PRNG, same sequence every run
+  let seed = 12345; EF.rng(() => { seed = (seed + 0x6D2B79F5) | 0; let x = Math.imul(seed ^ (seed >>> 15), 1 | seed); x = (x + Math.imul(x ^ (x >>> 7), 61 | x)) ^ x; return ((x ^ (x >>> 14)) >>> 0) / 4294967296; });
+  const cnt = { R: 0, SR: 0, SSR: 0, UR: 0 }, N = 200000;
+  for (let i = 0; i < N; i++) cnt[EF.rollRarity(1)]++;
+  const pct = {}; for (const k in cnt) pct[k] = +(cnt[k] / N * 100).toFixed(2);
+  const soft = [1, 69, 70, 71, 80, 89, 90].map(n => +EF.ssrChance(n).toFixed(3));
+  A.tala = 5000; A.pity = 0; A.cos = {}; A.spirits = []; A.dust = 0;
+  // R every time: pity climbs, a duplicate turns into Stardust
+  EF.rng(() => 0.5);
+  const r1 = EF.summon(1)[0], r2 = EF.summon(1)[0];
+  const dup = { first: r1, second: r2, dust: A.dust };
+  // 10x costs 1000 and gives 10 results
+  const t0 = A.tala; const ten = EF.summon(10); const cost10 = t0 - A.tala;
+  const pityAfter = A.pity;
+  // an RNG that never rolls an SSR on its own: soft pity, then the guarantee by pull 90
+  A.pity = 0; A.tala = 100000; EF.rng(() => 0.9999);
+  let first = 0, got = null; for (let i = 1; i <= 90 && !first; i++) { const r = EF.summon(1)[0]; if (r.r === 'SSR' || r.r === 'UR') { first = i; got = r; } }
+  const before69 = first > 69;
+  // UR roll: Bakunawa Hatchling
+  EF.rng(() => 0.001); const ur = EF.summon(1)[0];
+  EF.rng(null);
+  const noMoney = (() => { const keep = A.tala; A.tala = 50; const r = EF.summon(1); A.tala = keep; return r; })();
+  return { pct, soft, dup, ten: ten.length, cost10, pityAfter, first, got, before69, ur, pityNow: A.pity, spirits: A.spirits.slice(), noMoney };
+});
+ok('summon base rates match R 79.4 / SR 18 / SSR 2.4 / UR 0.2', Math.abs(g.pct.R - 79.4) < 0.4 && Math.abs(g.pct.SR - 18) < 0.4 && Math.abs(g.pct.SSR - 2.4) < 0.15 && Math.abs(g.pct.UR - 0.2) < 0.05, JSON.stringify(g.pct));
+ok('soft pity from pull 70 (+6% per pull), guaranteed by 90', g.soft[0] === 0.026 && g.soft[1] === 0.026 && g.soft[2] === 0.086 && g.soft[3] === 0.146 && g.soft[6] === 1 && g.before69 && g.first <= 90 && g.got.r === 'SSR', JSON.stringify({ soft: g.soft, first: g.first, got: g.got }));
+ok('1x costs 100, 10x costs 1000 Tala; no Tala, no summon', g.ten === 10 && g.cost10 === 1000 && g.pityAfter === 12 && g.noMoney === null, JSON.stringify({ ten: g.ten, cost10: g.cost10, pity: g.pityAfter }));
+ok('duplicates turn into Stardust', !g.dup.first.dup && g.dup.second.dup && g.dup.second.id === g.dup.first.id && g.dup.dust === 5, JSON.stringify(g.dup));
+ok('summon-only spirits: Minokawa (SSR) and Bakunawa (UR) join the account', g.got.id === 'minokawa' && g.ur.r === 'UR' && g.ur.id === 'bakunawa' && g.spirits.includes('minokawa') && g.spirits.includes('bakunawa'), JSON.stringify([g.got, g.ur]));
+const spfx = await page.evaluate(Y => {
+  const d0 = EF.stats().dmg; const eq = EF.equip('bakunawa'); const d1 = EF.stats().dmg;
+  EF.equip('minokawa'); EF.clearEnemies(); EF.teleport(30, Y + 35); EF.step(5); EF.P.featherCd = 0;
+  const e = EF.spawnAt('kapre', 34, Y + 36); e.st = 'rest'; let feather = false;
+  for (let i = 0; i < 90; i++) { EF.step(1); EF.P.inv = 9; e.st = 'rest'; if (EF.projs.some(p => p.type === 'feather')) feather = true; }
+  return { eq, ratio: +(d1 / d0).toFixed(3), feather, hit: e.hp < e.max };
+}, Y);
+ok('summoned spirits have real effects (Bakunawa +15% damage, Minokawa feathers)', spfx.eq && spfx.ratio === 1.15 && spfx.feather && spfx.hit, JSON.stringify(spfx));
+for (const l of ['en', 'fil', 'de']) {
+  await setLang(l);
+  await page.evaluate(() => { EF.menu(true); EF.tab('summon'); });
+  await page.waitForTimeout(120);
+  await shot('30-summon-' + l);
+}
+await setLang('en');
+await page.evaluate(() => EF.tab('summon'));
+await page.click('[data-odds]');
+const odds = await page.evaluate(() => {
+  const el = document.getElementById('odds'), txt = el ? el.textContent : '', I = window.EF_I18N.en;
+  const names = EF.gacha.map(g => g.type === 'spirit' ? I['sp_' + g.id] : I['g_' + g.id]);
+  const body = document.getElementById('m-body').textContent;
+  return { vis: !!el && el.offsetHeight > 0, rows: el ? el.querySelectorAll('tbody tr').length : 0, allNames: names.every(n => txt.includes(n)), pcts: ['79.4%', '18%', '2.4%', '0.2%', '15.88%', '4.5%', '0.8%', '0.1%'].every(p => txt.includes(p)),
+    pity: /\d+ \/ 90/.test(body), neutral: !/casino|jackpot|gambl|\bbet\b|\bwin\b|lucky|spin/i.test(body) };
+});
+ok('Odds button opens the full rate table (every item and rarity)', odds.vis && odds.rows === 18 && odds.allNames && odds.pcts, JSON.stringify(odds));
+ok('pity counter shown, neutral wording', odds.pity && odds.neutral);
+await shot('31-odds-en');
+await page.evaluate(() => { document.getElementById('m-body').scrollTop = 9999; });
+await shot('31-odds-en-bottom');
+await setLang('de'); await page.evaluate(() => EF.tab('summon'));
+await shot('31-odds-de');
+await setLang('fil'); await page.evaluate(() => EF.tab('summon'));
+await shot('31-odds-fil');
+
+// Hero tab: customization + summoned cosmetics equip
+const hero = await page.evaluate(() => {
+  EF.acc.cos.wpn_neon = 1; EF.acc.cos.aura_moon = 1; EF.acc.cos.ttl_tide = 1; EF.acc.cos.pat_banig = 1;
+  EF.tab('hero');
+  const q = s => document.querySelector(s);
+  q('[data-eq="wpn"][data-id="wpn_neon"]').click(); q('[data-eq="aura"][data-id="aura_moon"]').click(); q('[data-eq="ttl"][data-id="ttl_tide"]').click(); q('[data-eq="pat"][data-id="pat_banig"]').click();
+  q('#m-body [data-c="acc"][data-v="1"]').click();
+  const sv = JSON.parse(localStorage.getItem('epochfall.save.v1')), ac = JSON.parse(localStorage.getItem('epochfall.account.v1'));
+  return { acc: sv.look.acc, equip: ac.equip, cols: EF.heroColors().includes('#ff3d8b') };
+});
+ok('Hero tab: change look and equip summoned cosmetics', hero.acc === 1 && hero.equip.wpn === 'wpn_neon' && hero.equip.aura === 'aura_moon' && hero.equip.ttl === 'ttl_tide' && hero.cols, JSON.stringify(hero));
+for (const l of ['en', 'fil', 'de']) { await setLang(l); await page.evaluate(() => EF.tab('hero')); await page.waitForTimeout(100); await shot('32-hero-' + l); }
+await setLang('en');
+await page.evaluate(() => EF.menu(false));
+await page.waitForTimeout(250);
+await shot('33-cosmetics-ingame');
+
+// hell mode: own slot + character, +60% enemies, boss from stage 3, one life
+const shared0 = await page.evaluate(() => ({ tala: EF.acc.tala, cos: Object.keys(EF.acc.cos).sort().join(), spirits: EF.acc.spirits.slice().sort().join(), dust: EF.acc.dust }));
+await page.evaluate(() => { EF.menu(true); EF.tab('hero'); });
+await page.click('#to-title');
+const back = await page.evaluate(() => ({ title: !document.getElementById('title').hidden, mode: EF.mode, menu: document.getElementById('menu').hidden }));
+ok('Hero tab leads back to the title screen', back.title && back.mode === 'title' && back.menu, JSON.stringify(back));
+await page.click('#btn-hell');
+await page.waitForTimeout(120);
+const hp = await page.evaluate(() => ({ pick: !document.getElementById('pick').hidden, tag: !document.getElementById('pk-hell').hidden }));
+await shot('34-pick-hell');
+await page.click('.cls-card[data-cls="esk"]');
+await page.fill('#pk-name', 'Bagani');
+await page.click('#pk-go');
+const hell = await page.evaluate(Y => {
+  const normal = JSON.parse(localStorage.getItem('epochfall.save.v1')), hs = JSON.parse(localStorage.getItem('epochfall.hell.v1'));
+  EF.clearEnemies(); EF.teleport(30, Y + 35); EF.step(5);
+  const e = EF.spawnAt('sigbin', 40, Y + 36);
+  EF.P.inv = 0; const h0 = EF.P.hp; EF.hurt(10); const took = h0 - EF.P.hp;
+  const eq = EF.equip('bakunawa');
+  return { hell: EF.S.hell, cls: EF.S.cls, name: EF.S.name, hs: !!hs && hs.hell, normalCls: normal.cls, normalName: normal.name, ehp: e.max, took, base: EF.bossBase(), eq };
+}, Y);
+ok('hell mode uses its own slot and a new character', hp.pick && hp.tag && hell.hell && hell.hs && hell.name === 'Bagani' && hell.normalCls === 'bab' && hell.normalName === 'Mayumi', JSON.stringify(hell));
+ok('hell mode: enemies +60% HP and damage, boss starts at stage 3', Math.abs(hell.ehp - 48) < 0.01 && hell.took === 16 && hell.base === 3);
+ok('hell character can use account spirits', hell.eq);
+await page.waitForTimeout(150);
+await shot('35-hell-ingame');
+const dead = await page.evaluate(() => {
+  EF.lvl(4);
+  EF.P.inv = 0; EF.P.hp = 1; EF.hurt(50); EF.step(2);
+  const fl = document.getElementById('fallen');
+  return { mode: EF.mode, hellSave: localStorage.getItem('epochfall.hell.v1'), normal: !!localStorage.getItem('epochfall.save.v1'), fallen: EF.acc.fallen[0], list: fl.hidden ? '' : fl.textContent,
+    title: !document.getElementById('title').hidden, hellBtn: document.getElementById('btn-hell').textContent,
+    tala: EF.acc.tala, cos: Object.keys(EF.acc.cos).sort().join(), spirits: EF.acc.spirits.slice().sort().join(), dust: EF.acc.dust };
+});
+ok('hell death deletes the hell character', dead.mode === 'title' && dead.hellSave === null && dead.normal && dead.title, JSON.stringify(dead));
+ok('hell death writes name, level and time to the Fallen list', dead.fallen && dead.fallen.name === 'Bagani' && dead.fallen.lvl === 4 && typeof dead.fallen.time === 'number' && dead.list.includes('Bagani') && dead.list.includes('Lv 4'));
+ok('account items survive permadeath (Tala, cosmetics, spirits, Stardust)', dead.tala === shared0.tala && dead.cos === shared0.cos && dead.spirits === shared0.spirits && dead.dust === shared0.dust && dead.spirits.includes('bakunawa'), JSON.stringify(shared0));
+for (const l of ['en', 'fil', 'de']) { await setLang(l); await page.waitForTimeout(120); await shot('36-title-fallen-' + l); }
+await setLang('en');
+const cont = await page.evaluate(() => { document.getElementById('btn-continue').click(); return { cls: EF.S.cls, name: EF.S.name, hell: EF.S.hell }; });
+ok('continue still loads the normal character after a hell death', cont.cls === 'bab' && cont.name === 'Mayumi' && !cont.hell, JSON.stringify(cont));
 
 ok('no script errors', errors.length === 0, errors.slice(0, 3).join(' | '));
 await browser.close();

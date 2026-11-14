@@ -20,6 +20,23 @@ of each extinct past species, captured at the next Anito shrine, 1 active, passi
 map grown upward by 40 rows (present-only rooftop district, past-only hidden Punso den behind a vine curtain, balete
 canopy, 2 secret chests); era screen wipe, explored-tile map tab with optional HUD mini-map, explored tiles saved.
 
+Round 3:
+- Class pick after "New game": Eskrimador (unchanged tree) or Babaylan (staff combo at 9 instead of 12 base damage, skill
+  button = channelled spirit orb 12 energy / 14..38 damage, summon button B/U or the touch button = the active spirit strikes
+  the nearest foe, 20 energy). Babaylan tree: 14 nodes (Anito, Diwata, Rites + Ascension I). Saves store `cls`; old saves load
+  as Eskrimador.
+- Ascension I: permanent glowing markings + aura, 2.4 s cut-in.
+- Customization (pick screen and the Hero menu tab): skin 5, hair style 4, hair colour 5, scarf/sash accent 6; saved in `look`.
+- Summon tab (offline, no real money): Tala from kills (1, giants 3), chests 30, boss 120, daily gift 100. 1x = 100, 10x = 1000.
+  R 79.4 / SR 18 / SSR 2.4 / UR 0.2 %, +6 % SSR chance per pull from pull 70, SSR or better guaranteed at 90, pity counter,
+  Odds table with every item. 14 prizes: scarf patterns, weapon skins, auras, titles, Minokawa (SSR spirit, +10 % attack
+  speed, homing feathers) and Bakunawa Hatchling (UR spirit, +15 % damage, energy on kill). Duplicates give Stardust.
+  RNG is injectable with `EF.rng(fn)`.
+- Hell Mode: unlocked once the normal save beat the Tikbalang or reached level 10; own save slot (`epochfall.hell.v1`)
+  and character; enemies +60 % HP and damage; boss starts at stage 3; one life, death deletes the hell save and adds
+  name, level and time to the Fallen list on the title screen. The account (`epochfall.account.v1`: Tala, Stardust, pity,
+  cosmetics, summoned spirits) is shared and never lost.
+
 ## Native shells (iOS + Android)
 
 Both wrap the same `web/` folder (single source of truth), landscape only, full-screen, no IAP yet.

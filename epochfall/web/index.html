@@ -18,7 +18,10 @@
       <div class="title-buttons">
         <button id="btn-continue" class="big" type="button"></button>
         <button id="btn-new" class="ghost" type="button"></button>
+        <button id="btn-hell" class="hell" type="button"></button>
       </div>
+      <p id="t-hell" class="keys"></p>
+      <div id="fallen" class="fallen" hidden></div>
       <div class="langs" role="group" aria-label="Language">
         <button type="button" data-lang="en">English</button>
         <button type="button" data-lang="fil">Filipino</button>
@@ -28,10 +31,32 @@
     </div>
   </div>
 
+  <div id="pick" class="screen" hidden>
+    <div class="pick-box">
+      <div class="pick-head">
+        <h2 id="pk-title"></h2>
+        <span id="pk-hell" class="hell-tag" hidden></span>
+        <button id="pk-back" class="ghost sm" type="button"></button>
+      </div>
+      <div class="pick-grid">
+        <button type="button" class="cls-card" data-cls="esk"><canvas width="72" height="88"></canvas><span class="nm"></span><span class="ds"></span></button>
+        <button type="button" class="cls-card" data-cls="bab"><canvas width="72" height="88"></canvas><span class="nm"></span><span class="ds"></span></button>
+        <div class="pick-side">
+          <div id="pk-cust" class="cust"></div>
+          <div class="pick-foot">
+            <label class="pk-name"><span id="pk-nl"></span><input id="pk-name" type="text" maxlength="14" autocomplete="off" spellcheck="false"></label>
+            <button id="pk-go" class="big" type="button"></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="touch" hidden>
     <div id="stick"><div id="knob"></div></div>
     <div id="pad">
       <button type="button" class="tb" id="b-skill" data-k="skill">✦</button>
+      <button type="button" class="tb" id="b-sum" data-k="summon" hidden>❂</button>
       <button type="button" class="tb" id="b-dash" data-k="dash">»</button>
       <button type="button" class="tb" id="b-atk" data-k="attack">⚔</button>
       <button type="button" class="tb" id="b-jump" data-k="jump">▲</button>
@@ -49,6 +74,8 @@
         <button type="button" data-tab="forge"></button>
         <button type="button" data-tab="bag"></button>
         <button type="button" data-tab="map"></button>
+        <button type="button" data-tab="hero"></button>
+        <button type="button" data-tab="summon"></button>
         <button type="button" id="m-close" class="close"></button>
       </div>
       <div id="m-body"></div>

@@ -4,7 +4,8 @@
 const TS = 16, MW = 200, VH = 300;
 const PAST = 0, PRESENT = 1;
 const THRESH = 10; // past kills to drive a species extinct
-const SAVE_KEY = 'epochfall.save.v1';
+const SAVE_KEY = 'epochfall.save.v1', HELL_KEY = 'epochfall.hell.v1', ACC_KEY = 'epochfall.account.v1';
+const HELL_MUL = 1.6; // hell mode: enemy HP and damage
 const cv = document.getElementById('game');
 let ctx = cv.getContext('2d'); // swapped briefly to draw menu portraits
 let VW = 640, K = 1;
@@ -16,7 +17,7 @@ function t(k, ...a) { let s = (I[lang] && I[lang][k]) || I.en[k] || k; a.forEach
 function tk(k, fb) { return (I[lang] && I[lang][k]) || I.en[k] || fb; }
 function spName(id) { return tk('sn_' + id, SPEC[id].name); }
 function matName(m) { return tk('m_' + m, MATS[m]); }
-function spiritName(id) { return id === 'diwata' ? t('sp_diwata') : t('spiritOf', spName(id)); }
+function spiritName(id) { return SUMMON_SPIRITS.includes(id) || id === 'diwata' ? t('sp_' + id) : t('spiritOf', spName(id)); }
 let rng = Math.random; // forge rolls; replaceable through EF.rng for deterministic tests
 
 // ---------- data ----------
@@ -47,25 +48,73 @@ const MATS = { hunterP: 'Sigbin Fang', hunterX: 'Chrome Fang', hunterS: 'Tiktik 
   swarmS: 'Wisp Static', flyerP: 'Wakwak Feather', flyerX: 'Drone Rotor', flyerS: 'Mantis Lens',
   giantP: 'Kapre Ember', giantX: 'Piston Heart', giantS: 'Heartwood Core', scavP: 'Punso Clay', scavX: 'Salvaged Wire', scavS: 'Mirror Scale', scavA: 'Cinder Tail',
   tikCore: 'Tikbalang Core' };
-const NODES = [
-  { id: 'arnis', br: 'blade', req: null, cost: 0 },
-  { id: 'swift', br: 'blade', req: 'arnis', cost: 1 },
-  { id: 'fourth', br: 'blade', req: 'swift', cost: 1 },
-  { id: 'breaker', br: 'blade', req: 'fourth', cost: 1, mats: { hunterP: 4 } },
-  { id: 'edge', br: 'blade', req: 'breaker', cost: 2 },
-  { id: 'bolt', br: 'spirit', req: 'arnis', cost: 1 },
-  { id: 'well', br: 'spirit', req: 'bolt', cost: 1 },
-  { id: 'echo', br: 'spirit', req: 'well', cost: 1, mats: { flyerP: 3 } },
-  { id: 'mend', br: 'spirit', req: 'echo', cost: 2 },
-  { id: 'roots', br: 'body', req: 'arnis', cost: 1 },
-  { id: 'step', br: 'body', req: 'roots', cost: 1 },
-  { id: 'airdash', br: 'body', req: 'step', cost: 1, mats: { swarmP: 4 } },
-  { id: 'iron', br: 'body', req: 'airdash', cost: 2 },
-  { id: 'asc', br: 'asc', req: 'arnis', cost: 2, lvl: 5 }
+const TREES = {
+  esk: [
+    { id: 'arnis', br: 'blade', req: null, cost: 0 },
+    { id: 'swift', br: 'blade', req: 'arnis', cost: 1 },
+    { id: 'fourth', br: 'blade', req: 'swift', cost: 1 },
+    { id: 'breaker', br: 'blade', req: 'fourth', cost: 1, mats: { hunterP: 4 } },
+    { id: 'edge', br: 'blade', req: 'breaker', cost: 2 },
+    { id: 'bolt', br: 'spirit', req: 'arnis', cost: 1 },
+    { id: 'well', br: 'spirit', req: 'bolt', cost: 1 },
+    { id: 'echo', br: 'spirit', req: 'well', cost: 1, mats: { flyerP: 3 } },
+    { id: 'mend', br: 'spirit', req: 'echo', cost: 2 },
+    { id: 'roots', br: 'body', req: 'arnis', cost: 1 },
+    { id: 'step', br: 'body', req: 'roots', cost: 1 },
+    { id: 'airdash', br: 'body', req: 'step', cost: 1, mats: { swarmP: 4 } },
+    { id: 'iron', br: 'body', req: 'airdash', cost: 2 },
+    { id: 'asc', br: 'asc', req: 'arnis', cost: 2, lvl: 5 }
+  ],
+  // Babaylan: staff combo + channelled spirit orb from the start; the Anito branch unlocks the spirit summon
+  bab: [
+    { id: 'tawag', br: 'anito', req: null, cost: 0 },
+    { id: 'call', br: 'anito', req: 'tawag', cost: 1 },
+    { id: 'bond', br: 'anito', req: 'call', cost: 1 },
+    { id: 'legion', br: 'anito', req: 'bond', cost: 1, mats: { flyerP: 3 } },
+    { id: 'avatar', br: 'anito', req: 'legion', cost: 2 },
+    { id: 'swiftch', br: 'diwata', req: 'tawag', cost: 1 },
+    { id: 'pierce', br: 'diwata', req: 'swiftch', cost: 1 },
+    { id: 'bloom', br: 'diwata', req: 'pierce', cost: 1, mats: { swarmP: 4 } },
+    { id: 'grace', br: 'diwata', req: 'bloom', cost: 2 },
+    { id: 'chant', br: 'rites', req: 'tawag', cost: 1 },
+    { id: 'ward', br: 'rites', req: 'chant', cost: 1 },
+    { id: 'trance', br: 'rites', req: 'ward', cost: 1, mats: { hunterP: 4 } },
+    { id: 'quake', br: 'rites', req: 'trance', cost: 2 },
+    { id: 'asc', br: 'asc', req: 'tawag', cost: 2, lvl: 5 }
+  ]
+};
+const BRANCHES = { esk: ['blade', 'spirit', 'body'], bab: ['anito', 'diwata', 'rites'] };
+const CLASSES = ['esk', 'bab'];
+function tree() { return TREES[S.cls] || TREES.esk; }
+// customization (concept section 5): index into these lists, stored per character in the save
+const SKINS = ['#f1c9a0', '#d9a273', '#c98c5c', '#9a6440', '#6b4329'];
+const HAIR_STYLES = 4;
+const HAIR_COLS = ['#14121c', '#4a2a18', '#8a4a22', '#b8bcc8', '#2bd9ff'];
+const ACCENTS = ['#ff3d8b', '#3ef0b4', '#ffc65a', '#2bd9ff', '#c7a2ff', '#ff8a3d'];
+const LOOK_KEYS = { skin: SKINS.length, hair: HAIR_STYLES, hairCol: HAIR_COLS.length, acc: ACCENTS.length };
+function defLook(cls) { return cls === 'bab' ? { skin: 1, hair: 1, hairCol: 0, acc: 4 } : { skin: 2, hair: 0, hairCol: 0, acc: 0 }; }
+// gacha (offline, no real money): Tala is earned in game; rates are always shown in the Odds table
+const RAR = ['R', 'SR', 'SSR', 'UR'];
+const RAR_RATE = { R: 79.4, SR: 18, SSR: 2.4, UR: 0.2 };
+const RAR_COL = { R: '#5aa8ff', SR: '#c77dff', SSR: '#ffc65a', UR: '#ff7ad9' };
+const RAR_DUST = { R: 5, SR: 20, SSR: 80, UR: 300 };
+const GACHA = [
+  { id: 'pat_banig', type: 'pat', r: 'R' }, { id: 'pat_stripe', type: 'pat', r: 'R' }, { id: 'wpn_narra', type: 'wpn', r: 'R' },
+  { id: 'ttl_runner', type: 'ttl', r: 'R' }, { id: 'ttl_watcher', type: 'ttl', r: 'R' },
+  { id: 'pat_sampaguita', type: 'pat', r: 'SR' }, { id: 'wpn_capiz', type: 'wpn', r: 'SR' }, { id: 'aura_firefly', type: 'aura', r: 'SR' }, { id: 'ttl_tide', type: 'ttl', r: 'SR' },
+  { id: 'wpn_neon', type: 'wpn', r: 'SSR' }, { id: 'aura_plume', type: 'aura', r: 'SSR' }, { id: 'minokawa', type: 'spirit', r: 'SSR' },
+  { id: 'bakunawa', type: 'spirit', r: 'UR' }, { id: 'aura_moon', type: 'aura', r: 'UR' }
 ];
+const PULL_COST = 100, SOFT_PITY = 70, HARD_PITY = 90, SOFT_STEP = 0.06;
+const TALA = { kill: 1, giant: 3, chest: 30, boss: 120, gift: 100 };
+const COS_SLOTS = ['pat', 'wpn', 'aura', 'ttl'];
+const WPN_COL = { wpn_narra: '#a0703c', wpn_capiz: '#f6f0e0', wpn_neon: '#ff3d8b' };
 // spirits: the starter Diwata Wisp (id diwata) plus the ghost of each extinct past species (id = past species id)
-const SPIRITS = ['diwata', 'sigbin', 'salagubang', 'wakwak', 'kapre', 'punso'];
-const SPIRIT_COL = { diwata: '#9dffd9', sigbin: '#c7a2ff', salagubang: '#ffe08a', wakwak: '#8fe3ff', kapre: '#ffb347', punso: '#f2c48a' };
+// plus two summon-only spirits (Minokawa SSR, Bakunawa UR) that belong to the account, not the character
+const SUMMON_SPIRITS = ['minokawa', 'bakunawa'];
+const SPIRITS = ['diwata', 'sigbin', 'salagubang', 'wakwak', 'kapre', 'punso', 'minokawa', 'bakunawa'];
+const SPIRIT_COL = { diwata: '#9dffd9', sigbin: '#c7a2ff', salagubang: '#ffe08a', wakwak: '#8fe3ff', kapre: '#ffb347', punso: '#f2c48a', minokawa: '#ffd37a', bakunawa: '#7ad7ff' };
+const SUMMON_MULT = { minokawa: 1.3, bakunawa: 1.6 };
 // forge: kampilan +1..+10, each + is +6% melee damage. Success odds are always shown in the UI.
 const FORGE = [
   { chance: 100, mats: { hunterP: 2, swarmP: 2 } },
@@ -151,19 +200,22 @@ let spawnState = [];
 let hintCd = 0, featherTaken = false;
 const WIPE = 0.5; let wipeT = 0, wipeCol = '#fff', denReveal = 0;
 
-function freshSave() {
-  return { v: 1, lvl: 1, xp: 0, sp: 1, nodes: ['arnis'], mats: {}, pastKills: { hunter: 0, swarm: 0, flyer: 0, giant: 0, scav: 0 }, dj: false,
+function freshSave(cls = 'esk') {
+  return { v: 1, cls, look: defLook(cls), name: '', hell: false, lvl: 1, xp: 0, sp: 1, nodes: [TREES[cls][0].id], mats: {}, pastKills: { hunter: 0, swarm: 0, flyer: 0, giant: 0, scav: 0 }, dj: false,
     shrine: 0, era: PRESENT, bossMem: { attempts: 0, wins: 0, left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0, maxStage: 1 },
     bossDone: false, deaths: 0, time: 0, lang: null,
     spirits: ['diwata'], spirit: 'diwata', spiritAt: {}, forge: 0, chests: [], ex: '', minimap: false };
 }
-function load() {
+function load(key = SAVE_KEY) {
   try {
-    const r = localStorage.getItem(SAVE_KEY);
+    const r = localStorage.getItem(key);
     if (r) {
       const d = JSON.parse(r);
       if (d && d.v === 1) {
-        const f = freshSave(), s = Object.assign(f, d);
+        // saves from before the class choice have no cls: they are Eskrimador saves
+        const f = freshSave(TREES[d.cls] ? d.cls : 'esk'), s = Object.assign(f, d);
+        if (!TREES[s.cls]) s.cls = 'esk';
+        s.look = Object.assign(defLook(s.cls), d.look);
         s.pastKills = Object.assign(freshSave().pastKills, d.pastKills);
         // older saves: extinct niches whose spirit was never offered wait at the middle shrine
         for (const n of NICHE_IDS) { const id = NICHES[n][0]; if (s.pastKills[n] >= THRESH && !s.spirits.includes(id) && s.spiritAt[id] === undefined) s.spiritAt[id] = 1; }
@@ -198,7 +250,22 @@ function redrawMinimap() {
   mmCtx.putImageData(mmImg, 0, 0);
 }
 function exploredPct() { let n = 0; for (let i = 0; i < explored.length; i++) n += explored[i]; return Math.round(n / explored.length * 100); }
-function save() { try { S.ex = explored.join(''); localStorage.setItem(SAVE_KEY, JSON.stringify(S)); } catch (e) {} }
+function save() {
+  try { S.ex = explored.join(''); localStorage.setItem(S.hell ? HELL_KEY : SAVE_KEY, JSON.stringify(S)); } catch (e) {}
+  if (!S.hell && !ACC.hellOk && (S.bossDone || S.lvl >= 10)) { ACC.hellOk = true; saveAcc(); }
+}
+// account: shared by the normal and the hell character, never lost on permadeath
+function freshAcc() { return { v: 1, tala: 0, dust: 0, pity: 0, pulls: 0, cos: {}, spirits: [], equip: {}, gift: '', fallen: [], hellOk: false, last: [] }; }
+function loadAcc() {
+  try { const d = JSON.parse(localStorage.getItem(ACC_KEY) || 'null'); if (d && d.v === 1) return Object.assign(freshAcc(), d); } catch (e) {}
+  return freshAcc();
+}
+let ACC = loadAcc();
+function saveAcc() { try { localStorage.setItem(ACC_KEY, JSON.stringify(ACC)); } catch (e) {} }
+function addTala(n) { ACC.tala += n; saveAcc(); }
+function ownsSpirit(id) { return S.spirits.includes(id) || ACC.spirits.includes(id); }
+function hellUnlocked() { if (ACC.hellOk) return true; const n = load(SAVE_KEY); return !!(n && (n.bossDone || n.lvl >= 10)); }
+function hm() { return S && S.hell ? HELL_MUL : 1; }
 function has(id) { return S.nodes.includes(id); }
 function popPct(n) { return Math.max(0, THRESH - S.pastKills[n]) / THRESH; }
 
@@ -218,15 +285,17 @@ function initAudio() { if (AC) return; try { AC = new (window.AudioContext || wi
 // ---------- input ----------
 const held = {}, pressed = {};
 const KEYMAP = { ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right', ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down',
-  KeyX: 'jump', KeyK: 'jump', Space: 'jump', KeyZ: 'attack', KeyJ: 'attack', KeyC: 'dash', KeyL: 'dash', ShiftLeft: 'dash', KeyV: 'skill', KeyI: 'skill' };
+  KeyX: 'jump', KeyK: 'jump', Space: 'jump', KeyZ: 'attack', KeyJ: 'attack', KeyC: 'dash', KeyL: 'dash', ShiftLeft: 'dash', KeyV: 'skill', KeyI: 'skill', KeyB: 'summon', KeyU: 'summon' };
 function press(k) { if (!held[k]) pressed[k] = true; held[k] = true; }
 function release(k) { held[k] = false; }
 addEventListener('keydown', e => {
+  if (e.target && e.target.tagName === 'INPUT') return;
   if (e.code === 'Escape' || e.code === 'KeyP' || e.code === 'Tab') { e.preventDefault(); if (mode === 'play') toggleMenu(); return; }
   const k = KEYMAP[e.code]; if (k) { e.preventDefault(); press(k); }
-  if (mode === 'title' && (e.code === 'Enter' || e.code === 'Space')) startGame(false);
+  if (mode === 'title' && document.getElementById('pick').hidden && (e.code === 'Enter' || e.code === 'Space')) titleContinue();
 });
-addEventListener('keyup', e => { const k = KEYMAP[e.code]; if (k) release(k); });
+addEventListener('keyup', e => {
+  if (e.target && e.target.tagName === 'INPUT') return; const k = KEYMAP[e.code]; if (k) release(k); });
 
 const touchEl = document.getElementById('touch');
 let touchWanted = false;
@@ -292,23 +361,27 @@ function toast(msg, dur = 2.6) { toastEl.textContent = msg; toastEl.classList.ad
 function newPlayer(x, y) {
   return { x, y, w: 12, h: 26, vx: 0, vy: 0, face: 1, onGround: false, jumps: 0, coyote: 0, jbuf: 0, hp: 100, maxhp: 100, en: 50, maxen: 50,
     inv: 0, dashT: 0, dashCd: 0, airDashed: false, atkT: 0, atkDur: 0, atkCd: 0, combo: 0, comboWin: 0, finisher: false, hitIds: null,
-    safe: { x, y }, hurtT: 0, anim: 0, shieldCd: 0, biteCd: 0, dartCd: 1, stompCd: 3 };
+    safe: { x, y }, hurtT: 0, anim: 0, shieldCd: 0, biteCd: 0, dartCd: 1, stompCd: 3, featherCd: 2, chan: -1, sumCd: 0 };
 }
 function forgeMult(lv) { return 1 + FORGE_PCT / 100 * lv; }
 function stats() {
-  const asc = has('asc') ? 1.1 : 1, sp = S.spirit;
+  const asc = has('asc') ? 1.1 : 1, sp = S.spirit, bab = S.cls === 'bab', bk = sp === 'bakunawa' ? 1.15 : 1;
   return {
-    spd: (has('swift') ? 1.15 : 1) * asc,
+    spd: (has('swift') ? 1.15 : 1) * (sp === 'minokawa' ? 1.1 : 1) * asc,
     maxCombo: has('fourth') ? 4 : 3,
-    dmg: 12 * (has('edge') ? 1.2 : 1) * asc * forgeMult(S.forge),
-    maxhp: (100 + (has('roots') ? 25 : 0) + (sp === 'kapre' ? 30 : 0)) * asc,
-    maxen: 50 + (has('well') ? 25 : 0),
-    regen: (has('well') ? 9 : 5) + (sp === 'wakwak' ? 3 : 0),
+    // the Babaylan staff is weaker than the Eskrimador blades
+    dmg: (bab ? 9 : 12) * (has('edge') ? 1.2 : 1) * asc * bk * forgeMult(S.forge),
+    magic: asc * bk,
+    maxhp: (100 + (has('roots') || has('chant') ? 25 : 0) + (sp === 'kapre' ? 30 : 0)) * asc,
+    maxen: (bab ? 60 : 50) + (has('well') ? 25 : 0) + (has('grace') ? 30 : 0),
+    regen: (has('well') || has('grace') ? 9 : 5) + (sp === 'wakwak' ? 3 : 0),
     crit: sp === 'sigbin' ? 0.18 : 0.04,
     magnet: sp === 'punso' ? 190 : 70,
-    dashInv: has('step') ? 0.28 : 0.16,
-    dashCd: has('step') ? 0.32 : 0.5,
-    taken: (has('iron') ? 0.85 : 1) / asc
+    dashInv: has('step') || has('trance') ? 0.28 : 0.16,
+    dashCd: has('step') || has('trance') ? 0.32 : 0.5,
+    airdash: has('airdash') || has('trance'),
+    breaker: has('breaker') || has('quake'),
+    taken: (has('iron') || has('ward') ? 0.85 : 1) / asc
   };
 }
 function hurtPlayer(dmg, fromX) {
@@ -320,7 +393,7 @@ function hurtPlayer(dmg, fromX) {
     return;
   }
   const st = stats();
-  const d = Math.round(dmg * st.taken);
+  const d = Math.round(dmg * hm() * st.taken);
   P.hp -= d; P.inv = 0.7; P.hurtT = 0.25;
   P.vx = (P.x + P.w / 2 < fromX ? -1 : 1) * 160; P.vy = -160;
   shake = Math.max(shake, 5); hitstop = 0.06; sfx(140, 0.15, 'sawtooth', 0.06, -60);
@@ -330,6 +403,7 @@ function hurtPlayer(dmg, fromX) {
 }
 function die() {
   S.deaths++;
+  if (S.hell) { P.hp = 0; mode = 'fallen'; return; } // one life: handled by endHell() once this frame is done
   if (boss && boss.active) endBossFight(false);
   toast(t('died'));
   const sx = SHRINES[S.shrine] * TS;
@@ -358,7 +432,7 @@ function spawnEnemy(sp) {
   const d = SPEC[id], n = d.group || 1;
   for (let i = 0; i < n; i++) {
     const e = { id: uid++, sp: id, d, x: sp.x * TS + i * 12, y: sp.y * TS - d.h - (d.beh === 'swarm' ? i * 10 : 0), w: d.w, h: d.h, vx: 0, vy: 0,
-      hp: d.hp, max: d.hp, face: -1, onGround: false, st: 'walk', t: rnd(0, 1), home: { x: sp.x * TS, y: sp.y * TS - 40 }, src: sp, era: S.era, flashT: 0, kb: 0, ph: rnd(0, 6),
+      hp: d.hp * hm(), max: d.hp * hm(), face: -1, onGround: false, st: 'walk', t: rnd(0, 1), home: { x: sp.x * TS, y: sp.y * TS - 40 }, src: sp, era: S.era, flashT: 0, kb: 0, ph: rnd(0, 6),
       loot: null, target: null };
     if (d.beh === 'flyer' || d.beh === 'diver') e.y = sp.y * TS - 30;
     enemies.push(e); sp.alive++;
@@ -527,6 +601,8 @@ function killEnemy(e) {
   sfx(220, 0.12, 'square', 0.05, -120);
   if (e.src) { e.src.alive = Math.max(0, e.src.alive - 1); if (e.src.alive === 0) e.src.cd = 12; }
   if (has('mend')) P.hp = Math.min(P.maxhp, P.hp + 4);
+  if (S.spirit === 'bakunawa') P.en = Math.min(P.maxen, P.en + 6);
+  addTala(d.beh === 'giant' ? TALA.giant : TALA.kill);
   // drop (the Taga-Punso spirit finds more), plus anything a scavenger stole
   const dropX = e.x + e.w / 2 - 4, extra = S.spirit === 'punso';
   if (Math.random() < Math.min(1, (d.group ? 0.45 : 0.85) * (extra ? 1.25 : 1))) dropItem(dropX, e.y, d.mat);
@@ -566,11 +642,11 @@ function gainXp(x) {
 }
 
 // ---------- boss: Tikbalang with learning stages ----------
-function bossBaseStage() { return Math.min(3, 1 + Math.floor(S.bossMem.attempts / 2)); }
+function bossBaseStage() { const s = Math.min(3, 1 + Math.floor(S.bossMem.attempts / 2)); return S.hell ? Math.max(3, s) : s; }
 function startBossFight() {
   fill(ARENA.door, OY + 30, 2, 6, 1);
   const base = bossBaseStage();
-  boss = { active: true, x: 188 * TS, y: GY * TS - 64, w: 36, h: 64, vx: 0, vy: 0, hp: 520, max: 520, face: -1, onGround: false,
+  boss = { active: true, x: 188 * TS, y: GY * TS - 64, w: 36, h: 64, vx: 0, vy: 0, hp: 520 * hm(), max: 520 * hm(), face: -1, onGround: false,
     st: 'intro', t: 0, stage: base, base, flashT: 0, next: null, last: [], tele: 0, plan: null,
     mem: { left: 0, right: 0, air: 0, ground: 0, bolts: 0, melee: 0 }, telePX: 0, hitThis: null, alpha: 1 };
   enemies = [];
@@ -710,6 +786,7 @@ function damageBoss(dmg, isBolt) {
     b.hp = 0; b.st = 'dead'; b.t = 0; shake = 14; flash = 0.6; flashCol = '#ffc65a'; sfx(50, 1.2, 'sawtooth', 0.09, -20);
     projs = projs.filter(p => p.from !== 'boss');
     S.mats.tikCore = (S.mats.tikCore || 0) + 1;
+    addTala(TALA.boss); popText(b.x + b.w / 2, b.y - 16, t('talaGot', TALA.boss), '#ffd37a', true);
     gainXp(120);
   }
 }
@@ -728,7 +805,7 @@ document.getElementById('w-again').addEventListener('click', () => { document.ge
 
 // ---------- player update ----------
 function attackBox() {
-  const w = P.finisher ? 40 : 30;
+  const w = S.cls === 'bab' ? (P.finisher ? 34 : 26) : P.finisher ? 40 : 30;
   return { x: P.face > 0 ? P.x + P.w - 2 : P.x - w + 2, y: P.y - 2, w, h: P.h + 4 };
 }
 function updatePlayer(dt) {
@@ -749,7 +826,7 @@ function updatePlayer(dt) {
     P.dashT -= dt; P.vx = P.face * 360; P.vy = 0;
     if (Math.random() < 0.7) parts.push({ x: P.x + P.w / 2, y: P.y + rnd(4, P.h - 4), vx: -P.face * 30, vy: 0, life: 0.25, max: 0.25, col: has('asc') ? '#ffc65a' : '#3ef0b4', size: 3, grav: 0 });
   } else {
-    const max = 140, acc = P.onGround ? 1400 : 900;
+    const max = P.chan >= 0 ? 70 : 140, acc = P.onGround ? 1400 : 900;
     if (dir) { P.vx += dir * acc * dt; if (Math.abs(P.vx) > max) P.vx = Math.sign(P.vx) * max; if (P.atkT <= 0) P.face = dir; }
     else { const fr = P.onGround ? 1600 : 500; P.vx = Math.abs(P.vx) <= fr * dt ? 0 : P.vx - Math.sign(P.vx) * fr * dt; }
     P.vy = Math.min(620, P.vy + 980 * dt);
@@ -759,7 +836,7 @@ function updatePlayer(dt) {
       else if (S.dj && P.jumps < 2) { P.vy = -320; P.jbuf = 0; P.jumps = 2; sfx(560, 0.1, 'triangle', 0.04, 300); burst(P.x + P.w / 2, P.y + P.h, 10, '#ff8a3d', 100, 0.4); }
     }
   }
-  if (pressed.dash && P.dashCd <= 0 && (P.onGround || (has('airdash') && !P.airDashed))) {
+  if (pressed.dash && P.dashCd <= 0 && (P.onGround || (st.airdash && !P.airDashed))) {
     if (!P.onGround) P.airDashed = true;
     if (dir) P.face = dir;
     P.dashT = 0.16; P.dashCd = st.dashCd; P.inv = Math.max(P.inv, st.dashInv); sfx(260, 0.1, 'sine', 0.05, 400);
@@ -778,7 +855,7 @@ function updatePlayer(dt) {
     const prog = 1 - P.atkT / P.atkDur;
     if (prog > 0.2 && prog < 0.75) {
       const hb = attackBox();
-      const mult = P.finisher ? (has('breaker') ? 2.08 : 1.6) : 1;
+      const mult = P.finisher ? (st.breaker ? 2.08 : 1.6) : 1;
       for (const e of enemies) if (!e.dead && !P.hitIds.has(e.id) && overlap(hb, e)) {
         P.hitIds.add(e.id);
         const crit = Math.random() < st.crit;
@@ -788,7 +865,7 @@ function updatePlayer(dt) {
         hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, P.finisher ? 5 : 2);
       }
       if (boss && !P.hitIds.has('boss') && overlap(hb, boss)) { P.hitIds.add('boss'); damageBoss(st.dmg * mult * rnd(0.92, 1.08), false); hitstop = P.finisher ? 0.08 : 0.045; shake = Math.max(shake, 3); }
-      if (P.finisher && has('breaker') && !P.hitIds.has('wall')) {
+      if (P.finisher && st.breaker && !P.hitIds.has('wall')) {
         const x0 = Math.floor(hb.x / TS), x1 = Math.floor((hb.x + hb.w) / TS), y0 = Math.floor(hb.y / TS), y1 = Math.floor((hb.y + hb.h) / TS);
         let broke = false;
         for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) if (tileAt(x, y) === 6) {
@@ -799,13 +876,21 @@ function updatePlayer(dt) {
       }
     }
   }
-  // skill
-  if (pressed.skill && has('bolt') && P.en >= 15) {
+  // skill: Eskrimador spirit bolt, Babaylan channelled spirit orb (hold to grow it, release to cast)
+  if (S.cls === 'bab') {
+    if (pressed.skill && P.chan < 0 && P.en >= ORB_COST) { P.chan = 0; P.en -= ORB_COST; sfx(330, 0.2, 'sine', 0.04, 200); }
+    if (P.chan >= 0) {
+      if (held.skill) { P.chan = Math.min(1, P.chan + dt * (has('swiftch') ? 1.8 : 1.1)); if (Math.random() < 0.5) parts.push({ x: P.x + P.w / 2 + P.face * 10 + rnd(-10, 10), y: P.y + 10 + rnd(-10, 10), vx: 0, vy: 0, life: 0.25, max: 0.25, col: '#c7a2ff', size: 2, grav: 0 }); }
+      else fireOrb(st);
+    }
+    if (pressed.summon) summonStrike(st);
+  } else if (pressed.skill && has('bolt') && P.en >= 15) {
     P.en -= 15;
     const echo = has('echo');
-    projs.push({ from: 'player', x: P.x + P.w / 2 - 6 + P.face * 8, y: P.y + 8, w: 12, h: 8, vx: P.face * 330, vy: 0, dmg: 18 * (echo ? 1.25 : 1) * (has('asc') ? 1.1 : 1), type: 'bolt', life: 0.9, pierce: echo, hit: new Set() });
+    projs.push({ from: 'player', x: P.x + P.w / 2 - 6 + P.face * 8, y: P.y + 8, w: 12, h: 8, vx: P.face * 330, vy: 0, dmg: 18 * (echo ? 1.25 : 1) * st.magic, type: 'bolt', life: 0.9, pierce: echo, hit: new Set() });
     sfx(880, 0.12, 'sine', 0.05, -400);
   }
+  if (P.sumCd > 0) P.sumCd -= dt;
   P.drop = held.down && pressed.jump;
   moveX(P, P.vx * dt);
   moveY(P, P.vy * dt);
@@ -823,6 +908,44 @@ function updatePlayer(dt) {
     if (!danger) P.safe = { x: P.x, y: P.y };
   }
   P.anim += dt * (Math.abs(P.vx) > 10 ? 1 : 0.3);
+}
+
+// ---------- Babaylan: spirit orb + spirit summon ----------
+const ORB_COST = 12, SUMMON_COST = 20;
+function fireOrb(st) {
+  const c = P.chan, sz = Math.round(8 + 8 * c);
+  P.chan = -1;
+  projs.push({ from: 'player', x: P.x + P.w / 2 - sz / 2 + P.face * 10, y: P.y + 12 - sz / 2, w: sz, h: sz, vx: P.face * 270, vy: 0, dmg: (14 + 24 * c) * st.magic,
+    type: 'orb', charge: c, life: 1.1, pierce: has('pierce'), bloom: has('bloom'), hit: new Set() });
+  sfx(520 + c * 300, 0.18, 'sine', 0.05, -250);
+}
+// the active spirit strikes the nearest foes (up to 3 with Ancestor Legion)
+function summonStrike(st) {
+  if (!has('call') || P.sumCd > 0 || P.en < SUMMON_COST || !S.spirit) return false;
+  const cx = P.x + P.w / 2, cy = P.y + P.h / 2, tg = [];
+  for (const e of enemies) if (!e.dead) { const d = Math.hypot(e.x + e.w / 2 - cx, e.y + e.h / 2 - cy); if (d < 240) tg.push({ e, d }); }
+  if (boss && boss.st !== 'dead' && boss.alpha > 0.5) { const d = Math.hypot(boss.x + boss.w / 2 - cx, boss.y + boss.h / 2 - cy); if (d < 240) tg.push({ e: boss, d }); }
+  if (!tg.length) { popText(cx, P.y - 6, t('noTarget'), '#9aa3c0'); return false; }
+  tg.sort((a, b) => a.d - b.d);
+  P.en -= SUMMON_COST; P.sumCd = has('bond') ? 2.5 : 4;
+  const dmg = 26 * (has('bond') ? 1.3 : 1) * (SUMMON_MULT[S.spirit] || 1) * st.magic;
+  tg.slice(0, has('legion') ? 3 : 1).forEach((o, i) => {
+    projs.push({ from: 'player', x: SPR.x - 8, y: SPR.y - 8, w: 16, h: 16, vx: (i - 1) * 120, vy: -160, dmg, type: 'spirit', sid: S.spirit, tgt: o.e, life: 1.6, pierce: false, hit: new Set() });
+  });
+  burst(SPR.x, SPR.y, 16, SPIRIT_COL[S.spirit], 140, 0.5, 2, 0); sfx(700, 0.25, 'triangle', 0.05, 500);
+  return true;
+}
+
+function projHit(p, e) {
+  const cx = p.x + p.w / 2, cy = p.y + p.h / 2;
+  if (p.type === 'spirit') {
+    burst(cx, cy, 14, SPIRIT_COL[p.sid], 170, 0.45);
+    if (has('avatar')) P.hp = Math.min(P.maxhp, P.hp + 6);
+  } else if (p.type === 'orb' && p.bloom) {
+    // Diwata Bloom: the orb bursts and hurts every foe close to the impact
+    burst(cx, cy, 18, '#c7a2ff', 160, 0.5);
+    for (const o of enemies) if (o !== e && !o.dead && Math.hypot(o.x + o.w / 2 - cx, o.y + o.h / 2 - cy) < 46) damageEnemy(o, p.dmg * 0.5, Math.sign(o.x - cx) || 1, true);
+  }
 }
 
 // ---------- world update ----------
@@ -845,7 +968,7 @@ function switchEra() {
 const SPR = { x: 0, y: 0 };
 function spiritSpot(si) { return { x: SHRINES[si] * TS + 34, y: GY * TS - 34 }; }
 function equipSpirit(id) {
-  if (!S.spirits.includes(id)) return false;
+  if (!ownsSpirit(id)) return false;
   S.spirit = id; P.shieldCd = 0; P.biteCd = 0;
   const st = stats(); P.maxhp = st.maxhp; P.hp = Math.min(P.hp, P.maxhp);
   save(); return true;
@@ -880,6 +1003,17 @@ function updateSpirit(dt) {
         sfx(1100, 0.05, 'triangle', 0.03, -400); P.dartCd = 1.3;
       } else P.dartCd = 0.2;
     }
+  } else if (sp === 'minokawa') {
+    // feather volley: three feathers at the nearest foe every 6 s
+    P.featherCd -= dt;
+    if (P.featherCd <= 0) {
+      let best = null, bd = 170 * 170;
+      for (const e of enemies) if (!e.dead) { const ddx = e.x + e.w / 2 - SPR.x, ddy = e.y + e.h / 2 - SPR.y, d2 = ddx * ddx + ddy * ddy; if (d2 < bd) { bd = d2; best = e; } }
+      if (best) {
+        for (let i = -1; i <= 1; i++) projs.push({ from: 'player', x: SPR.x - 3, y: SPR.y - 3 + i * 6, w: 6, h: 6, vx: 0, vy: i * 60, dmg: 10, type: 'feather', tgt: best, life: 1, pierce: false, hit: new Set() });
+        sfx(1300, 0.08, 'triangle', 0.03, -500); P.featherCd = 6;
+      } else P.featherCd = 0.25;
+    }
   } else if (sp === 'kapre') {
     P.stompCd -= dt;
     if (P.stompCd <= 0) {
@@ -898,6 +1032,7 @@ function updateChests() {
       S.chests.push(c.id);
       const got = [];
       for (const m in c.loot) { S.mats[m] = (S.mats[m] || 0) + c.loot[m]; got.push(c.loot[m] + 'x ' + matName(m)); }
+      addTala(TALA.chest); got.push(TALA.chest + ' Tala');
       toast(t('chestOpen', got.join(', ')), 4.5); flash = 0.3; flashCol = '#ffc65a';
       burst(c.x * TS + 8, c.y * TS - 8, 30, '#ffc65a', 180, 0.8); sfx(880, 0.15, 'triangle', 0.06, 300); setTimeout(() => sfx(1320, 0.2, 'triangle', 0.05), 120);
       gainXp(20); exDirty = true; save();
@@ -911,6 +1046,9 @@ function markExplored() {
   for (let y = cy - 2; y <= cy + 2; y++) for (let x = cx - 3; x <= cx + 3; x++) if (x >= 0 && y >= 0 && x < EXW && y < EXH && !explored[y * EXW + x]) { explored[y * EXW + x] = 1; exDirty = true; }
 }
 function update(dt) {
+  if (!S || !P) return;
+  if (mode === 'fallen') { endHell(); return; }
+  if (cutT > 0) { cutT -= dt; for (const k in pressed) pressed[k] = false; return; } // ascension cut-in freezes the action
   S.time += dt;
   if (toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.classList.remove('show'); }
   if (hintCd > 0) hintCd -= dt;
@@ -940,7 +1078,7 @@ function update(dt) {
   }
   // hints
   if (hintCd <= 0) {
-    if (!has('breaker') && P.x > 149 * TS && P.x < 154 * TS && P.y > (OY + 30) * TS) { toast(t('cracked'), 3); hintCd = 8; }
+    if (!stats().breaker && P.x > 149 * TS && P.x < 154 * TS && P.y > (OY + 30) * TS) { toast(t(S.cls === 'bab' ? 'crackedBab' : 'cracked'), 3); hintCd = 8; }
     else if (S.era === PAST && P.x > 38 * TS && P.x < 44 * TS && P.y > (OY + 30) * TS) { toast(t('noCross'), 3); hintCd = 8; }
     else if (S.era === PRESENT && P.x > 96 * TS && P.x < 104 * TS && P.y > (OY + 30) * TS) { toast(t('sealed'), 3.5); hintCd = 12; }
   }
@@ -954,13 +1092,18 @@ function update(dt) {
   for (const p of projs) {
     p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt;
     if (p.type === 'leaf') p.vy += Math.sin(p.life * 10) * 40 * dt;
+    if (p.tgt && !p.tgt.dead && p.tgt.st !== 'dead') {
+      const g = p.tgt, ddx = g.x + g.w / 2 - p.x - p.w / 2, ddy = g.y + g.h / 2 - p.y - p.h / 2, m = Math.hypot(ddx, ddy) || 1, k = Math.min(1, dt * 7);
+      p.vx += (ddx / m * 380 - p.vx) * k; p.vy += (ddy / m * 380 - p.vy) * k;
+    }
     if (p.from === 'player') {
-      parts.push({ x: p.x + 6, y: p.y + 4, vx: 0, vy: 0, life: 0.18, max: 0.18, col: '#3ef0b4', size: 3, grav: 0 });
-      for (const e of enemies) if (!e.dead && !p.hit.has(e.id) && overlap(p, e)) { p.hit.add(e.id); damageEnemy(e, p.dmg, Math.sign(p.vx), true); if (!p.pierce) p.life = 0; }
-      if (boss && !p.hit.has('boss') && overlap(p, boss) && boss.alpha > 0.5) { p.hit.add('boss'); damageBoss(p.dmg, true); if (!p.pierce) p.life = 0; }
+      const col = p.type === 'orb' ? '#c7a2ff' : p.type === 'spirit' ? SPIRIT_COL[p.sid] : '#3ef0b4';
+      parts.push({ x: p.x + p.w / 2, y: p.y + p.h / 2, vx: 0, vy: 0, life: 0.18, max: 0.18, col, size: 3, grav: 0 });
+      for (const e of enemies) if (!e.dead && !p.hit.has(e.id) && overlap(p, e)) { p.hit.add(e.id); damageEnemy(e, p.dmg, Math.sign(p.vx) || 1, true); projHit(p, e); if (!p.pierce) p.life = 0; }
+      if (boss && !p.hit.has('boss') && overlap(p, boss) && boss.alpha > 0.5) { p.hit.add('boss'); damageBoss(p.dmg, true); projHit(p, boss); if (!p.pierce) p.life = 0; }
     } else if (overlap(p, P) && P.dashT <= 0) { hurtPlayer(p.dmg, p.x); if (p.type === 'leaf') p.life = 0; }
     if (p.type === 'wave') { const v = tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h + 2) / TS)); if (!isSolid(v) && !isOneWay(v)) p.life = 0; }
-    else if (isSolid(tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h / 2) / TS)))) p.life = 0;
+    else if (p.type !== 'spirit' && isSolid(tileAt(Math.floor((p.x + p.w / 2) / TS), Math.floor((p.y + p.h / 2) / TS)))) p.life = 0;
   }
   projs = projs.filter(p => p.life > 0);
   // items
@@ -978,6 +1121,7 @@ function update(dt) {
   const tx = clamp(P.x + P.w / 2 - VW / 2 + P.face * 30, 0, MW * TS - VW), ty = clamp(P.y + P.h / 2 - VH * 0.58, 0, MH * TS - VH);
   cam.x += (tx - cam.x) * Math.min(1, dt * 6); cam.y += (ty - cam.y) * Math.min(1, dt * 5);
   for (const k in pressed) pressed[k] = false;
+  if (mode === 'fallen') endHell();
 }
 
 // ---------- rendering ----------
@@ -1312,6 +1456,29 @@ function drawBody(sp, tm, st, body, eye, plain) {
       ctx.fillStyle = '#eafff6'; ctx.beginPath(); ctx.arc(0, 0, 3, 0, 7); ctx.fill();
       break;
     }
+    case 'minokawa': {
+      // the giant moon-eating bird: mirror-bright feathers, hooked beak, long fanned tail
+      const flap = Math.sin(tm * 6) * 4;
+      ctx.beginPath(); ctx.ellipse(0, 0, 7, 5, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-2, -2); ctx.lineTo(-13, -10 - flap); ctx.lineTo(-9, -2); ctx.lineTo(2, 1); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(-6, 1); ctx.lineTo(-15, 5); ctx.lineTo(-14, 0); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(5, -3); ctx.lineTo(9, -6); ctx.lineTo(12, -3); ctx.lineTo(9, -1); ctx.fill();
+      if (!plain) { ctx.fillStyle = '#fff6d8'; ctx.fillRect(-10, -7 - flap * 0.5, 4, 1); ctx.fillRect(-7, -4, 4, 1); ctx.fillStyle = '#b8862a'; ctx.fillRect(11, -3, 2, 2); }
+      ctx.fillStyle = eye; ctx.fillRect(7, -4, 2, 2);
+      break;
+    }
+    case 'bakunawa': {
+      // young sea serpent with a moon in its jaws
+      ctx.lineWidth = 4; ctx.strokeStyle = body; ctx.beginPath();
+      for (let i = 0; i <= 6; i++) { const sx = -14 + i * 3.4, sy2 = Math.sin(tm * 4 + i * 0.9) * 3; if (i) ctx.lineTo(sx, sy2); else ctx.moveTo(sx, sy2); }
+      ctx.stroke();
+      const hy = Math.sin(tm * 4 + 6 * 0.9) * 3;
+      ctx.beginPath(); ctx.ellipse(8, hy - 1, 5, 4, 0, 0, 7); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(5, hy - 4); ctx.lineTo(2, hy - 9); ctx.lineTo(7, hy - 5); ctx.fill();
+      if (!plain) { ctx.fillStyle = '#ffe3f0'; ctx.beginPath(); ctx.arc(13, hy + 1, 2.5, 0, 7); ctx.fill(); ctx.fillStyle = '#2b6aa0'; for (let i = 0; i < 4; i++) ctx.fillRect(-12 + i * 5, Math.sin(tm * 4 + i * 1.3) * 3 - 3, 2, 1); }
+      ctx.fillStyle = eye; ctx.fillRect(9, hy - 3, 2, 2);
+      break;
+    }
     default: {
       // wakwak / drones / mantis: winged night flyer
       const flap = Math.sin(tm * (st === 'dive' ? 4 : 12)) * 6;
@@ -1330,7 +1497,7 @@ function drawSpiritGhost(id, x, y, face, time, scale) {
   const col = SPIRIT_COL[id];
   ctx.globalAlpha = 0.22 + 0.08 * Math.sin(time * 4); ctx.fillStyle = col; ctx.beginPath(); ctx.arc(0, 0, 13, 0, 7); ctx.fill();
   ctx.globalAlpha = 0.8;
-  if (id === 'diwata') drawBody('diwata', time, 'walk', col, '#ffffff', false);
+  if (id === 'diwata' || SUMMON_SPIRITS.includes(id)) drawBody(id, time, 'walk', col, '#ffffff', false);
   else { ctx.globalAlpha = 0.7; drawBody(id, time, 'walk', col, '#ffffff', true); }
   ctx.globalAlpha = 1;
   ctx.restore();
@@ -1370,35 +1537,91 @@ function drawPlayer(time) {
   const asc = has('asc');
   if (asc) { ctx.fillStyle = `rgba(255,198,90,${0.18 + 0.08 * Math.sin(time * 4)})`; ctx.beginPath(); ctx.ellipse(x + P.w / 2, y + P.h / 2, 16, 20, 0, 0, 7); ctx.fill(); }
   ctx.save(); ctx.translate(x + P.w / 2, y + P.h); ctx.scale(P.face, 1);
-  const run = P.onGround && Math.abs(P.vx) > 10 ? Math.sin(P.anim * 14) * 3 : 0;
-  // scarf
-  ctx.strokeStyle = '#ff3d8b'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(-1, -20);
-  ctx.quadraticCurveTo(-10, -20 + Math.sin(time * 10) * 3, -16 - Math.min(10, Math.abs(P.vx) / 14), -16 + Math.sin(time * 12) * 3); ctx.stroke();
-  ctx.fillStyle = '#1b2236'; ctx.fillRect(-4, -9, 3, 9 + run); ctx.fillRect(1, -9, 3, 9 - run);
-  ctx.fillStyle = P.hurtT > 0 ? '#ffffff' : '#2c6b74'; ctx.fillRect(-5, -19, 10, 11);
-  ctx.fillStyle = '#ffc65a'; ctx.fillRect(-5, -11, 10, 2);
-  ctx.fillStyle = '#c98c5c'; ctx.fillRect(-4, -26, 8, 7);
-  ctx.fillStyle = '#14121c'; ctx.fillRect(-5, -27, 9, 3); ctx.fillRect(-5, -25, 2, 4);
-  ctx.fillStyle = '#ff3d8b'; ctx.fillRect(-4, -24, 8, 1);
-  ctx.fillStyle = '#14121c'; ctx.fillRect(2, -23, 1, 1);
-  // weapon
-  if (P.atkT > 0) {
-    const prog = 1 - P.atkT / P.atkDur, a0 = P.combo % 2 ? -1.6 : 1.2, a1 = P.combo % 2 ? 1.1 : -1.4, a = a0 + (a1 - a0) * Math.min(1, prog * 1.6);
-    const len = P.finisher ? 30 : 22;
-    ctx.strokeStyle = P.finisher ? (has('breaker') ? 'rgba(255,198,90,.55)' : 'rgba(236,230,214,.45)') : 'rgba(62,240,180,.4)';
-    ctx.lineWidth = P.finisher ? 9 : 6; ctx.beginPath(); ctx.arc(2, -14, len - 4, Math.min(a0, a), Math.max(a0, a)); ctx.stroke();
-    ctx.strokeStyle = '#ece6d6'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(2, -14); ctx.lineTo(2 + Math.cos(a) * len, -14 + Math.sin(a) * len); ctx.stroke();
+  drawHero({ cls: S.cls, look: S.look, asc, eq: ACC.equip, run: P.onGround && Math.abs(P.vx) > 10 ? Math.sin(P.anim * 14) * 3 : 0, vx: P.vx, hurt: P.hurtT > 0,
+    atk: P.atkT > 0 ? { prog: 1 - P.atkT / P.atkDur, combo: P.combo, fin: P.finisher, brk: stats().breaker } : null, chan: P.chan }, time);
+  ctx.restore();
+}
+// the hero, drawn around the feet facing +x (used in game, on the class pick screen, the Hero tab and the ascension cut-in)
+function drawHero(o, time) {
+  const L = o.look || defLook(o.cls), eq = o.eq || {}, bab = o.cls === 'bab';
+  const skin = SKINS[L.skin] || SKINS[2], hc = HAIR_COLS[L.hairCol] || HAIR_COLS[0], acc = ACCENTS[L.acc] || ACCENTS[0], run = o.run || 0;
+  const wcol = WPN_COL[eq.wpn];
+  // cosmetic aura behind the body
+  if (eq.aura === 'aura_firefly') for (let i = 0; i < 5; i++) { const a = time * 1.6 + i * 1.26; ctx.fillStyle = `rgba(190,255,150,${0.5 + 0.4 * Math.sin(time * 5 + i)})`; ctx.fillRect(Math.cos(a) * 14 - 1, -13 + Math.sin(a) * 12 - 1, 2, 2); }
+  else if (eq.aura === 'aura_plume') for (let i = 0; i < 5; i++) { const a = -2.6 + i * 0.35 + Math.sin(time * 3) * 0.05; ctx.fillStyle = i % 2 ? '#ff8a3d' : '#ffd34a'; ctx.globalAlpha = 0.75; ctx.beginPath(); ctx.ellipse(-3 + Math.cos(a) * 11, -16 + Math.sin(a) * 11, 6, 2, a, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+  else if (eq.aura === 'aura_moon') for (let i = 0; i < 7; i++) { const a = time * 0.7 + i * 0.9; ctx.fillStyle = i === 6 ? '#ffe3f0' : '#c9eedc'; ctx.globalAlpha = 0.85; ctx.beginPath(); ctx.arc(Math.cos(a) * 17, -14 + Math.sin(a) * 8, 1.6, 0, 7); ctx.fill(); ctx.globalAlpha = 1; }
+  // scarf (Eskrimador) or sash ribbon (Babaylan) in the accent colour, with an optional summoned pattern
+  ctx.strokeStyle = acc; ctx.lineWidth = 3; ctx.beginPath();
+  const sy = bab ? -12 : -20;
+  ctx.moveTo(-1, sy); ctx.quadraticCurveTo(-10, sy + Math.sin(time * 10) * 3, -16 - Math.min(10, Math.abs(o.vx || 0) / 14), sy + 4 + Math.sin(time * 12) * 3); ctx.stroke();
+  if (eq.pat) {
+    const pc = { pat_banig: ['#ffc65a', [2, 2]], pat_stripe: ['#2bd9ff', [3, 3]], pat_sampaguita: ['#ffffff', [1, 3]], pat_tala: ['#fff', [1, 2]] }[eq.pat] || ['#fff', [2, 2]];
+    ctx.strokeStyle = pc[0]; ctx.lineWidth = 1.5; ctx.setLineDash(pc[1]); ctx.lineDashOffset = -time * 8; ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset = 0;
+  }
+  // hair behind the head (long / braid)
+  ctx.fillStyle = hc;
+  if (L.hair === 1) ctx.fillRect(-6, -25, 3, bab ? 13 : 10);
+  else if (L.hair === 3) { ctx.fillRect(-6, -24, 2, 3); ctx.fillRect(-7, -21, 2, 3); ctx.fillRect(-6, -18, 2, 3); ctx.fillRect(-7, -15, 2, 2); }
+  if (bab) {
+    ctx.fillStyle = '#1b2236'; ctx.fillRect(-3, -5, 2, 5 + run * 0.4); ctx.fillRect(1, -5, 2, 5 - run * 0.4);
+    // robe: plum with an accent hem and sash
+    ctx.fillStyle = o.hurt ? '#ffffff' : '#4a2350';
+    ctx.beginPath(); ctx.moveTo(-5, -19); ctx.lineTo(5, -19); ctx.lineTo(7 + run * 0.3, -4); ctx.lineTo(-7 + run * 0.3, -4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = acc; ctx.fillRect(-7 + run * 0.3, -6, 14, 2); ctx.fillRect(-5, -13, 10, 2);
+    ctx.fillStyle = '#7a3a7e'; ctx.fillRect(-1, -19, 2, 6);
   } else {
-    ctx.strokeStyle = '#a8b0c8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-3, -18); ctx.lineTo(-9, -4); ctx.stroke();
+    ctx.fillStyle = '#1b2236'; ctx.fillRect(-4, -9, 3, 9 + run); ctx.fillRect(1, -9, 3, 9 - run);
+    ctx.fillStyle = o.hurt ? '#ffffff' : '#2c6b74'; ctx.fillRect(-5, -19, 10, 11);
+    ctx.fillStyle = '#ffc65a'; ctx.fillRect(-5, -11, 10, 2);
+  }
+  ctx.fillStyle = skin; ctx.fillRect(-4, -26, 8, 7);
+  ctx.fillStyle = hc; ctx.fillRect(-5, -27, 9, 3); ctx.fillRect(-5, -25, 2, 4);
+  if (L.hair === 2) ctx.fillRect(-7, -30, 4, 4);
+  if (bab) {
+    // putong headdress: gold band, three feathers (jade, accent, gold)
+    ctx.fillStyle = '#ffc65a'; ctx.fillRect(-5, -27, 10, 2);
+    ctx.fillStyle = '#3ef0b4'; ctx.fillRect(-4, -32, 2, 5); ctx.fillStyle = acc; ctx.fillRect(-1, -34, 2, 7); ctx.fillStyle = '#ffc65a'; ctx.fillRect(2, -31, 2, 4);
+  } else { ctx.fillStyle = acc; ctx.fillRect(-4, -24, 8, 1); }
+  ctx.fillStyle = '#14121c'; ctx.fillRect(2, -23, 1, 1);
+  // Ascension I: glowing markings on face and body
+  if (o.asc) {
+    const g = 0.6 + 0.4 * Math.sin(time * 4);
+    ctx.fillStyle = `rgba(125,255,240,${g})`;
+    ctx.fillRect(-4, -18, 1, 2); ctx.fillRect(-3, -16, 1, 2); ctx.fillRect(-4, -14, 1, 2); ctx.fillRect(-3, -12, 1, 2);
+    ctx.fillRect(3, -18, 1, 2); ctx.fillRect(2, -16, 1, 2); ctx.fillRect(3, -14, 1, 2);
+    ctx.fillRect(-1, -22, 3, 1); ctx.fillRect(-3, -21, 1, 2);
+    ctx.fillStyle = `rgba(255,198,90,${g})`; ctx.fillRect(-1, -26, 2, 1);
+  }
+  // weapon
+  if (o.atk) {
+    const a0 = o.atk.combo % 2 ? -1.6 : 1.2, a1 = o.atk.combo % 2 ? 1.1 : -1.4, a = a0 + (a1 - a0) * Math.min(1, o.atk.prog * 1.6);
+    const len = bab ? (o.atk.fin ? 26 : 20) : o.atk.fin ? 30 : 22;
+    ctx.strokeStyle = o.atk.fin ? (o.atk.brk ? 'rgba(255,198,90,.55)' : 'rgba(236,230,214,.45)') : bab ? 'rgba(199,162,255,.45)' : 'rgba(62,240,180,.4)';
+    ctx.lineWidth = o.atk.fin ? 9 : 6; ctx.beginPath(); ctx.arc(2, -14, len - 4, Math.min(a0, a), Math.max(a0, a)); ctx.stroke();
+    ctx.strokeStyle = wcol || (bab ? '#a0703c' : '#ece6d6'); ctx.lineWidth = bab ? 2.5 : 2; ctx.beginPath(); ctx.moveTo(2, -14); ctx.lineTo(2 + Math.cos(a) * len, -14 + Math.sin(a) * len); ctx.stroke();
+  } else if (bab) {
+    ctx.strokeStyle = wcol || '#8a5a34'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(6, -27); ctx.lineTo(6, 0); ctx.stroke();
+    ctx.fillStyle = '#3ef0b4'; ctx.fillRect(5, -30, 3, 3);
+  } else {
+    ctx.strokeStyle = wcol || '#a8b0c8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-3, -18); ctx.lineTo(-9, -4); ctx.stroke();
     ctx.strokeStyle = '#8a5a34'; ctx.beginPath(); ctx.moveTo(4, -16); ctx.lineTo(9, -3); ctx.stroke();
   }
-  ctx.restore();
+  if (wcol === '#ff3d8b' && !o.atk) { ctx.fillStyle = `rgba(255,61,139,${0.25 + 0.15 * Math.sin(time * 6)})`; ctx.beginPath(); ctx.arc(bab ? 6 : -6, -12, 6, 0, 7); ctx.fill(); }
+  // channelled orb in the free hand
+  if (o.chan >= 0 && o.chan !== undefined) {
+    const r = 3 + 5 * o.chan;
+    ctx.fillStyle = 'rgba(199,162,255,.35)'; ctx.beginPath(); ctx.arc(11, -15, r + 3, 0, 7); ctx.fill();
+    ctx.fillStyle = '#e6d8ff'; ctx.beginPath(); ctx.arc(11, -15, r, 0, 7); ctx.fill();
+  }
 }
 function drawProj() {
   for (const p of projs) {
     const x = p.x - cam.x, y = p.y - cam.y;
     if (p.type === 'bolt') { ctx.fillStyle = 'rgba(62,240,180,.35)'; ctx.fillRect(x - 3, y - 2, p.w + 6, p.h + 4); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(x, y + 2, p.w, p.h - 4); ctx.fillStyle = '#eafff6'; ctx.fillRect(x + 3, y + 3, p.w - 6, 2); }
     else if (p.type === 'leaf') { ctx.save(); ctx.translate(x + 5, y + 5); ctx.rotate(p.life * 12); ctx.fillStyle = '#7ad04a'; ctx.beginPath(); ctx.ellipse(0, 0, 6, 3, 0, 0, 7); ctx.fill(); ctx.fillStyle = '#3ef0b4'; ctx.fillRect(-5, 0, 10, 1); ctx.restore(); }
+    else if (p.type === 'orb') { const r = p.w / 2; ctx.fillStyle = 'rgba(199,162,255,.35)'; ctx.beginPath(); ctx.arc(x + r, y + r, r + 4, 0, 7); ctx.fill(); ctx.fillStyle = '#c7a2ff'; ctx.beginPath(); ctx.arc(x + r, y + r, r, 0, 7); ctx.fill(); ctx.fillStyle = '#f4ecff'; ctx.beginPath(); ctx.arc(x + r - 1, y + r - 1, r * 0.45, 0, 7); ctx.fill(); }
+    else if (p.type === 'spirit') drawSpiritGhost(p.sid, x + p.w / 2, y + p.h / 2, p.vx >= 0 ? 1 : -1, performance.now() / 1000, 0.9);
+    else if (p.type === 'feather') { ctx.fillStyle = '#ffd37a'; ctx.save(); ctx.translate(x + 3, y + 3); ctx.rotate(Math.atan2(p.vy, p.vx)); ctx.fillRect(-5, -1, 10, 2); ctx.restore(); }
     else if (p.type === 'dart') { ctx.fillStyle = 'rgba(143,227,255,.35)'; ctx.fillRect(x - 2, y - 2, p.w + 4, p.h + 4); ctx.fillStyle = '#8fe3ff'; ctx.fillRect(x, y, p.w, p.h); }
     else if (p.type === 'wave') { ctx.fillStyle = 'rgba(168,139,90,.85)'; ctx.beginPath(); ctx.moveTo(x, y + p.h); ctx.lineTo(x + p.w / 2, y); ctx.lineTo(x + p.w, y + p.h); ctx.fill(); ctx.fillStyle = 'rgba(255,61,139,.6)'; ctx.fillRect(x, y + p.h - 2, p.w, 2); }
   }
@@ -1427,7 +1650,15 @@ function drawHUD(time) {
     if (S.spirit === 'salagubang') cd = P.shieldCd / 12; else if (S.spirit === 'sigbin') cd = P.biteCd / 3.5; else if (S.spirit === 'kapre') cd = P.stompCd > 1 ? P.stompCd / 8 : 0;
     if (cd > 0) { ctx.strokeStyle = 'rgba(236,230,214,.6)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(ox + 6, sy - 3, 6, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * (1 - cd)); ctx.stroke(); }
     ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = col; ctx.fillText(spiritName(S.spirit), ox + 16, sy);
+    if (S.cls === 'bab' && has('call')) {
+      // summon readiness ring
+      const r = P.sumCd > 0 ? 1 - P.sumCd / (has('bond') ? 2.5 : 4) : 1, sx = ox + 22 + ctx.measureText(spiritName(S.spirit)).width;
+      ctx.strokeStyle = r >= 1 && P.en >= SUMMON_COST ? col : 'rgba(236,230,214,.35)'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(sx + 4, sy - 3, 4, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * r); ctx.stroke();
+    }
   }
+  let ty = oy + 42;
+  if (ACC.equip.ttl) { ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = RAR_COL[gItem(ACC.equip.ttl).r]; ctx.fillText(t('g_' + ACC.equip.ttl), ox, ty); ty += 11; }
+  if (S.hell) { ctx.font = '700 8px "Chakra Petch", sans-serif'; ctx.fillStyle = '#ff5a3d'; ctx.fillText(t('hellTag'), ox, ty); }
   // era pill
   const past = S.era === PAST, label = (past ? t('past') : t('present')) + ' · ' + (past ? t('yearPast') : t('yearPresent'));
   ctx.font = '700 10px "Chakra Petch", sans-serif';
@@ -1505,6 +1736,28 @@ function render(time) {
   }
   if (flash > 0) { ctx.globalAlpha = Math.min(0.6, flash); ctx.fillStyle = flashCol; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = 1; }
   drawHUD(time);
+  if (cutT > 0) drawCutIn(time);
+}
+// ascension cut-in: dark frame, a gold band sweeping in with the hero and the title
+let cutT = 0;
+const CUT = 2.4;
+function drawCutIn(time) {
+  const p = 1 - cutT / CUT, a = Math.min(1, p / 0.12, cutT / 0.3);
+  ctx.globalAlpha = 0.65 * a; ctx.fillStyle = '#05060c'; ctx.fillRect(0, 0, VW, VH); ctx.globalAlpha = a;
+  const off = (1 - Math.min(1, p / 0.18)) * -VW, cy = VH / 2;
+  ctx.fillStyle = 'rgba(255,198,90,.92)';
+  ctx.beginPath(); ctx.moveTo(off, cy - 46); ctx.lineTo(off + VW + 60, cy - 66); ctx.lineTo(off + VW + 60, cy + 40); ctx.lineTo(off, cy + 60); ctx.fill();
+  ctx.fillStyle = '#0b0e1a'; ctx.beginPath(); ctx.moveTo(off, cy - 40); ctx.lineTo(off + VW + 60, cy - 60); ctx.lineTo(off + VW + 60, cy + 34); ctx.lineTo(off, cy + 54); ctx.fill();
+  for (let i = 0; i < 18; i++) { ctx.fillStyle = i % 2 ? '#3ef0b4' : '#ffc65a'; ctx.fillRect(off + ((i * 53 + time * 260) % (VW + 40)), cy - 30 + (i * 37 % 70), 14, 1); }
+  ctx.save(); ctx.translate(off + VW * 0.26, cy + 46); ctx.scale(3.2, 3.2);
+  ctx.fillStyle = `rgba(255,198,90,${0.25 + 0.1 * Math.sin(time * 6)})`; ctx.beginPath(); ctx.ellipse(0, -14, 15, 19, 0, 0, 7); ctx.fill();
+  drawHero({ cls: S.cls, look: S.look, asc: true, eq: ACC.equip }, time);
+  ctx.restore();
+  ctx.textAlign = 'left'; ctx.fillStyle = '#ffc65a'; ctx.font = '700 30px "Chakra Petch", sans-serif';
+  ctx.fillText(t('ascCut'), off + VW * 0.42, cy - 2);
+  ctx.fillStyle = '#ece6d6'; ctx.font = '600 12px "Sora", sans-serif';
+  ctx.fillText(t('ascSub', S.name || t('cls_' + S.cls)), off + VW * 0.42, cy + 20);
+  ctx.globalAlpha = 1;
 }
 
 // ---------- menu ----------
@@ -1527,11 +1780,17 @@ function canLearn(n) {
   return true;
 }
 function learn(id) {
-  const n = NODES.find(x => x.id === id); if (!n || !canLearn(n)) return false;
+  const n = tree().find(x => x.id === id); if (!n || !canLearn(n)) return false;
   S.sp -= n.cost; if (n.mats) for (const m in n.mats) S.mats[m] -= n.mats[m];
   S.nodes.push(id);
   const st = stats(); P.maxhp = st.maxhp; P.maxen = st.maxen; P.hp = Math.min(P.hp + 25, P.maxhp);
   sfx(660, 0.2, 'triangle', 0.06, 200);
+  if (id === 'asc') {
+    // ascension: permanent look change (markings + aura) and a short cut-in
+    if (!menuEl.hidden) toggleMenu(false);
+    cutT = CUT; sfx(392, 0.5, 'triangle', 0.06, 400); setTimeout(() => sfx(784, 0.6, 'triangle', 0.06, 200), 260);
+    burst(P.x + P.w / 2, P.y + P.h / 2, 40, '#ffc65a', 220, 1, 2, 0);
+  }
   save(); return true;
 }
 function nodeHTML(n) {
@@ -1564,7 +1823,7 @@ function forgeUpgrade() {
   if (ok) { sfx(660, 0.15, 'triangle', 0.06, 300); setTimeout(() => sfx(990, 0.25, 'triangle', 0.06), 110); } else sfx(160, 0.3, 'sawtooth', 0.05, -80);
   save(); return ok;
 }
-const TABS = { skills: 'skills', eco: 'eco', spirits: 'spirits', forge: 'forge', bag: 'bag', map: 'map' };
+const TABS = { skills: 'skills', eco: 'eco', spirits: 'spirits', forge: 'forge', bag: 'bag', map: 'map', hero: 'hero', summon: 'summon' };
 function portrait(cnv, id) {
   const c2 = cnv.getContext('2d'), old = ctx;
   c2.clearRect(0, 0, cnv.width, cnv.height);
@@ -1575,9 +1834,10 @@ function renderMenu() {
   document.querySelectorAll('.tabs [data-tab]').forEach(b => { b.classList.toggle('on', b.dataset.tab === tab); b.textContent = t(TABS[b.dataset.tab]); });
   document.getElementById('m-close').textContent = t('resume');
   if (tab === 'skills') {
-    let h = `<div class="sp-line"><span>Eskrimador · ${t('lvl')} ${S.lvl}</span><span>${t('sp')}: <b>${S.sp}</b></span></div><div class="tree">`;
-    for (const br of ['blade', 'spirit', 'body']) { h += `<div class="branch"><h3>${t('br_' + br)}</h3>`; NODES.filter(n => n.br === br && n.id !== 'arnis').forEach(n => { h += nodeHTML(n); }); h += '</div>'; }
-    h += '</div><div class="asc">' + nodeHTML(NODES.find(n => n.id === 'asc')) + nodeHTML(NODES[0]) + '</div>';
+    const tr = tree();
+    let h = `<div class="sp-line"><span>${t('cls_' + S.cls)} · ${t('lvl')} ${S.lvl}</span><span>${t('sp')}: <b>${S.sp}</b></span></div><div class="tree">`;
+    for (const br of BRANCHES[S.cls]) { h += `<div class="branch"><h3>${t('br_' + br)}</h3>`; tr.filter(n => n.br === br && n !== tr[0]).forEach(n => { h += nodeHTML(n); }); h += '</div>'; }
+    h += '</div><div class="asc">' + nodeHTML(tr.find(n => n.id === 'asc')) + nodeHTML(tr[0]) + '</div>';
     mBody.innerHTML = h;
     mBody.querySelectorAll('[data-learn]').forEach(b => b.addEventListener('click', () => { learn(b.dataset.learn); renderMenu(); }));
   } else if (tab === 'eco') {
@@ -1594,11 +1854,12 @@ function renderMenu() {
   } else if (tab === 'spirits') {
     let h = `<p class="eco-hint">${t('spiritHint')}</p><div class="spirits">`;
     for (const id of SPIRITS) {
-      const got = S.spirits.includes(id), on = S.spirit === id, wait = S.spiritAt[id];
+      const got = ownsSpirit(id), on = S.spirit === id, wait = S.spiritAt[id], gs = SUMMON_SPIRITS.includes(id);
       let st;
       if (on) st = `<span class="st">${t('spiritActive')}</span>`;
       else if (got) st = `<button type="button" data-equip="${id}">${t('equip')}</button>`;
       else if (wait !== undefined) st = `<span class="st wait">${t('spiritWaiting', wait + 1)}</span>`;
+      else if (gs) st = `<span class="st lock">${t('spiritSummonOnly', gItem(id).r)}</span>`;
       else st = `<span class="st lock">${t('spiritLocked', spName(id))}</span>`;
       h += `<div class="spirit ${on ? 'have' : got ? 'can' : ''} ${got || wait !== undefined ? '' : 'dim'}"><canvas width="56" height="44" data-por="${id}"></canvas><div class="sp-txt"><span class="nm" style="color:${SPIRIT_COL[id]}">${spiritName(id)}</span><span class="ds">${t('spd_' + id)}</span>${st}</div></div>`;
     }
@@ -1622,6 +1883,25 @@ function renderMenu() {
     mBody.innerHTML = h + '</div></div>';
     const fb = mBody.querySelector('[data-forge]');
     if (fb) fb.addEventListener('click', () => { forgeUpgrade(); renderMenu(); });
+  } else if (tab === 'hero') {
+    const ttl = ACC.equip.ttl;
+    let h = `<div class="hero"><div class="hero-l"><canvas id="hero-cv" width="96" height="104"></canvas><span class="nm">${esc(S.name || t('cls_' + S.cls))}</span>` +
+      `<span class="ds">${t('cls_' + S.cls)} · ${t('lvl')} ${S.lvl}</span>${ttl ? `<span class="ttl" style="color:${RAR_COL[gItem(ttl).r]}">${t('g_' + ttl)}</span>` : ''}</div><div class="hero-r">${custHTML(S.look)}`;
+    for (const sl of COS_SLOTS) {
+      const own = GACHA.filter(g => g.type === sl && ACC.cos[g.id]);
+      h += `<div class="cust-row"><span class="cl">${t('slot_' + sl)}</span><div class="chips"><button type="button" class="chip ${!ACC.equip[sl] ? 'on' : ''}" data-eq="${sl}" data-id="">${t('cosNone')}</button>` +
+        own.map(g => `<button type="button" class="chip ${ACC.equip[sl] === g.id ? 'on' : ''}" data-eq="${sl}" data-id="${g.id}" style="border-color:${RAR_COL[g.r]}">${t('g_' + g.id)}</button>`).join('') + '</div></div>';
+    }
+    mBody.innerHTML = h + `<p class="eco-hint">${t('cosHint')}</p><button type="button" class="chip" id="to-title">${t('toTitle')}</button></div></div>`;
+    heroPreview(document.getElementById('hero-cv'), S.cls, S.look, has('asc'), ACC.equip);
+    bindCust(mBody, S.look, () => { save(); renderMenu(); });
+    mBody.querySelectorAll('[data-eq]').forEach(b => b.addEventListener('click', () => { ACC.equip[b.dataset.eq] = b.dataset.id || null; saveAcc(); renderMenu(); }));
+    document.getElementById('to-title').addEventListener('click', () => { save(); showTitle(); });
+  } else if (tab === 'summon') {
+    mBody.innerHTML = summonHTML();
+    mBody.querySelectorAll('[data-por]').forEach(c => portrait(c, c.dataset.por));
+    mBody.querySelectorAll('[data-pull]').forEach(b => b.addEventListener('click', () => { summon(+b.dataset.pull); renderMenu(); }));
+    mBody.querySelector('[data-odds]').addEventListener('click', () => { oddsOpen = !oddsOpen; renderMenu(); });
   } else if (tab === 'map') {
     if (exDirty) redrawMinimap();
     mBody.innerHTML = `<div class="map-line"><span>${t('explored', exploredPct())}</span><label><input type="checkbox" id="mm-toggle" ${S.minimap ? 'checked' : ''}> ${t('minimapToggle')}</label></div><canvas id="map-cv" width="${MW * 3}" height="${MH * 3}"></canvas><p class="eco-hint">${t('mapLegend')}</p>`;
@@ -1636,7 +1916,89 @@ function renderMenu() {
   }
 }
 
+function esc(x) { return String(x).replace(/[&<>"']/g, c => '&#' + c.charCodeAt(0) + ';'); }
+// customization rows (class pick screen + Hero tab)
+function custHTML(look) {
+  const sw = (key, cols) => cols.map((c, i) => `<button type="button" class="swc ${look[key] === i ? 'on' : ''}" data-c="${key}" data-v="${i}" style="background:${c}" aria-label="${t('c_' + key)} ${i + 1}"></button>`).join('');
+  let hs = ''; for (let i = 0; i < HAIR_STYLES; i++) hs += `<button type="button" class="chip ${look.hair === i ? 'on' : ''}" data-c="hair" data-v="${i}">${t('hs' + i)}</button>`;
+  return `<div class="cust-row"><span class="cl">${t('c_skin')}</span><div class="chips">${sw('skin', SKINS)}</div></div>` +
+    `<div class="cust-row"><span class="cl">${t('c_hair')}</span><div class="chips">${hs}</div></div>` +
+    `<div class="cust-row"><span class="cl">${t('c_hairCol')}</span><div class="chips">${sw('hairCol', HAIR_COLS)}</div></div>` +
+    `<div class="cust-row"><span class="cl">${t('c_acc')}</span><div class="chips">${sw('acc', ACCENTS)}</div></div>`;
+}
+function bindCust(root, look, done) {
+  root.querySelectorAll('[data-c]').forEach(b => b.addEventListener('click', () => { look[b.dataset.c] = +b.dataset.v; done(); }));
+}
+function heroPreview(cnv, cls, look, asc, eq) {
+  const c2 = cnv.getContext('2d'), old = ctx;
+  c2.setTransform(1, 0, 0, 1, 0, 0); c2.clearRect(0, 0, cnv.width, cnv.height);
+  const sc = cnv.height / 37;
+  c2.translate(cnv.width / 2, cnv.height - 3); c2.scale(sc, sc);
+  ctx = c2;
+  try { if (asc) { ctx.fillStyle = 'rgba(255,198,90,.2)'; ctx.beginPath(); ctx.ellipse(0, -14, 15, 19, 0, 0, 7); ctx.fill(); } drawHero({ cls, look, asc, eq: eq || {} }, 1.3); } finally { ctx = old; }
+}
+// ---------- summon (gacha, offline, no real money) ----------
+let oddsOpen = false;
+function gItem(id) { return GACHA.find(g => g.id === id); }
+// chance of SSR or better on the n-th pull since the last SSR/UR: base 2.6%, +6% per pull from pull 70, guaranteed at 90
+function ssrChance(n) { return n >= HARD_PITY ? 1 : Math.min(1, (RAR_RATE.SSR + RAR_RATE.UR) / 100 + Math.max(0, n - SOFT_PITY + 1) * SOFT_STEP); }
+function rollRarity(n) {
+  const hi = ssrChance(n), r = rng();
+  if (r < hi) return r < hi * RAR_RATE.UR / (RAR_RATE.SSR + RAR_RATE.UR) ? 'UR' : 'SSR';
+  return (r - hi) / (1 - hi) < RAR_RATE.SR / (RAR_RATE.R + RAR_RATE.SR) ? 'SR' : 'R';
+}
+function pullOne() {
+  const n = ACC.pity + 1, rar = rollRarity(n), pool = GACHA.filter(g => g.r === rar);
+  const it = pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))];
+  ACC.pulls++; ACC.pity = rar === 'SSR' || rar === 'UR' ? 0 : n;
+  let dup;
+  if (it.type === 'spirit') { dup = ACC.spirits.includes(it.id); if (!dup) ACC.spirits.push(it.id); }
+  else { dup = !!ACC.cos[it.id]; ACC.cos[it.id] = (ACC.cos[it.id] || 0) + 1; }
+  const dust = dup ? RAR_DUST[rar] : 0; ACC.dust += dust;
+  return { id: it.id, r: rar, dup, dust };
+}
+function summon(n) {
+  if (ACC.tala < PULL_COST * n) return null;
+  ACC.tala -= PULL_COST * n;
+  const res = []; for (let i = 0; i < n; i++) res.push(pullOne());
+  ACC.last = res; saveAcc();
+  const top = res.some(r => r.r === 'UR') ? 3 : res.some(r => r.r === 'SSR') ? 2 : res.some(r => r.r === 'SR') ? 1 : 0;
+  sfx(520 + top * 130, 0.25, 'triangle', 0.05, 300); if (top >= 2) setTimeout(() => sfx(1040, 0.4, 'triangle', 0.05, 200), 150);
+  return res;
+}
+function dailyGift() {
+  const d = new Date().toDateString();
+  if (ACC.gift === d) return false;
+  ACC.gift = d; addTala(TALA.gift); toast(t('giftToast', TALA.gift), 3.2); return true;
+}
+function fmtPct(x) { const s = String(Math.round(x * 100) / 100) + '%'; return lang === 'de' ? s.replace('.', ',') : s; }
+function gName(id) { const g = gItem(id); return g.type === 'spirit' ? t('sp_' + id) : t('g_' + id); }
+function summonHTML() {
+  let h = `<div class="gacha"><div class="g-top"><span>${t('tala')} <b>${ACC.tala}</b></span><span>${t('dust')} <b>${ACC.dust}</b></span>` +
+    `<span>${t('pity')} <b id="pity-n">${ACC.pity}</b> / ${HARD_PITY}</span></div>` +
+    `<div class="g-banner"><canvas width="56" height="44" data-por="bakunawa"></canvas><canvas width="56" height="44" data-por="minokawa"></canvas><div class="g-bt"><span class="nm">${t('banner')}</span><span class="ds">${t('bannerSub')}</span><span class="ds">${t('pityLine', ACC.pity, HARD_PITY)}</span></div></div>` +
+    `<div class="g-btns"><button type="button" data-pull="1" ${ACC.tala < PULL_COST ? 'disabled' : ''}>${t('pull1', PULL_COST)}</button>` +
+    `<button type="button" data-pull="10" ${ACC.tala < PULL_COST * 10 ? 'disabled' : ''}>${t('pull10', PULL_COST * 10)}</button><button type="button" class="ghost" data-odds="1">${oddsOpen ? t('oddsClose') : t('odds')}</button></div>`;
+  if (ACC.last && ACC.last.length) {
+    h += `<div class="g-res"><span class="cl">${t('lastPull')}</span>` + ACC.last.map(r => `<span class="gr" style="border-color:${RAR_COL[r.r]}"><b style="color:${RAR_COL[r.r]}">${r.r}</b> ${gName(r.id)} <i>${r.dup ? t('dustGot', r.dust) : t('newItem')}</i></span>`).join('') + '</div>';
+  }
+  if (oddsOpen) {
+    h += `<div class="odds" id="odds"><p class="fg-rule">${t('pityRule')}</p><table><thead><tr><th>${t('oddsItem')}</th><th>${t('oddsType')}</th><th>${t('oddsRar')}</th><th>${t('oddsRate')}</th></tr></thead><tbody>`;
+    for (const r of RAR.slice().reverse()) {
+      const pool = GACHA.filter(g => g.r === r);
+      h += `<tr class="rh"><td colspan="3" style="color:${RAR_COL[r]}">${r}</td><td>${fmtPct(RAR_RATE[r])}</td></tr>`;
+      for (const g of pool) h += `<tr><td>${gName(g.id)}</td><td>${t(g.type === 'spirit' ? 'type_spirit' : 'slot_' + g.type)}</td><td style="color:${RAR_COL[r]}">${r}</td><td>${fmtPct(RAR_RATE[r] / pool.length)}</td></tr>`;
+    }
+    h += '</tbody></table></div>';
+  }
+  return h + `<p class="eco-hint">${t('earnHint')}</p></div>`;
+}
+
 // ---------- title / flow ----------
+const pickEl = document.getElementById('pick'), titleEl = document.getElementById('title');
+const DEF_NAME = { esk: 'Lakan', bab: 'Ligaya' };
+let pick = { cls: 'esk', look: defLook('esk'), hell: false, touched: false };
+function fmtTime(sec) { return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0'); }
 function applyLang() {
   document.documentElement.lang = lang === 'fil' ? 'fil' : lang;
   document.getElementById('t-tagline').textContent = t('tagline');
@@ -1645,27 +2007,96 @@ function applyLang() {
   const saved = load();
   const c = document.getElementById('btn-continue'), n = document.getElementById('btn-new');
   c.textContent = saved ? t('cont') : t('tap'); n.textContent = t('newgame'); n.hidden = !saved;
+  const hb = document.getElementById('btn-hell'), ok = hellUnlocked(), hs = load(HELL_KEY);
+  hb.disabled = !ok; hb.classList.toggle('locked', !ok);
+  hb.textContent = !ok ? t('hellLocked') : hs ? t('hellCont', hs.name || t('cls_' + hs.cls), hs.lvl) : t('hellBtn');
+  document.getElementById('t-hell').textContent = ok ? t('hellInfo') : t('hellNeed');
+  const fl = document.getElementById('fallen');
+  fl.hidden = !ACC.fallen.length;
+  if (ACC.fallen.length) fl.innerHTML = `<span class="fh">${t('fallenTitle')}</span>` + ACC.fallen.slice(0, 3).map(f => `<span>${esc(f.name)} · ${t('cls_' + f.cls)} · ${t('lvl')} ${f.lvl} · ${fmtTime(f.time)}</span>`).join('');
   document.querySelectorAll('.langs button').forEach(b => b.classList.toggle('on', b.dataset.lang === lang));
+  if (!pickEl.hidden) renderPick();
 }
 document.querySelectorAll('.langs button').forEach(b => b.addEventListener('click', () => { lang = b.dataset.lang; try { localStorage.setItem('epochfall.lang', lang); } catch (e) {} applyLang(); }));
-document.getElementById('btn-continue').addEventListener('click', () => startGame(false));
-document.getElementById('btn-new').addEventListener('click', () => startGame(true));
-function startGame(fresh) {
+function titleContinue() { if (load()) startGame(false); else openPick(false); }
+document.getElementById('btn-continue').addEventListener('click', titleContinue);
+document.getElementById('btn-new').addEventListener('click', () => openPick(false));
+document.getElementById('btn-hell').addEventListener('click', () => {
+  if (!hellUnlocked()) return;
+  if (load(HELL_KEY)) startGame(false, { hell: true }); else openPick(true);
+});
+// class pick: both classes with a live preview, customization, name; also the entry to a new hell mode character
+function openPick(hell) {
+  pick = { cls: 'esk', look: defLook('esk'), hell, touched: false };
+  document.getElementById('pk-name').value = '';
+  pickEl.hidden = false; titleEl.hidden = true;
+  renderPick();
+}
+function renderPick() {
+  document.getElementById('pk-title').textContent = t('pickTitle');
+  const tag = document.getElementById('pk-hell'); tag.hidden = !pick.hell; tag.textContent = t('pickHell');
+  document.getElementById('pk-back').textContent = t('back');
+  document.getElementById('pk-go').textContent = t('pickGo');
+  document.getElementById('pk-nl').textContent = t('pickName');
+  document.getElementById('pk-name').placeholder = DEF_NAME[pick.cls];
+  pickEl.querySelectorAll('.cls-card').forEach(card => {
+    const c = card.dataset.cls;
+    card.classList.toggle('on', c === pick.cls);
+    card.setAttribute('aria-pressed', c === pick.cls);
+    card.querySelector('.nm').textContent = t('cls_' + c);
+    card.querySelector('.ds').textContent = t('clsd_' + c);
+    heroPreview(card.querySelector('canvas'), c, c === pick.cls ? pick.look : (pick.touched ? pick.look : defLook(c)), false, ACC.equip);
+  });
+  const cu = document.getElementById('pk-cust');
+  cu.innerHTML = custHTML(pick.look);
+  bindCust(cu, pick.look, () => { pick.touched = true; renderPick(); });
+}
+pickEl.querySelectorAll('.cls-card').forEach(card => card.addEventListener('click', () => {
+  pick.cls = card.dataset.cls;
+  if (!pick.touched) pick.look = defLook(pick.cls);
+  renderPick();
+}));
+document.getElementById('pk-back').addEventListener('click', () => { pickEl.hidden = true; titleEl.hidden = false; applyLang(); });
+document.getElementById('pk-go').addEventListener('click', () => {
+  startGame(true, { cls: pick.cls, look: pick.look, hell: pick.hell, name: document.getElementById('pk-name').value.trim().slice(0, 14) || DEF_NAME[pick.cls] });
+});
+function startGame(fresh, o = {}) {
   initAudio();
-  S = (!fresh && load()) || freshSave();
+  const hell = !!o.hell, cls = TREES[o.cls] ? o.cls : 'esk';
+  S = (!fresh && load(hell ? HELL_KEY : SAVE_KEY)) || freshSave(cls);
+  if (fresh) {
+    S = freshSave(cls); S.hell = hell; S.name = o.name || DEF_NAME[cls];
+    if (o.look) for (const k in LOOK_KEYS) S.look[k] = clamp(o.look[k] | 0, 0, LOOK_KEYS[k] - 1);
+  }
   buildMap();
   const sx = S.bossDone ? SHRINES[2] : (S.shrine || S.time ? SHRINES[S.shrine] : 4);
   P = newPlayer(sx * TS, GY * TS - 26);
   const st = stats(); P.maxhp = P.hp = st.maxhp; P.maxen = P.en = st.maxen;
-  enemies = []; projs = []; items = []; parts = []; texts = []; boss = null;
+  enemies = []; projs = []; items = []; parts = []; texts = []; boss = null; cutT = 0;
   resetSpawns(); loadExplored(); wipeT = 0;
   SPR.x = P.x; SPR.y = P.y - 10;
   cam.x = clamp(P.x - VW / 2, 0, MW * TS - VW); cam.y = clamp(P.y - VH * 0.58, 0, MH * TS - VH);
-  document.getElementById('title').hidden = true;
-  mode = 'play';
+  titleEl.hidden = true; pickEl.hidden = true;
+  document.getElementById('b-sum').hidden = S.cls !== 'bab';
+  mode = 'play'; paused = false;
   if (touchWanted) touchEl.hidden = false;
-  if (!S.time) toast(t('present') + ' · ' + t('yearPresent'), 2.2);
+  if (!S.time) toast(t('present') + ' · ' + t('yearPresent') + (S.hell ? ' · ' + t('hellTag') : ''), 2.2);
+  dailyGift();
   save();
+}
+function showTitle() {
+  S = null; P = null; boss = null; enemies = []; projs = []; cutT = 0;
+  mode = 'title'; paused = false; menuEl.hidden = true; touchEl.hidden = true; timeBtn.hidden = true;
+  document.getElementById('win').hidden = true; pickEl.hidden = true; titleEl.hidden = false;
+  applyLang();
+}
+// hell mode permadeath: the character and its save are gone, its name goes to the Fallen list; the account keeps everything
+function endHell() {
+  const f = { name: S.name || DEF_NAME[S.cls], cls: S.cls, lvl: S.lvl, time: Math.floor(S.time), boss: !!S.bossDone, at: Date.now() };
+  ACC.fallen.unshift(f); if (ACC.fallen.length > 20) ACC.fallen.length = 20; saveAcc();
+  try { localStorage.removeItem(HELL_KEY); } catch (e) {}
+  showTitle();
+  toast(t('hellFallen', f.name), 5);
 }
 
 // ---------- sizing + loop ----------
@@ -1684,6 +2115,8 @@ let last = performance.now(), acc = 0;
 const STEP = 1 / 60;
 function frame(now) {
   const dt = Math.min(0.1, (now - last) / 1000); last = now;
+  if (mode === 'fallen') endHell();
+  if (mode !== 'play' && toastT > 0) { toastT -= dt; if (toastT <= 0) toastEl.classList.remove('show'); }
   if (mode === 'play' && !paused) { acc += dt; let n = 0; while (acc >= STEP && n < 5) { update(STEP); acc -= STEP; n++; } if (n === 5) acc = 0; }
   if (S && P) render(now / 1000);
   else titleRender(now / 1000);
@@ -1700,7 +2133,20 @@ requestAnimationFrame(frame);
 // test / debug hook (used by tools/test.mjs)
 window.EF = {
   get S() { return S; }, get P() { return P; }, get boss() { return boss; }, get enemies() { return enemies; }, get mode() { return mode; },
-  start: startGame, step(n = 1) { for (let i = 0; i < n; i++) update(STEP); },
+  start: startGame, get acc() { return ACC; }, toTitle() { if (S) save(); showTitle(); }, pick: openPick, get pickState() { return pick; },
+  tree, ssrChance, rollRarity, summon, gacha: GACHA, rates: RAR_RATE, dailyGift, hurt: d => hurtPlayer(d, P.x + 20), get cut() { return cutT; },
+  bossBase: bossBaseStage, hellUnlocked, summonStrike: () => summonStrike(stats()),
+  // colours the hero sprite actually uses: draws the current hero into a small canvas and reads the pixels back
+  heroColors() {
+    const c = document.createElement('canvas'); c.width = 48; c.height = 48;
+    const c2 = c.getContext('2d'), old = ctx; c2.translate(24, 44); ctx = c2;
+    try { drawHero({ cls: S.cls, look: S.look, asc: has('asc'), eq: ACC.equip }, Math.PI / 8); } finally { ctx = old; }
+    const d = c2.getImageData(0, 0, 48, 48).data, set = new Set();
+    for (let i = 0; i < d.length; i += 4) if (d[i + 3] === 255) set.add('#' + [d[i], d[i + 1], d[i + 2]].map(v => v.toString(16).padStart(2, '0')).join(''));
+    return [...set];
+  },
+  look: { SKINS, HAIR_COLS, ACCENTS },
+  step(n = 1) { for (let i = 0; i < n; i++) update(STEP); },
   hold(k, v) { if (v) press(k); else release(k); },
   tap(k) { press(k); update(STEP); release(k); },
   teleport(tx, ty) { P.x = tx * TS; P.y = ty * TS - P.h; P.vx = P.vy = 0; cam.x = clamp(P.x - VW / 2, 0, MW * TS - VW); cam.y = clamp(P.y - VH * 0.58, 0, MH * TS - VH); },
@@ -1712,7 +2158,7 @@ window.EF = {
   tab(name) { tab = name; renderMenu(); },
   drop(tx, ty, mat) { dropItem(tx * TS, ty * TS - 8, mat); return items[items.length - 1]; },
   spawnAt(id, tx, ty) {
-    const d = SPEC[id], e = { id: uid++, sp: id, d, x: tx * TS, y: ty * TS - d.h, w: d.w, h: d.h, vx: 0, vy: 0, hp: d.hp, max: d.hp, face: -1, onGround: false,
+    const d = SPEC[id], e = { id: uid++, sp: id, d, x: tx * TS, y: ty * TS - d.h, w: d.w, h: d.h, vx: 0, vy: 0, hp: d.hp * hm(), max: d.hp * hm(), face: -1, onGround: false,
       st: 'walk', t: 0, home: { x: tx * TS, y: ty * TS - 40 }, src: null, era: S.era, flashT: 0, kb: 0, ph: 0, loot: null, target: null };
     enemies.push(e); return e;
   },
