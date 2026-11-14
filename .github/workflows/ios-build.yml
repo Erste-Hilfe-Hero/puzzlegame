@@ -27,6 +27,8 @@ jobs:
           xcodebuild -project AmysTastyIsland.xcodeproj -scheme AmysTastyIsland -configuration Release \
             -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/ati.xcarchive \
             CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
+          # the app loads web/index.html from the bundle: fail the build if it is not there (blank screen otherwise)
+          test -f $RUNNER_TEMP/ati.xcarchive/Products/Applications/AmysTastyIsland.app/web/index.html
           cd $RUNNER_TEMP/ati.xcarchive/Products/Applications && ditto -c -k --keepParent AmysTastyIsland.app $RUNNER_TEMP/AmysTastyIsland-unsigned.zip
       - uses: actions/upload-artifact@v4
         with:
