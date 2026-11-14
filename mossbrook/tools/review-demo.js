@@ -1,5 +1,5 @@
 // App Review recording only: drives the real game UI (launch, level, duel, shop, settings) with visible tap marks.
-// Injected by tools/review-video.sh through the simulator-only MB_DEMO_JS hook; never part of the shipped app flow.
+// Injected by tools/review-video.sh through the simulator-only MB_DEMO_JS hook; never part of the shipped app flow. (v0.3.2 check)
 (async () => {
   const w = ms => new Promise(r => setTimeout(r, ms));
   const dot = document.createElement('div');
