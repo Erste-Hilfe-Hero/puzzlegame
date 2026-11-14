@@ -13,6 +13,8 @@ const ok = (name, cond, info = '') => { results.push({ name, pass: !!cond, info 
 
 const browser = await chromium.launch();
 const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, deviceScaleFactor: 1 });
+// seeded Math.random: same fight rolls every run (boss attack picks are random, a short run could skip one)
+await ctx.addInitScript(() => { let sd = 0x5eed; Math.random = () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
@@ -696,7 +698,8 @@ const f3 = await page.evaluate(() => {
     if (EF.projs.some(p => p.type === 'shard')) shards = true;
     EF.P.inv = 9;
     EF.P.x = b.x + (EF.P.x < b.x ? -14 : b.w + 2); EF.P.y = b.y + b.h - EF.P.h; EF.P.vy = 0; EF.P.face = EF.P.x < b.x ? 1 : -1;
-    if (frames % 10 === 0) EF.tap('attack'); else EF.step(1);
+    // hold fire until the boss has shown its dark lunge (or 40 s), so a short fight cannot skip it
+    if (frames % 10 === 0 && ((seen.has('lunge') && seen.has('eyes')) || frames > 60 * 40)) EF.tap('attack'); else EF.step(1);
     frames++;
   }
   return { seen: [...seen], maxStage, frames, mode: EF.mode, done: EF.S.bossDone, beaten: EF.S.beaten.slice(), shards, maxDark: +maxDark.toFixed(2), core: EF.S.mats.z3_core || 0 };
