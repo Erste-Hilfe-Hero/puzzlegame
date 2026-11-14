@@ -108,6 +108,8 @@ const GACHA = [
 const PULL_COST = 100, SOFT_PITY = 74, HARD_PITY = 90, SOFT_STEP = 0.06;
 const TALA = { kill: 1, giant: 3, chest: 30, boss: 120, gift: 100 };
 const COS_SLOTS = ['pat', 'wpn', 'aura', 'ttl'];
+// shop-only cosmetics (Starter Pack, shop.js): never in the summon pool or the odds table
+const SHOP_COS = [{ id: 'pat_tala', type: 'pat', r: 'SR' }];
 const WPN_COL = { wpn_narra: '#a0703c', wpn_capiz: '#f6f0e0', wpn_neon: '#ff3d8b' };
 // spirits: the starter Diwata Wisp (id diwata) plus the ghost of each extinct past species (id = past species id)
 // plus two summon-only spirits (Minokawa SSR, Bakunawa UR) that belong to the account, not the character
@@ -1888,7 +1890,7 @@ function renderMenu() {
     let h = `<div class="hero"><div class="hero-l"><canvas id="hero-cv" width="96" height="104"></canvas><span class="nm">${esc(S.name || t('cls_' + S.cls))}</span>` +
       `<span class="ds">${t('cls_' + S.cls)} · ${t('lvl')} ${S.lvl}</span>${ttl ? `<span class="ttl" style="color:${RAR_COL[gItem(ttl).r]}">${t('g_' + ttl)}</span>` : ''}</div><div class="hero-r">${custHTML(S.look)}`;
     for (const sl of COS_SLOTS) {
-      const own = GACHA.filter(g => g.type === sl && ACC.cos[g.id]);
+      const own = GACHA.concat(SHOP_COS).filter(g => g.type === sl && ACC.cos[g.id]);
       h += `<div class="cust-row"><span class="cl">${t('slot_' + sl)}</span><div class="chips"><button type="button" class="chip ${!ACC.equip[sl] ? 'on' : ''}" data-eq="${sl}" data-id="">${t('cosNone')}</button>` +
         own.map(g => `<button type="button" class="chip ${ACC.equip[sl] === g.id ? 'on' : ''}" data-eq="${sl}" data-id="${g.id}" style="border-color:${RAR_COL[g.r]}">${t('g_' + g.id)}</button>`).join('') + '</div></div>';
     }
@@ -1902,6 +1904,7 @@ function renderMenu() {
     mBody.querySelectorAll('[data-por]').forEach(c => portrait(c, c.dataset.por));
     mBody.querySelectorAll('[data-pull]').forEach(b => b.addEventListener('click', () => { summon(+b.dataset.pull); renderMenu(); }));
     mBody.querySelector('[data-odds]').addEventListener('click', () => { oddsOpen = !oddsOpen; renderMenu(); });
+    if (window.EFShop) window.EFShop.summonTab(mBody);
   } else if (tab === 'map') {
     if (exDirty) redrawMinimap();
     mBody.innerHTML = `<div class="map-line"><span>${t('explored', exploredPct())}</span><label><input type="checkbox" id="mm-toggle" ${S.minimap ? 'checked' : ''}> ${t('minimapToggle')}</label></div><canvas id="map-cv" width="${MW * 3}" height="${MH * 3}"></canvas><p class="eco-hint">${t('mapLegend')}</p>`;
@@ -1939,7 +1942,7 @@ function heroPreview(cnv, cls, look, asc, eq) {
 }
 // ---------- summon (gacha, offline, no real money) ----------
 let oddsOpen = false;
-function gItem(id) { return GACHA.find(g => g.id === id); }
+function gItem(id) { return GACHA.find(g => g.id === id) || SHOP_COS.find(g => g.id === id); }
 // chance of SSR or better on the n-th pull since the last SSR/UR: base 2.6%, +6% per pull from pull 70, guaranteed at 90
 function ssrChance(n) { return n >= HARD_PITY ? 1 : Math.min(1, (RAR_RATE.SSR + RAR_RATE.UR) / 100 + Math.max(0, n - SOFT_PITY + 1) * SOFT_STEP); }
 function rollRarity(n) {
@@ -2146,6 +2149,8 @@ window.EF = {
     return [...set];
   },
   look: { SKINS, HAIR_COLS, ACCENTS },
+  // hooks for shop.js (IAP)
+  host: { saveAcc, addTala, t, toast, renderMenu, shopCos: SHOP_COS, get lang() { return lang; }, get tab() { return tab; }, get menuOpen() { return !menuEl.hidden; } },
   step(n = 1) { for (let i = 0; i < n; i++) update(STEP); },
   hold(k, v) { if (v) press(k); else release(k); },
   tap(k) { press(k); update(STEP); release(k); },

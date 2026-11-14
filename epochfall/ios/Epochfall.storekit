@@ -1,0 +1,176 @@
+{
+  "identifier": "C0304121",
+  "nonRenewingSubscriptions": [],
+  "products": [
+    {
+      "displayPrice": "2.99",
+      "familyShareable": false,
+      "internalID": "267738410",
+      "localizations": [
+        {
+          "description": "300 Tala + exclusive SR scarf pattern",
+          "displayName": "Starter Pack",
+          "locale": "en_US"
+        },
+        {
+          "description": "300 Tala + exklusives SR-Schalmuster",
+          "displayName": "Starterpaket",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.starter",
+      "referenceName": "Starter Pack",
+      "type": "NonConsumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "808465139",
+      "localizations": [
+        {
+          "description": "300 Tala now + 90 Tala daily for 30 days",
+          "displayName": "Moon Pass",
+          "locale": "en_US"
+        },
+        {
+          "description": "300 Tala sofort + 90 Tala täglich, 30 Tage",
+          "displayName": "Mondpass",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.moonpass",
+      "referenceName": "Moon Pass 30 days",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "0.99",
+      "familyShareable": false,
+      "internalID": "312492858",
+      "localizations": [
+        {
+          "description": "60 Tala for summons in Epochfall.",
+          "displayName": "60 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "60 Tala für Beschwörungen in Epochfall.",
+          "displayName": "60 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_60",
+      "referenceName": "Tala 60 (tala_60)",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "4.99",
+      "familyShareable": false,
+      "internalID": "489916785",
+      "localizations": [
+        {
+          "description": "300 Tala + 30 bonus Tala.",
+          "displayName": "330 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "300 Tala + 30 Bonus-Tala.",
+          "displayName": "330 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_300",
+      "referenceName": "Tala 330 (tala_300)",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "14.99",
+      "familyShareable": false,
+      "internalID": "618842744",
+      "localizations": [
+        {
+          "description": "980 Tala + 110 bonus Tala.",
+          "displayName": "1090 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "980 Tala + 110 Bonus-Tala.",
+          "displayName": "1090 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_980",
+      "referenceName": "Tala 1090 (tala_980)",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "29.99",
+      "familyShareable": false,
+      "internalID": "468859644",
+      "localizations": [
+        {
+          "description": "1980 Tala + 260 bonus Tala.",
+          "displayName": "2240 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "1980 Tala + 260 Bonus-Tala.",
+          "displayName": "2240 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_1980",
+      "referenceName": "Tala 2240 (tala_1980)",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "49.99",
+      "familyShareable": false,
+      "internalID": "177273239",
+      "localizations": [
+        {
+          "description": "3280 Tala + 600 bonus Tala.",
+          "displayName": "3880 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "3280 Tala + 600 Bonus-Tala.",
+          "displayName": "3880 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_3280",
+      "referenceName": "Tala 3880 (tala_3280)",
+      "type": "Consumable"
+    },
+    {
+      "displayPrice": "99.99",
+      "familyShareable": false,
+      "internalID": "729627343",
+      "localizations": [
+        {
+          "description": "6480 Tala + 1600 bonus Tala.",
+          "displayName": "8080 Tala",
+          "locale": "en_US"
+        },
+        {
+          "description": "6480 Tala + 1600 Bonus-Tala.",
+          "displayName": "8080 Tala",
+          "locale": "de"
+        }
+      ],
+      "productID": "com.nyrathen.epochfall.tala_6480",
+      "referenceName": "Tala 8080 (tala_6480)",
+      "type": "Consumable"
+    }
+  ],
+  "settings": {
+    "_failTransactionsEnabled": false,
+    "_locale": "en_US",
+    "_storefront": "USA"
+  },
+  "subscriptionGroups": [],
+  "version": {
+    "major": 3,
+    "minor": 0
+  }
+}

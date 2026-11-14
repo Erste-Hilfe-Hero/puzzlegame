@@ -7,6 +7,9 @@ targets:
   Epochfall:
     type: application
     platform: iOS
+    # Run action uses the local StoreKit configuration (all Tala products) for testing purchases in the simulator
+    scheme:
+      storeKitConfiguration: Epochfall.storekit
     sources:
       - App
       # folder reference: lands in the bundle as Epochfall.app/web/ (WebView.swift loads web/index.html)

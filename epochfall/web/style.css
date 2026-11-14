@@ -194,3 +194,25 @@ button:focus-visible { outline: 2px solid var(--jade); outline-offset: 2px; }
 .odds tr.rh td { font-family: var(--display); font-weight: 700; padding-top: 7px; }
 #b-sum { right: 66px; bottom: 136px; width: 46px; height: 46px; font-size: 18px; border-color: #c7a2ff; }
 @media (max-width: 700px) { .pick-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } .pick-side { grid-column: 1 / -1; } .hero { grid-template-columns: 1fr; } }
+/* Tala shop (shop.js) */
+.g-note { margin: 0; font-size: 11px; color: var(--mute); }
+.shop { display: flex; flex-direction: column; gap: 8px; }
+.sh-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sh-head .sh-title { font-family: var(--display); font-weight: 700; font-size: 15px; flex: 1 1 auto; }
+.sh-head .sh-bal { color: var(--mute); font-family: var(--display); }
+.sh-head .sh-bal b { color: var(--gold); font-size: 17px; font-variant-numeric: tabular-nums; }
+.shop button { border-radius: 3px; padding: 6px 12px; font-size: 12.5px; font-weight: 700; }
+.shop button.ghost { background: transparent; color: var(--pearl); border: 1px solid var(--mute); }
+.shop button:disabled { opacity: .5; cursor: not-allowed; }
+.sh-info, .sh-msg, .sh-moon { margin: 0; font-size: 12px; }
+.sh-info { color: var(--gold); }
+.sh-msg { color: var(--jade); }
+.sh-moon { color: #c9eedc; }
+.sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.sh-card { display: flex; flex-direction: column; gap: 4px; padding: 8px; border: 1px solid rgba(236,230,214,.18); border-radius: 4px; background: rgba(11,14,26,.4); }
+.sh-card.starter, .sh-card.moon { border-color: rgba(199,125,255,.55); }
+.sh-card .nm { font-family: var(--display); font-weight: 700; font-size: 14px; color: var(--gold); }
+.sh-card .ds { font-size: 11px; color: var(--mute); flex: 1 1 auto; }
+.sh-card button { margin-top: auto; background: var(--gold); color: var(--ink); border: 0; }
+.sh-card.owned button { background: transparent; color: var(--jade); border: 1px solid var(--jade); }
+.sh-foot { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }

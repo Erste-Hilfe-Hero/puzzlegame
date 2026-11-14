@@ -1,0 +1,216 @@
+{
+  "app": "Epochfall",
+  "bundleId": "com.nyrathen.epochfall",
+  "platform": "iOS",
+  "store": "App Store (StoreKit 2)",
+  "currency": "Tala",
+  "priceCurrency": "USD",
+  "localeMap": {
+    "en": "en-US",
+    "fil": "fil",
+    "de": "de-DE"
+  },
+  "limits": {
+    "displayName": 30,
+    "description": 45
+  },
+  "regionLock": {
+    "paidPurchasesDisabledIn": [
+      "BEL",
+      "NLD"
+    ],
+    "reason": "paid random items (gacha), concept section 9"
+  },
+  "products": [
+    {
+      "productId": "com.nyrathen.epochfall.starter",
+      "type": "non_consumable",
+      "priceUsd": 2.99,
+      "tala": 300,
+      "oncePerAccount": true,
+      "cosmetic": {
+        "id": "pat_tala",
+        "rarity": "SR",
+        "slot": "scarf pattern",
+        "exclusive": true
+      },
+      "referenceName": "Starter Pack",
+      "localizations": {
+        "en": {
+          "displayName": "Starter Pack",
+          "description": "300 Tala + exclusive SR scarf pattern"
+        },
+        "fil": {
+          "displayName": "Panimulang Pack",
+          "description": "300 Tala + eksklusibong SR na bandana"
+        },
+        "de": {
+          "displayName": "Starterpaket",
+          "description": "300 Tala + exklusives SR-Schalmuster"
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.moonpass",
+      "type": "consumable",
+      "priceUsd": 4.99,
+      "tala": 300,
+      "dailyTala": 90,
+      "days": 30,
+      "note": "300 Tala on purchase, then 90 Tala once per calendar day on login for 30 days (tracked by date in the account save). Buying again while active adds 30 days.",
+      "referenceName": "Moon Pass 30 days",
+      "localizations": {
+        "en": {
+          "displayName": "Moon Pass",
+          "description": "300 Tala now + 90 Tala daily for 30 days"
+        },
+        "fil": {
+          "displayName": "Pase ng Buwan",
+          "description": "300 Tala agad + 90 Tala araw-araw, 30 araw"
+        },
+        "de": {
+          "displayName": "Mondpass",
+          "description": "300 Tala sofort + 90 Tala täglich, 30 Tage"
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_60",
+      "type": "consumable",
+      "priceUsd": 0.99,
+      "tala": 60,
+      "baseTala": 60,
+      "bonusTala": 0,
+      "referenceName": "Tala 60 (tala_60)",
+      "localizations": {
+        "en": {
+          "displayName": "60 Tala",
+          "description": "60 Tala for summons in Epochfall."
+        },
+        "fil": {
+          "displayName": "60 Tala",
+          "description": "60 Tala para sa pagtawag sa Epochfall."
+        },
+        "de": {
+          "displayName": "60 Tala",
+          "description": "60 Tala für Beschwörungen in Epochfall."
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_300",
+      "type": "consumable",
+      "priceUsd": 4.99,
+      "tala": 330,
+      "baseTala": 300,
+      "bonusTala": 30,
+      "referenceName": "Tala 330 (tala_300)",
+      "localizations": {
+        "en": {
+          "displayName": "330 Tala",
+          "description": "300 Tala + 30 bonus Tala."
+        },
+        "fil": {
+          "displayName": "330 Tala",
+          "description": "300 Tala + 30 na dagdag na Tala."
+        },
+        "de": {
+          "displayName": "330 Tala",
+          "description": "300 Tala + 30 Bonus-Tala."
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_980",
+      "type": "consumable",
+      "priceUsd": 14.99,
+      "tala": 1090,
+      "baseTala": 980,
+      "bonusTala": 110,
+      "referenceName": "Tala 1090 (tala_980)",
+      "localizations": {
+        "en": {
+          "displayName": "1090 Tala",
+          "description": "980 Tala + 110 bonus Tala."
+        },
+        "fil": {
+          "displayName": "1090 Tala",
+          "description": "980 Tala + 110 na dagdag na Tala."
+        },
+        "de": {
+          "displayName": "1090 Tala",
+          "description": "980 Tala + 110 Bonus-Tala."
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_1980",
+      "type": "consumable",
+      "priceUsd": 29.99,
+      "tala": 2240,
+      "baseTala": 1980,
+      "bonusTala": 260,
+      "referenceName": "Tala 2240 (tala_1980)",
+      "localizations": {
+        "en": {
+          "displayName": "2240 Tala",
+          "description": "1980 Tala + 260 bonus Tala."
+        },
+        "fil": {
+          "displayName": "2240 Tala",
+          "description": "1980 Tala + 260 na dagdag na Tala."
+        },
+        "de": {
+          "displayName": "2240 Tala",
+          "description": "1980 Tala + 260 Bonus-Tala."
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_3280",
+      "type": "consumable",
+      "priceUsd": 49.99,
+      "tala": 3880,
+      "baseTala": 3280,
+      "bonusTala": 600,
+      "referenceName": "Tala 3880 (tala_3280)",
+      "localizations": {
+        "en": {
+          "displayName": "3880 Tala",
+          "description": "3280 Tala + 600 bonus Tala."
+        },
+        "fil": {
+          "displayName": "3880 Tala",
+          "description": "3280 Tala + 600 na dagdag na Tala."
+        },
+        "de": {
+          "displayName": "3880 Tala",
+          "description": "3280 Tala + 600 Bonus-Tala."
+        }
+      }
+    },
+    {
+      "productId": "com.nyrathen.epochfall.tala_6480",
+      "type": "consumable",
+      "priceUsd": 99.99,
+      "tala": 8080,
+      "baseTala": 6480,
+      "bonusTala": 1600,
+      "referenceName": "Tala 8080 (tala_6480)",
+      "localizations": {
+        "en": {
+          "displayName": "8080 Tala",
+          "description": "6480 Tala + 1600 bonus Tala."
+        },
+        "fil": {
+          "displayName": "8080 Tala",
+          "description": "6480 Tala + 1600 na dagdag na Tala."
+        },
+        "de": {
+          "displayName": "8080 Tala",
+          "description": "6480 Tala + 1600 Bonus-Tala."
+        }
+      }
+    }
+  ]
+}

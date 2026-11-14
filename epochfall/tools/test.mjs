@@ -612,6 +612,178 @@ const cont = await page.evaluate(() => { document.getElementById('btn-continue')
 ok('continue still loads the normal character after a hell death', cont.cls === 'bab' && cont.name === 'Mayumi' && !cont.hell, JSON.stringify(cont));
 
 ok('no script errors', errors.length === 0, errors.slice(0, 3).join(' | '));
+
+// ================= Tala shop: iOS StoreKit bridge faked in a separate browser context =================
+{
+  const PRE = 'com.nyrathen.epochfall.';
+  const ids = ['starter', 'moonpass', 'tala_60', 'tala_300', 'tala_980', 'tala_1980', 'tala_3280', 'tala_6480'].map(k => PRE + k);
+  const sctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, deviceScaleFactor: 1 });
+  await sctx.addInitScript(() => {
+    window.__ef = [];
+    window.__buyable = () => [...document.querySelectorAll('[data-buy]')].filter(b => !b.disabled).map(b => b.dataset.buy);
+    window.webkit = { messageHandlers: { ef: { postMessage: m => window.__ef.push(JSON.parse(JSON.stringify(m))) } } };
+  });
+  const sp = await sctx.newPage();
+  const sErr = [];
+  sp.on('pageerror', e => sErr.push(String(e)));
+  sp.on('console', m => { if (m.type() === 'error' && !/fonts\.g/.test(m.text())) sErr.push(m.text()); });
+  await sp.goto('file://' + path.join(web, 'index.html'));
+  await sp.waitForTimeout(400);
+  const sshot = async n => { if (shots) await sp.screenshot({ path: path.join(shots, n + '.png') }); };
+
+  const s1 = await sp.evaluate(() => {
+    const asked = __ef.filter(m => m.type === 'products').length;
+    EF.start(true); EF.menu(true); EF.tab('summon');
+    const body = document.getElementById('m-body'), note = document.getElementById('g-note'), sb = body.querySelector('[data-shop]');
+    return { asked, bridge: EFShop.bridge, note: note ? note.textContent : '', noteVis: !!note && note.offsetHeight > 0, shopBtn: sb ? sb.textContent : '',
+      neutral: !/casino|jackpot|gambl|\bbet\b|\bwin\b|lucky|spin/i.test(body.textContent), tala: EF.acc.tala };
+  });
+  ok('shop: page asks native for products on load', s1.asked === 1 && s1.bridge, JSON.stringify(s1));
+  ok('Summon tab shows "Contains random items" note and a Shop button', /random items/i.test(s1.note) && /odds/i.test(s1.note) && s1.noteVis && s1.shopBtn === 'Shop' && s1.neutral, JSON.stringify(s1));
+  const nag = await sp.evaluate(() => { EF.menu(false); return { overlays: document.querySelectorAll('.shop, [data-buy], .sh-card').length, badge: document.querySelectorAll('.badge, .dot, .notif').length }; });
+  ok('no shop prompts or badges outside the shop view', nag.overlays === 0 && nag.badge === 0, JSON.stringify(nag));
+
+  const s2 = await sp.evaluate(ids => {
+    EF.menu(true); EF.tab('summon'); document.querySelector('[data-shop]').click();
+    const before = { cards: document.querySelectorAll('.sh-card').length, enabled: [...document.querySelectorAll('[data-buy]')].filter(b => !b.disabled).length,
+      restore: !!document.querySelector('[data-restore]') && !document.querySelector('[data-restore]').disabled };
+    EFShop.onProducts(ids.map((id, i) => ({ id, price: 'PHP ' + (59 + i * 100) + '.00', title: id })));
+    EFShop.onStorefront('PHL');
+    const l60 = document.querySelector(`[data-buy="${ids[2]}"]`).textContent;
+    return { before, after: [...document.querySelectorAll('[data-buy]')].filter(b => !b.disabled).length, l60 };
+  }, ids);
+  ok('shop lists 8 packs; localized StoreKit prices enable buying', s2.before.cards === 8 && s2.before.enabled === 0 && s2.before.restore && s2.after === 8 && s2.l60 === 'PHP 259.00', JSON.stringify(s2));
+  await sshot('40-shop-en');
+
+  const s3 = await sp.evaluate(PRE => {
+    const id = PRE + 'tala_980', t0 = EF.acc.tala; __ef.length = 0;
+    document.querySelector(`[data-buy="${id}"]`).click();
+    const posted = JSON.stringify(__ef), busy = [...document.querySelectorAll('[data-buy]')].filter(b => !b.disabled).length;
+    const noGrantYet = EF.acc.tala === t0;
+    const first = EFShop.onPurchased(id, 1001);
+    const t1 = EF.acc.tala;
+    const dup = EFShop.onPurchased(id, '1001');
+    const saved = JSON.parse(localStorage.getItem('epochfall.account.v1'));
+    return { posted, busy, noGrantYet, first, dup, gain: t1 - t0, dupGain: EF.acc.tala - t1, acks: __ef.filter(m => m.type === 'ack').map(m => m.id), savedTx: saved.iapTx, savedOk: saved.tala === t1, msg: (document.getElementById('shop-msg') || {}).textContent };
+  }, PRE);
+  ok('buy posts {type:"buy", id} and grants nothing until native confirms', s3.posted === JSON.stringify([{ type: 'buy', id: PRE + 'tala_980' }]) && s3.busy === 0 && s3.noGrantYet, JSON.stringify(s3));
+  ok('verified purchase grants 1090 Tala, saves the tx id and acks it', s3.first === true && s3.gain === 1090 && s3.savedTx.includes('1001') && s3.savedOk && s3.acks[0] === '1001' && /1090/.test(s3.msg), JSON.stringify(s3));
+  ok('duplicate purchase callback does not grant twice (acked again)', s3.dup === false && s3.dupGain === 0 && s3.acks.length === 2 && s3.acks[1] === '1001');
+
+  const s4 = await sp.evaluate(PRE => {
+    const id = PRE + 'tala_60', t0 = EF.acc.tala;
+    document.querySelector(`[data-buy="${id}"]`).click();
+    EFShop.onFailed(id, 'error');
+    const msg = document.getElementById('shop-msg').textContent, enabled = [...document.querySelectorAll('[data-buy]')].filter(b => !b.disabled).length;
+    document.querySelector(`[data-buy="${id}"]`).click(); EFShop.onFailed(id, 'cancelled');
+    return { gain: EF.acc.tala - t0, msg, enabled, msg2: document.getElementById('shop-msg').textContent };
+  }, PRE);
+  ok('failed or cancelled purchase grants nothing and re-enables buying', s4.gain === 0 && /did not go through/.test(s4.msg) && s4.enabled === 8 && /cancelled/.test(s4.msg2), JSON.stringify(s4));
+
+  const s5 = await sp.evaluate(PRE => {
+    const id = PRE + 'starter', A = EF.acc, t0 = A.tala;
+    document.querySelector(`[data-buy="${id}"]`).click(); EFShop.onPurchased(id, '2001');
+    const gain = A.tala - t0, btn = document.querySelector(`[data-buy="${id}"]`);
+    const r = { gain, cos: A.cos.pat_tala, starter: A.starter, owned: btn.disabled && btn.textContent === 'Owned', inPool: EF.gacha.some(g => g.id === 'pat_tala') };
+    const t1 = A.tala; EFShop.onPurchased(id, '2002'); r.secondGain = A.tala - t1;
+    r.buyAgain = EFShop.buy(id);
+    EF.tab('hero'); const chip = document.querySelector('[data-eq="pat"][data-id="pat_tala"]'); r.chip = !!chip;
+    if (chip) chip.click(); r.equip = A.equip.pat;
+    EF.tab('summon');
+    return r;
+  }, PRE);
+  ok('Starter Pack: 300 Tala + exclusive SR scarf pattern, once only, not in the summon pool', s5.gain === 300 && s5.cos === 1 && s5.starter && s5.owned && !s5.inPool && s5.secondGain === 0 && s5.buyAgain === false, JSON.stringify(s5));
+  ok('Starter cosmetic can be equipped in the Hero tab', s5.chip && s5.equip === 'pat_tala');
+
+  const s6 = await sp.evaluate(PRE => {
+    const A = EF.acc; A.starter = false; delete A.cos.pat_tala; A.equip.pat = null;
+    const t0 = A.tala; __ef.length = 0;
+    document.querySelector('[data-restore]').click();
+    const posted = JSON.stringify(__ef);
+    EFShop.onRestored([{ id: PRE + 'starter', txId: '2001' }]);
+    const msg = document.getElementById('shop-msg').textContent;
+    const saved = JSON.parse(localStorage.getItem('epochfall.account.v1'));
+    EFShop.onRestored([]);
+    return { posted, starter: A.starter, cos: A.cos.pat_tala, gain: A.tala - t0, msg, saved: saved.starter && saved.cos.pat_tala === 1, none: document.getElementById('shop-msg').textContent,
+      owned: document.querySelector(`[data-buy="${PRE}starter"]`).disabled };
+  }, PRE);
+  ok('Restore purchases brings back the Starter Pack (entitlement) without new Tala', s6.posted === JSON.stringify([{ type: 'restore' }]) && s6.starter && s6.cos === 1 && s6.gain === 0 && s6.saved && /Restored: Starter Pack/.test(s6.msg) && /No purchases/.test(s6.none) && s6.owned, JSON.stringify(s6));
+
+  const s7 = await sp.evaluate(PRE => {
+    const A = EF.acc, id = PRE + 'moonpass', day = d => () => new Date(2026, 10, d, 10, 0, 0);
+    EFShop.now = day(14);
+    const t0 = A.tala;
+    document.querySelector(`[data-buy="${id}"]`).click(); EFShop.onPurchased(id, '3001');
+    const r = { buy: A.tala - t0, left: EFShop.moonLeft(), until: A.moon.until };
+    r.sameDay = EFShop.claimMoon();
+    EFShop.now = day(15); r.next = EFShop.claimMoon(); r.nextAgain = EFShop.claimMoon(); r.left15 = EFShop.moonLeft();
+    // the Summon tab claims too (login while the menu is used)
+    EFShop.now = day(16); const t16 = A.tala; EF.tab('summon'); r.tab = A.tala - t16; r.shown = document.querySelector('.sh-moon') ? document.querySelector('.sh-moon').textContent : (document.querySelector('#m-body').textContent.match(/Moon Pass: \d+ days left/) || [''])[0];
+    EFShop.now = () => new Date(2026, 11, 13, 9); r.last = EFShop.claimMoon(); r.leftLast = EFShop.moonLeft();
+    EFShop.now = () => new Date(2026, 11, 14, 9); r.after = EFShop.claimMoon(); r.leftAfter = EFShop.moonLeft();
+    r.total = A.tala - t0;
+    return r;
+  }, PRE);
+  ok('Moon Pass: 300 Tala + 90 today on purchase, 30 days', s7.buy === 390 && s7.left === 30 && s7.until === '2026-12-13' && s7.sameDay === 0, JSON.stringify(s7));
+  ok('Moon Pass: 90 Tala once per new day (faked date change)', s7.next === 90 && s7.nextAgain === 0 && s7.left15 === 29 && s7.tab === 90 && /29|28/.test(s7.shown), JSON.stringify(s7));
+  ok('Moon Pass: last payout on day 30, nothing after it expires', s7.last === 90 && s7.leftLast === 1 && s7.after === 0 && s7.leftAfter === 0 && s7.total === 390 + 90 + 90 + 90, JSON.stringify(s7));
+
+  // login: an active pass pays out when the app starts on a new day
+  await sp.evaluate(() => { const a = JSON.parse(localStorage.getItem('epochfall.account.v1')); a.moon = { until: '2999-01-01', last: '2000-01-01' }; localStorage.setItem('epochfall.account.v1', JSON.stringify(a)); window.name = String(a.tala); });
+  await sp.reload(); await sp.waitForTimeout(400);
+  const s8 = await sp.evaluate(() => ({ gain: EF.acc.tala - +window.name, last: EF.acc.moon.last, again: EFShop.claimMoon() }));
+  ok('Moon Pass pays out on login (app start) once per day', s8.gain === 90 && s8.again === 0 && s8.last.length === 10, JSON.stringify(s8));
+
+  const s9 = await sp.evaluate(ids => {
+    EF.start(true);
+    EFShop.onProducts(ids.map(id => ({ id, price: '0,99 €' })));
+    const r = {};
+    for (const cc of ['BEL', 'NLD']) {
+      EFShop.onStorefront(cc); __ef.length = 0;
+      EF.menu(true); EF.tab('summon'); if (!document.querySelector('.shop')) document.querySelector('[data-shop]').click();
+      r[cc] = { locked: EFShop.locked, enabled: __buyable().length, info: (document.getElementById('shop-state') || {}).textContent, buy: EFShop.buy(ids[2]), posted: __ef.length, restore: !document.querySelector('[data-restore]').disabled };
+    }
+    EF.acc.tala = Math.max(EF.acc.tala, 100);
+    const t0 = EF.acc.tala; r.freePull = !!EF.summon(1) && EF.acc.tala === t0 - 100;
+    r.gift = (() => { EF.acc.gift = ''; const t1 = EF.acc.tala; EF.dailyGift(); return EF.acc.tala - t1; })();
+    r.saved = JSON.parse(localStorage.getItem('epochfall.account.v1')).sf;
+    return r;
+  }, ids.slice(0));
+  ok('BEL / NLD storefront: paid Tala purchases disabled, restore still works', ['BEL', 'NLD'].every(c => s9[c].locked && s9[c].enabled === 0 && /not available in your region/.test(s9[c].info) && s9[c].buy === false && s9[c].posted === 0 && s9[c].restore), JSON.stringify(s9));
+  ok('BEL / NLD: free Tala still work (summon with earned Tala, daily gift)', s9.freePull && s9.gift === 100 && s9.saved === 'NLD', JSON.stringify({ free: s9.freePull, gift: s9.gift }));
+  await sshot('41-shop-locked-nld');
+  const s10 = await sp.evaluate(() => { EFShop.onStorefront('PHL'); EF.tab('summon'); return { locked: EFShop.locked, enabled: __buyable().length }; });
+  ok('other storefronts unlock again', !s10.locked && s10.enabled === 7, JSON.stringify(s10));
+
+  const langs = {};
+  for (const l of ['fil', 'de', 'en']) {
+    langs[l] = await sp.evaluate(l => { document.querySelector(`.langs [data-lang="${l}"]`).click(); EF.tab('summon');
+      return { head: document.querySelector('.sh-title').textContent, restore: document.querySelector('[data-restore]').textContent, starter: document.querySelector('.sh-card.starter .nm').textContent }; }, l);
+    if (l !== 'en') await sshot('42-shop-' + l);
+  }
+  const keys = await sp.evaluate(() => { const I = window.EF_I18N, ks = ['shop', 'shopBack', 'shopTitle', 'gachaNote', 'shopIosOnly', 'shopRegion', 'shopLocked', 'shopOwned', 'shopBusy', 'shopUnavail', 'shopLoading', 'shopBonus', 'shopRestore', 'shopRestored', 'shopNothing', 'shopGot', 'shopGotStarter', 'shopGotMoon', 'shopFailed', 'shopCancelled', 'shopPending', 'shopRules', 'p_tala', 'p_starter', 'pd_starter', 'p_moonpass', 'pd_moonpass', 'moonActive', 'moonToast', 'g_pat_tala'];
+    return ks.filter(k => !I.fil[k] || !I.de[k] || !I.en[k]); });
+  ok('shop strings exist in en, fil and de', keys.length === 0 && langs.fil.head === 'Tindahan ng Tala' && langs.de.restore === 'Käufe wiederherstellen' && langs.en.starter === 'Starter Pack', JSON.stringify({ keys, langs }));
+  ok('no script errors in the shop context', sErr.length === 0, sErr.slice(0, 3).join(' | '));
+  await sctx.close();
+
+  // a normal browser (web preview): no native bridge, packs are shown as iOS only and cannot be bought
+  const bctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, deviceScaleFactor: 1 });
+  const bp = await bctx.newPage();
+  const bErr = [];
+  bp.on('pageerror', e => bErr.push(String(e)));
+  await bp.goto('file://' + path.join(web, 'index.html'));
+  await bp.waitForTimeout(300);
+  const b1 = await bp.evaluate(() => {
+    EF.start(true); EF.menu(true); EF.tab('summon'); document.querySelector('[data-shop]').click();
+    const btns = [...document.querySelectorAll('[data-buy]')];
+    return { bridge: EFShop.bridge, cards: btns.length, allOff: btns.every(b => b.disabled && b.textContent === 'Available in the iOS app'), info: document.getElementById('shop-state').textContent,
+      restore: document.querySelector('[data-restore]').disabled, buy: EFShop.buy('com.nyrathen.epochfall.tala_60'), restoreCall: EFShop.restore() };
+  });
+  ok('browser without the native bridge: packs shown as "Available in the iOS app", buying disabled', !b1.bridge && b1.cards === 8 && b1.allOff && b1.info === 'Available in the iOS app' && b1.restore && b1.buy === false && b1.restoreCall === false && bErr.length === 0, JSON.stringify(b1));
+  if (shots) await bp.screenshot({ path: path.join(shots, '43-shop-browser.png') });
+  await bctx.close();
+}
 await browser.close();
 const fails = results.filter(r => !r.pass).length;
 console.log(`\n${results.length - fails}/${results.length} passed`);

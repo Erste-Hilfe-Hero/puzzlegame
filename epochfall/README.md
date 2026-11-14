@@ -27,7 +27,7 @@ Round 3:
   as Eskrimador.
 - Ascension I: permanent glowing markings + aura, 2.4 s cut-in.
 - Customization (pick screen and the Hero menu tab): skin 5, hair style 4, hair colour 5, scarf/sash accent 6; saved in `look`.
-- Summon tab (offline, no real money): Tala from kills (1, giants 3), chests 30, boss 120, daily gift 100. 1x = 100, 10x = 1000.
+- Summon tab: Tala from kills (1, giants 3), chests 30, boss 120, daily gift 100. 1x = 100, 10x = 1000.
   R 79.4 / SR 18 / SSR 2.4 / UR 0.2 %, +6 % SSR chance per pull from pull 70, SSR or better guaranteed at 90, pity counter,
   Odds table with every item. 14 prizes: scarf patterns, weapon skins, auras, titles, Minokawa (SSR spirit, +10 % attack
   speed, homing feathers) and Bakunawa Hatchling (UR spirit, +15 % damage, energy on kill). Duplicates give Stardust.
@@ -39,7 +39,8 @@ Round 3:
 
 ## Native shells (iOS + Android)
 
-Both wrap the same `web/` folder (single source of truth), landscape only, full-screen, no IAP yet.
+Both wrap the same `web/` folder (single source of truth), landscape only, full-screen. In-app purchases exist on iOS only
+(owner decision); the Android shell has no billing.
 Bundle id / applicationId `com.nyrathen.epochfall`, version 0.1.0 (build number = CI run number).
 
 - `ios/`: XcodeGen project (`project.yml`), SwiftUI + WKWebView (`App/WebView.swift`). `web/` is bundled as a
@@ -60,3 +61,21 @@ Builds (push to `main` or `claude/project-thread-m6sbdk` touching `epochfall/**`
 Local: `cd epochfall/ios && xcodegen generate` (macOS); `cd epochfall/android && gradle assembleDebug` (needs an Android SDK).
 App icon: generated with PIL (navy, jade crescent moon, magenta blade); 1024 px in `ios/App/Assets.xcassets`,
 adaptive foreground + legacy mipmaps in `android/app/src/main/res`.
+
+## Tala shop (iOS in-app purchases, StoreKit 2)
+
+- Products: `store/iap-products.json` (ids, types, USD prices, Tala, reference/display names and descriptions in en, fil, de for
+  the App Store Connect setup). Six consumable Tala packs (60 / 330 / 1090 / 2240 / 3880 / 8080 Tala for 0.99 to 99.99 USD),
+  the one-time Starter Pack (non-consumable, 300 Tala + the shop-only SR scarf pattern Tala Starweave) and the consumable
+  30-day Moon Pass (300 Tala now, then 90 Tala once per calendar day on login, `ACC.moon = {until, last}`; buying it again
+  while active adds 30 days). Local testing: `ios/Epochfall.storekit`, set as the Run StoreKit configuration of the scheme.
+- `web/shop.js` (loaded after game.js, hooks via `EF.host`): a Shop button in the Summon tab opens the shop view; there are
+  no purchase pop-ups, badges or reminders anywhere else. The Summon tab says that it contains random items and that the odds are shown.
+- Bridge: web -> native `webkit.messageHandlers.ef.postMessage({type: 'products' | 'buy' | 'restore' | 'ack', id})`;
+  native -> web `EFShop.onProducts([{id, price}])`, `onPurchased(id, txId)`, `onFailed(id, reason)`, `onRestored([{id, txId}])`,
+  `onStorefront(countryCode)`. Tala are granted only after native reports a verified transaction, once per transaction id
+  (`ACC.iapTx`); the page then acks and native finishes the transaction (unfinished ones are re-sent on the next start,
+  `Transaction.updates` covers interrupted purchases). Restore purchases (`AppStore.sync` + `Transaction.currentEntitlements`)
+  brings back the Starter Pack cosmetic, not its Tala.
+- Storefront BEL or NLD: paid purchases are disabled (web and native); free Tala still work. Tala cannot be traded or cashed out.
+- In a normal browser (no native bridge) every pack shows "Available in the iOS app" and buying is disabled.

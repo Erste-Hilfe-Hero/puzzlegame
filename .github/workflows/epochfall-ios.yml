@@ -38,7 +38,7 @@ jobs:
             CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
           cd $RUNNER_TEMP/ef.xcarchive/Products/Applications
           # WebView.swift loads web/index.html; fail the build if the bundle path differs (blank screen otherwise)
-          for f in index.html style.css i18n.js game.js; do test -f Epochfall.app/web/$f || { echo "missing Epochfall.app/web/$f"; ls -R Epochfall.app | head -50; exit 1; }; done
+          for f in index.html style.css i18n.js game.js shop.js; do test -f Epochfall.app/web/$f || { echo "missing Epochfall.app/web/$f"; ls -R Epochfall.app | head -50; exit 1; }; done
           plutil -p Epochfall.app/Info.plist | grep -E 'Orientation|Landscape|CFBundleShortVersionString|CFBundleIdentifier'
           ditto -c -k --keepParent Epochfall.app $RUNNER_TEMP/Epochfall-unsigned.zip
       - name: Push unsigned app to branch epochfall-ios-out/<run> (for the signing host)
