@@ -2,6 +2,23 @@ import SwiftUI
 import UIKit
 import WebKit
 
+final class GameBridge {
+    static let shared = GameBridge()
+    weak var web: WKWebView?
+    private var last: (Double, String)?
+    private var ready = false
+
+    func hinge(_ deg: Double, _ status: String) {
+        last = (deg, status)
+        send()
+    }
+    func pageLoaded() { ready = true; send() }
+    private func send() {
+        guard ready, let l = last else { return }
+        web?.evaluateJavaScript("window.onHinge && window.onHinge(\(l.0), '\(l.1)')", completionHandler: nil)
+    }
+}
+
 struct GameView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> GameViewController { GameViewController() }
     func updateUIViewController(_ vc: GameViewController, context: Context) {}
@@ -26,6 +43,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
         web.scrollView.contentInsetAdjustmentBehavior = .never
         web.navigationDelegate = self
         view.addSubview(web)
+        GameBridge.shared.web = web
         load()
     }
 
@@ -36,6 +54,8 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
             web.loadFileURL(url, allowingReadAccessTo: url.deletingLastPathComponent())
         }
     }
+
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { GameBridge.shared.pageLoaded() }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { load() }
 

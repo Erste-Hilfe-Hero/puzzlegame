@@ -7,7 +7,7 @@
   var TR = { "Your turn": "Du bist dran", "Wait...": "Warte...", "You win!": "Gewonnen!", "You lose": "Verloren", "Draw!": "Unentschieden!",
     "Wins": "Siege", "Tap for a rematch": "Tippen f\u00fcr Revanche", "First to ": "Wer zuerst ", "You must capture!": "Du musst schlagen!",
     "Check!": "Schach!", "Roll": "W\u00fcrfeln", "No moves": "Kein Zug m\u00f6glich", "No more moves": "Keine Z\u00fcge mehr", "Off ": "Raus ",
-    "Sit face to face. Pick a game.": "Setzt euch gegen\u00fcber. W\u00e4hlt ein Spiel.", "Red": "Rot", "Blue": "Blau",
+    "Sit face to face. Pick a game.": "Setzt euch gegen\u00fcber. W\u00e4hlt ein Spiel.", "Red": "Rot", "Unfold your iPhone Duo for the big table": "Klapp dein iPhone Duo auf f\u00fcr den gro\u00dfen Tisch", "Lay the phone flat between you": "Leg das Handy flach zwischen euch", "Tap to continue": "Tippen zum Weiterspielen", "Blue": "Blau",
     "Four in a Row": "Vier gewinnt", "Checkers": "Dame", "Dots & Boxes": "K\u00e4sek\u00e4stchen", "Chess": "Schach" };
   function L(s) { return DE && TR[s] ? TR[s] : s; }
   var PC = ["#ef5b3c", "#3c8cf0"], PD = ["#a8341c", "#1f5aa8"], PNAME = [L("Red"), L("Blue")];
@@ -62,11 +62,20 @@
     g.addColorStop(0, "#2f6b4c"); g.addColorStop(1, "#173a2a");
     ctx.fillStyle = g; ctx.fillRect(-ox / scale, -oy / scale, cw / scale, ch / scale);
   }
+  // one home button per player, in that player's corner (never on the fold), icon turned toward them
+  var HOME = [[56, 34], [W - 56, H - 34]];
   function homeButton() {
-    circle(MID, 34, 24, "rgba(0,0,0,0.35)");
-    ctx.strokeStyle = "#fff"; ctx.lineWidth = 3; ctx.beginPath();
-    ctx.moveTo(MID - 11, 37); ctx.lineTo(MID, 25); ctx.lineTo(MID + 11, 37); ctx.moveTo(MID - 7, 34); ctx.lineTo(MID - 7, 45); ctx.lineTo(MID + 7, 45); ctx.lineTo(MID + 7, 34); ctx.stroke();
+    for (var p = 0; p < 2; p++) {
+      var hx = HOME[p][0], hy = HOME[p][1];
+      circle(hx, hy, 26, "rgba(0,0,0,0.35)");
+      ctx.save(); ctx.translate(hx, hy); ctx.rotate(p === 0 ? Math.PI / 2 : -Math.PI / 2);
+      ctx.strokeStyle = "#fff"; ctx.lineWidth = 3.5; ctx.lineJoin = "round"; ctx.beginPath();
+      ctx.moveTo(-11, 3); ctx.lineTo(0, -9); ctx.lineTo(11, 3); ctx.moveTo(-7, 0); ctx.lineTo(-7, 11); ctx.lineTo(7, 11); ctx.lineTo(7, 0); ctx.stroke();
+      ctx.restore();
+    }
   }
+  function onHome(p) { return HOME.some(function (h) { return Math.hypot(p.x - h[0], p.y - h[1]) < 40; }); }
+
   function scoreSide(p, s) { ptext(p, s, p === 0 ? 22 : W - 22, H / 2, 30, "#fff"); }
   function turnGlow(p) {
     var x = p === 0 ? -ox / scale : W + ox / scale - 14, a = 0.55 + 0.35 * Math.sin(t * 5);
@@ -178,7 +187,7 @@
 
   // ---------- FOUR IN A ROW ----------
   function FourRow() {
-    var C = 7, Rw = 6, S = 112, x0 = MID - C * S / 2, y0 = 500 - Rw * S / 2 + 10;
+    var C = 8, Rw = 7, S = 112, x0 = MID - C * S / 2, y0 = 500 - Rw * S / 2 + 10;
     var b = [], turn = starter, falling = null, line = null, moves = 0;
     for (var r = 0; r < Rw; r++) b.push(new Array(C).fill(-1));
     function check(r, c, p) {
@@ -663,18 +672,20 @@
     { id: "backgammon", name: "Backgammon", make: Backgammon }
   ];
   function tiles() {
-    return GAMES.map(function (g, i) { var col = i % 3, row = Math.floor(i / 3); return { g: g, x: 300 + col * 280, y: 140 + row * 380, w: 260, h: 340 }; });
+    return GAMES.map(function (g, i) { var half = i < 3 ? 0 : 1, row = i % 3; return { g: g, x: half === 0 ? 262 : W - 262 - 300, y: 44 + row * 312, w: 300, h: 288 }; });
   }
   function icon(id, x, y) {
     if (id === "hockey") { rr(x - 80, y - 50, 160, 100, 24); ctx.fillStyle = "#d6eaf6"; ctx.fill(); circle(x - 45, y, 22, PC[0]); circle(x + 45, y, 22, PC[1]); circle(x + 5, y - 10, 12, "#1d1f24"); }
     else if (id === "four") { rr(x - 75, y - 60, 150, 120, 14); ctx.fillStyle = "#f2c230"; ctx.fill(); for (var r = 0; r < 3; r++) for (var c = 0; c < 4; c++) circle(x - 54 + c * 36, y - 34 + r * 34, 13, (r === 2 && c < 3) ? PC[c % 2] : r === 1 && c === 1 ? PC[0] : "#173a2a"); }
     else if (id === "checkers") { for (var i = 0; i < 4; i++) for (var j = 0; j < 4; j++) { ctx.fillStyle = (i + j) % 2 ? "#7a5233" : "#e8d3ad"; ctx.fillRect(x - 64 + i * 32, y - 64 + j * 32, 32, 32); } circle(x - 32, y - 16, 12, PC[0]); circle(x + 32, y + 16, 12, PC[1]); circle(x, y + 48, 12, PC[1]); }
     else if (id === "dots") { ctx.fillStyle = "#f4efe3"; ctx.fillRect(x - 70, y - 60, 140, 120); ctx.fillStyle = PC[0]; ctx.globalAlpha = 0.4; ctx.fillRect(x - 50, y - 40, 50, 40); ctx.globalAlpha = 1; for (var a = 0; a < 3; a++) for (var bb = 0; bb < 3; bb++) circle(x - 50 + a * 50, y - 40 + bb * 40, 6, "#2b2b2b"); ctx.strokeStyle = PC[1]; ctx.lineWidth = 6; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + 50, y); ctx.stroke(); }
-    else if (id === "chess") { ctx.fillStyle = "#f4efe3"; ctx.beginPath(); ctx.moveTo(x - 30, y + 50); ctx.lineTo(x + 30, y + 50); ctx.lineTo(x + 18, y - 10); ctx.arc(x, y - 30, 22, 0.5, Math.PI - 0.5, true); ctx.closePath(); ctx.fill(); }
+    else if (id === "chess") { ctx.fillStyle = "#2f3d35"; ctx.beginPath(); ctx.moveTo(x - 30, y + 50); ctx.lineTo(x + 30, y + 50); ctx.lineTo(x + 18, y - 10); ctx.arc(x, y - 30, 22, 0.5, Math.PI - 0.5, true); ctx.closePath(); ctx.fill(); }
     else { for (var k = 0; k < 6; k++) { ctx.fillStyle = k % 2 ? "#7a5233" : "#e8d3ad"; ctx.beginPath(); ctx.moveTo(x - 75 + k * 25, y - 60); ctx.lineTo(x - 62 + k * 25, y); ctx.lineTo(x - 50 + k * 25, y - 60); ctx.fill(); } circle(x - 20, y + 30, 16, PC[0]); circle(x + 20, y + 30, 16, PC[1]); }
   }
   function drawMenu() {
     table();
+    ctx.save(); ctx.setLineDash([10, 14]); ctx.strokeStyle = "rgba(255,255,255,0.12)"; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(MID, 40); ctx.lineTo(MID, H - 40); ctx.stroke(); ctx.restore();
     for (var p = 0; p < 2; p++) {
       ptext(p, "Two at the Table", p === 0 ? 120 : W - 120, H / 2, 64, "#fff");
       ptext(p, L("Sit face to face. Pick a game."), p === 0 ? 195 : W - 195, H / 2, 26, "rgba(255,255,255,0.75)", "normal");
@@ -703,11 +714,12 @@
   cv.addEventListener("pointerdown", function (e) {
     tone(1, 0.01, "sine", 0.0001);
     var p = toLogical(e);
+    if (hinge && hinge.k !== "flat" && !hingeHidden) { hingeHidden = true; return; }
     if (state === "menu") {
       tiles().forEach(function (tl) { if (p.x > tl.x && p.x < tl.x + tl.w && p.y > tl.y && p.y < tl.y + tl.h) { sfx.tap(); open(tl.g.id); } });
       return;
     }
-    if (Math.hypot(p.x - MID, p.y - 34) < 34) { state = "menu"; game = null; result = null; return; }
+    if (onHome(p)) { state = "menu"; game = null; result = null; return; }
     if (result) { if (result.t > 0.8) { starter = 1 - starter; open(gameName); } return; }
     game.down(p, e.pointerId);
   });
@@ -721,6 +733,22 @@
     cv.width = cw * dpr; cv.height = ch * dpr; scale = Math.min(cw / W, ch / H); ox = (cw - W * scale) / 2; oy = (ch - H * scale) / 2;
   }
 
+  // iPhone Duo hinge (from the iOS shell): hint when the phone is closed or not flat; tap hides it until the state changes
+  var hinge = null, hingeHidden = false;
+  window.onHinge = function (deg, status) {
+    var k = status === "closed" ? "closed" : status === "partial" && deg < 150 ? "bent" : "flat";
+    if (!hinge || hinge.k !== k) hingeHidden = false;
+    hinge = { deg: deg, k: k };
+  };
+  function hingeHint() {
+    if (!hinge || hinge.k === "flat" || hingeHidden) return false;
+    var msg = hinge.k === "closed" ? L("Unfold your iPhone Duo for the big table") : L("Lay the phone flat between you");
+    ctx.fillStyle = "rgba(10,20,15,0.72)"; ctx.fillRect(-ox / scale, -oy / scale, cw / scale, ch / scale);
+    ptext(0, msg, MID - 120, H / 2, 40, "#fff"); ptext(1, msg, MID + 120, H / 2, 40, "#fff");
+    ptext(0, L("Tap to continue"), MID - 60, H / 2, 24, "rgba(255,255,255,0.7)", "normal"); ptext(1, L("Tap to continue"), MID + 60, H / 2, 24, "rgba(255,255,255,0.7)", "normal");
+    return true;
+  }
+
   // test hook
   window.tt = { open: open, game: function () { return game; }, result: function () { return result; }, menu: function () { state = "menu"; game = null; result = null; } };
 
@@ -731,6 +759,7 @@
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, cw, ch);
     ctx.setTransform(dpr * scale, 0, 0, dpr * scale, dpr * ox, dpr * oy);
     if (state === "menu") drawMenu(); else { game.draw(); drawResult(); if (gameName === "hockey") homeButton(); }
+    hingeHint();
     requestAnimationFrame(frame);
   }
   resize(); requestAnimationFrame(frame);
