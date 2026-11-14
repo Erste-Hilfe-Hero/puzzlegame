@@ -105,7 +105,7 @@ const GACHA = [
   { id: 'wpn_neon', type: 'wpn', r: 'SSR' }, { id: 'aura_plume', type: 'aura', r: 'SSR' }, { id: 'minokawa', type: 'spirit', r: 'SSR' },
   { id: 'bakunawa', type: 'spirit', r: 'UR' }, { id: 'aura_moon', type: 'aura', r: 'UR' }
 ];
-const PULL_COST = 100, SOFT_PITY = 70, HARD_PITY = 90, SOFT_STEP = 0.06;
+const PULL_COST = 100, SOFT_PITY = 74, HARD_PITY = 90, SOFT_STEP = 0.06;
 const TALA = { kill: 1, giant: 3, chest: 30, boss: 120, gift: 100 };
 const COS_SLOTS = ['pat', 'wpn', 'aura', 'ttl'];
 const WPN_COL = { wpn_narra: '#a0703c', wpn_capiz: '#f6f0e0', wpn_neon: '#ff3d8b' };

@@ -494,7 +494,7 @@ const g = await page.evaluate(() => {
   const cnt = { R: 0, SR: 0, SSR: 0, UR: 0 }, N = 200000;
   for (let i = 0; i < N; i++) cnt[EF.rollRarity(1)]++;
   const pct = {}; for (const k in cnt) pct[k] = +(cnt[k] / N * 100).toFixed(2);
-  const soft = [1, 69, 70, 71, 80, 89, 90].map(n => +EF.ssrChance(n).toFixed(3));
+  const soft = [1, 73, 74, 75, 80, 89, 90].map(n => +EF.ssrChance(n).toFixed(3));
   A.tala = 5000; A.pity = 0; A.cos = {}; A.spirits = []; A.dust = 0;
   // R every time: pity climbs, a duplicate turns into Stardust
   EF.rng(() => 0.5);
@@ -514,7 +514,7 @@ const g = await page.evaluate(() => {
   return { pct, soft, dup, ten: ten.length, cost10, pityAfter, first, got, before69, ur, pityNow: A.pity, spirits: A.spirits.slice(), noMoney };
 });
 ok('summon base rates match R 79.4 / SR 18 / SSR 2.4 / UR 0.2', Math.abs(g.pct.R - 79.4) < 0.4 && Math.abs(g.pct.SR - 18) < 0.4 && Math.abs(g.pct.SSR - 2.4) < 0.15 && Math.abs(g.pct.UR - 0.2) < 0.05, JSON.stringify(g.pct));
-ok('soft pity from pull 70 (+6% per pull), guaranteed by 90', g.soft[0] === 0.026 && g.soft[1] === 0.026 && g.soft[2] === 0.086 && g.soft[3] === 0.146 && g.soft[6] === 1 && g.before69 && g.first <= 90 && g.got.r === 'SSR', JSON.stringify({ soft: g.soft, first: g.first, got: g.got }));
+ok('soft pity from pull 74 (+6% per pull), guaranteed by 90', g.soft[0] === 0.026 && g.soft[1] === 0.026 && g.soft[2] === 0.086 && g.soft[3] === 0.146 && g.soft[5] < 1 && g.soft[6] === 1 && g.before69 && g.first <= 90 && g.got.r === 'SSR', JSON.stringify({ soft: g.soft, first: g.first, got: g.got }));
 ok('1x costs 100, 10x costs 1000 Tala; no Tala, no summon', g.ten === 10 && g.cost10 === 1000 && g.pityAfter === 12 && g.noMoney === null, JSON.stringify({ ten: g.ten, cost10: g.cost10, pity: g.pityAfter }));
 ok('duplicates turn into Stardust', !g.dup.first.dup && g.dup.second.dup && g.dup.second.id === g.dup.first.id && g.dup.dust === 5, JSON.stringify(g.dup));
 ok('summon-only spirits: Minokawa (SSR) and Bakunawa (UR) join the account', g.got.id === 'minokawa' && g.ur.r === 'UR' && g.ur.id === 'bakunawa' && g.spirits.includes('minokawa') && g.spirits.includes('bakunawa'), JSON.stringify([g.got, g.ur]));
