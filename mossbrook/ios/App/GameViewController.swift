@@ -101,6 +101,14 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
         return nil
     }
 
+    // App Review recording only (tools/review-video): the simulator build can run a scripted walkthrough passed in via
+    // SIMCTL_CHILD_MB_DEMO_JS. Compiled out of device builds.
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        #if targetEnvironment(simulator)
+        if let demo = ProcessInfo.processInfo.environment["MB_DEMO_JS"] { webView.evaluateJavaScript("void " + demo, completionHandler: nil) }
+        #endif
+    }
+
     // The web content process crashed or was killed under memory pressure: reload instead of a blank screen.
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         loadGame()

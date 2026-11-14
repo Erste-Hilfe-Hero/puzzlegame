@@ -1,0 +1,63 @@
+# Mossbrook: App Review screen recording of the real iOS app in the iOS Simulator (free macOS runner, public repo).
+# mossbrook/tools/review-demo.js drives the game UI (launch, level, duel, shop). Output: branch mossbrook-video-out/<run>.
+# Trigger: commit message containing "run:mossbrook-video", or manual.
+name: Mossbrook review video
+on:
+  push:
+    branches: [claude/project-thread-n4yo2b]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  video:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:mossbrook-video')
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Use Xcode 26
+        run: |
+          X=$(ls -d /Applications/Xcode_26*.app 2>/dev/null | sort -V | tail -1)
+          [ -n "$X" ] && sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Build for simulator
+        run: |
+          brew install xcodegen ffmpeg >/dev/null && cd mossbrook/ios && xcodegen generate
+          xcodebuild -project MossbrookSolitaire.xcodeproj -scheme MossbrookSolitaire -configuration Release \
+            -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' -derivedDataPath $RUNNER_TEMP/dd \
+            CODE_SIGNING_ALLOWED=NO build | tail -5
+          ls $RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator/MossbrookSolitaire.app/web/index.html
+      - name: Record
+        run: |
+          set -x
+          UDID=$(xcrun simctl list devices available -j | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)['devices']
+          c=[x for r,l in d.items() if 'iOS' in r for x in l if 'Pro Max' in x['name']] or [x for r,l in d.items() if 'iOS' in r for x in l if 'iPhone' in x['name']]
+          print(c[-1]['udid'])")
+          xcrun simctl boot $UDID; xcrun simctl bootstatus $UDID -b
+          xcrun simctl status_bar $UDID override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
+          xcrun simctl ui $UDID appearance dark || true
+          xcrun simctl install $UDID $RUNNER_TEMP/dd/Build/Products/Release-iphonesimulator/MossbrookSolitaire.app
+          sleep 8
+          xcrun simctl io $UDID recordVideo --codec=h264 --force $RUNNER_TEMP/raw.mp4 & REC=$!
+          sleep 3
+          SIMCTL_CHILD_MB_DEMO_JS="$(cat mossbrook/tools/review-demo.js)" xcrun simctl launch $UDID com.nyrathen.mossbrook
+          sleep 140
+          xcrun simctl io $UDID screenshot $RUNNER_TEMP/last.png
+          kill -INT $REC; wait $REC || true
+          ffmpeg -y -loglevel error -i $RUNNER_TEMP/raw.mp4 -vf "scale=-2:1280,fps=30" -c:v libx264 -crf 26 -preset slow -pix_fmt yuv420p -movflags +faststart $RUNNER_TEMP/mossbrook-review.mp4
+          ffmpeg -loglevel error -i $RUNNER_TEMP/mossbrook-review.mp4 -vf "fps=1/10,scale=200:-2,tile=8x2" -frames:v 1 $RUNNER_TEMP/contact.png
+          ls -la $RUNNER_TEMP/*.mp4 $RUNNER_TEMP/*.png
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mossbrook-review-video-${{ github.run_number }}
+          path: |
+            ${{ runner.temp }}/mossbrook-review.mp4
+            ${{ runner.temp }}/contact.png
+            ${{ runner.temp }}/last.png
+      - name: Push video to branch mossbrook-video-out/<run>
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../mossbrook-review.mp4 ../contact.png ../last.png .
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "mossbrook review video ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/mossbrook-video-out/${{ github.run_number }}
