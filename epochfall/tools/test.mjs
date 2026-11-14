@@ -19,11 +19,15 @@ await ctx.addInitScript(() => { let sd = 0x5eed; Math.random = () => { sd = (sd 
 const page = await ctx.newPage();
 const errors = [];
 page.on('pageerror', e => errors.push(String(e)));
-page.on('console', m => { if (m.type() === 'error' && !/fonts\.g/.test(m.text())) errors.push(m.text()); });
+const netReqs = []; page.on('request', r => { if (!r.url().startsWith('file:') && !r.url().startsWith('data:')) netReqs.push(r.url()); });
+page.on('console', m => { if (m.type() === 'error' ) errors.push(m.text()); });
 await page.goto('file://' + path.join(web, 'index.html'));
 await page.waitForTimeout(500);
 const shot = async n => { if (shots) await page.screenshot({ path: path.join(shots, n + '.png') }); };
 await shot('00-title');
+await page.waitForTimeout(300);
+ok('no network requests (fonts bundled, App Privacy: data not collected)', netReqs.length === 0, netReqs.slice(0, 3).join(' '));
+ok('bundled fonts load (Chakra Petch, Sora)', await page.evaluate(async () => { await document.fonts.ready; return document.fonts.check('700 20px "Chakra Petch"') && document.fonts.check('400 14px Sora'); }));
 
 // fresh device: hell mode is locked; a save from before the class choice loads as an Eskrimador; daily gift once per day
 const pre = await page.evaluate(() => {

@@ -1,3 +1,9 @@
+/* fonts bundled in the app (no network): Chakra Petch 500/700, Sora variable, latin subset, SIL OFL */
+@font-face { font-family: 'Chakra Petch'; font-weight: 500; font-display: swap; src: url(fonts/chakra-500.woff2) format('woff2'); }
+@font-face { font-family: 'Chakra Petch'; font-weight: 700; font-display: swap; src: url(fonts/chakra-700.woff2) format('woff2'); }
+@font-face { font-family: 'Sora'; font-weight: 400 600; font-display: swap; src: url(fonts/sora.woff2) format('woff2'); }
+/* keyboard hint only where a keyboard is likely */
+@media (pointer: coarse) { #t-keys { display: none; } }
 /* Neon-monsoon archipelago: deep sea-night base, capiz-shell pearl text, jeepney magenta + diwata jade accents */
 :root {
   --ink: #0b0e1a;

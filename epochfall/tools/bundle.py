@@ -4,6 +4,8 @@ import re, sys, pathlib
 web = pathlib.Path(sys.argv[1]); out = pathlib.Path(sys.argv[2])
 html = (web / 'index.html').read_text()
 css = (web / 'style.css').read_text()
+import base64
+css = re.sub(r'url\((fonts/[^)]+\.woff2)\)', lambda m: 'url(data:font/woff2;base64,' + base64.b64encode((web / m.group(1)).read_bytes()).decode() + ')', css)
 html = html.replace('<link rel="stylesheet" href="style.css">', '<style>\n' + css + '\n</style>')
 for js in ('i18n.js', 'game.js', 'shop.js'):
     html = html.replace(f'<script src="{js}"></script>', '<script>\n' + (web / js).read_text() + '\n</script>')
