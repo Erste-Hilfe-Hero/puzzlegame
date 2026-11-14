@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Epochfall</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;700&family=Sora:wght@400;600&display=swap">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <canvas id="game" aria-label="Epochfall game"></canvas>
+
+  <div id="title" class="screen">
+    <div class="title-inner">
+      <div class="logo">EPOCH<span>FALL</span></div>
+      <p id="t-tagline" class="tagline"></p>
+      <div class="title-buttons">
+        <button id="btn-continue" class="big" type="button"></button>
+        <button id="btn-new" class="ghost" type="button"></button>
+      </div>
+      <div class="langs" role="group" aria-label="Language">
+        <button type="button" data-lang="en">English</button>
+        <button type="button" data-lang="fil">Filipino</button>
+        <button type="button" data-lang="de">Deutsch</button>
+      </div>
+      <p id="t-keys" class="keys"></p>
+    </div>
+  </div>
+
+  <div id="touch" hidden>
+    <div id="stick"><div id="knob"></div></div>
+    <div id="pad">
+      <button type="button" class="tb" id="b-skill" data-k="skill">✦</button>
+      <button type="button" class="tb" id="b-dash" data-k="dash">»</button>
+      <button type="button" class="tb" id="b-atk" data-k="attack">⚔</button>
+      <button type="button" class="tb" id="b-jump" data-k="jump">▲</button>
+    </div>
+    <button type="button" id="b-time" data-k="up" hidden></button>
+    <button type="button" id="b-menu" aria-label="Menu">☰</button>
+  </div>
+
+  <div id="menu" class="screen" hidden>
+    <div class="menu-box">
+      <div class="tabs" role="tablist">
+        <button type="button" data-tab="skills" class="on"></button>
+        <button type="button" data-tab="eco"></button>
+        <button type="button" data-tab="bag"></button>
+        <button type="button" id="m-close" class="close"></button>
+      </div>
+      <div id="m-body"></div>
+    </div>
+  </div>
+
+  <div id="win" class="screen" hidden>
+    <div class="title-inner">
+      <div class="logo small" id="w-title"></div>
+      <p id="w-sub" class="tagline"></p>
+      <p id="w-stats" class="keys"></p>
+      <button id="w-again" class="big" type="button"></button>
+    </div>
+  </div>
+
+  <div id="toast" aria-live="polite"></div>
+  <div id="rotate"><p id="t-rotate"></p></div>
+</div>
+<script src="i18n.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
