@@ -1,0 +1,50 @@
+# Epochfall: web playthrough test, then unsigned iOS archive on a free GitHub macOS runner (public repo).
+# Signing and App Store upload happen on the Contabo host. Trigger: commit message containing "run:epochfall-ios", or manual.
+name: Epochfall iOS build
+on:
+  push:
+    branches: [main, claude/project-thread-m6sbdk]
+    paths: ['epochfall/**', '.github/workflows/epochfall-ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  test:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:epochfall-ios')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright && npx playwright install --with-deps chromium
+      - run: node epochfall/tools/test.mjs epochfall/web
+  build:
+    needs: test
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1); echo "xcode: $X"; sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Generate project
+        run: brew install xcodegen && cd epochfall/ios && xcodegen generate
+      - name: Archive (unsigned)
+        run: |
+          cd epochfall/ios
+          xcodebuild -project Epochfall.xcodeproj -scheme Epochfall -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/ef.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -40
+          cd $RUNNER_TEMP/ef.xcarchive/Products/Applications
+          # WebView.swift loads web/index.html; fail the build if the bundle path differs (blank screen otherwise)
+          for f in index.html style.css i18n.js game.js; do test -f Epochfall.app/web/$f || { echo "missing Epochfall.app/web/$f"; ls -R Epochfall.app | head -50; exit 1; }; done
+          plutil -p Epochfall.app/Info.plist | grep -E 'Orientation|Landscape|CFBundleShortVersionString|CFBundleIdentifier'
+          ditto -c -k --keepParent Epochfall.app $RUNNER_TEMP/Epochfall-unsigned.zip
+      - name: Push unsigned app to branch epochfall-ios-out/<run> (for the signing host)
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../Epochfall-unsigned.zip .
+          echo "xcode=$(xcodebuild -version | head -1) sha=${{ github.sha }}" > build-info.txt
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "epochfall ios unsigned ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/epochfall-ios-out/${{ github.run_number }}

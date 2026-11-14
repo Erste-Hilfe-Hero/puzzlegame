@@ -1,0 +1,36 @@
+# Epochfall Android: debug APK + unsigned release AAB as workflow artifacts (public repo, free minutes).
+# Play signing happens elsewhere. Trigger: commit message containing "run:epochfall-android", or manual.
+name: Epochfall Android build
+on:
+  push:
+    branches: [main, claude/project-thread-m6sbdk]
+    paths: ['epochfall/**', '.github/workflows/epochfall-android.yml']
+  workflow_dispatch:
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:epochfall-android')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.14.3' }
+      - name: assembleDebug + bundleRelease (unsigned)
+        env:
+          EF_VERSION_CODE: ${{ github.run_number }}
+        run: cd epochfall/android && gradle --no-daemon assembleDebug bundleRelease
+      - name: Check bundled web files
+        run: |
+          cd epochfall/android/app/build/outputs
+          for f in index.html style.css i18n.js game.js; do unzip -l apk/debug/app-debug.apk | grep -q "assets/web/$f" || { echo "missing assets/web/$f in APK"; exit 1; }; done
+          for f in index.html game.js; do unzip -l bundle/release/app-release.aab | grep -q "base/assets/web/$f" || { echo "missing base/assets/web/$f in AAB"; exit 1; }; done
+          mkdir -p $RUNNER_TEMP/out
+          cp apk/debug/app-debug.apk $RUNNER_TEMP/out/Epochfall-${{ github.run_number }}-debug.apk
+          cp bundle/release/app-release.aab $RUNNER_TEMP/out/Epochfall-${{ github.run_number }}-release-unsigned.aab
+      - uses: actions/upload-artifact@v4
+        with:
+          name: epochfall-android-${{ github.run_number }}
+          path: ${{ runner.temp }}/out/
+          if-no-files-found: error

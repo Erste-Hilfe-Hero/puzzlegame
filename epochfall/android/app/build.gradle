@@ -1,0 +1,30 @@
+plugins { id 'com.android.application' }
+
+android {
+    namespace 'com.nyrathen.epochfall'
+    compileSdk 35
+    defaultConfig {
+        applicationId 'com.nyrathen.epochfall'
+        minSdk 24
+        targetSdk 35
+        versionCode Integer.parseInt(System.getenv('EF_VERSION_CODE') ?: '1')
+        versionName '0.1.0'
+    }
+    buildFeatures { buildConfig true }
+    buildTypes {
+        release {
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
+    // epochfall/web is the single source of truth; it is copied into the APK as assets/web/ at build time.
+    sourceSets { main { assets.srcDirs = ["$buildDir/web-assets"] } }
+}
+
+tasks.register('copyWeb', Copy) {
+    from("$rootDir/../web") { exclude '**/.DS_Store' }
+    into "$buildDir/web-assets/web"
+}
+preBuild.dependsOn copyWeb

@@ -1,0 +1,40 @@
+name: Epochfall
+options:
+  bundleIdPrefix: com.nyrathen
+  deploymentTarget:
+    iOS: "16.0"
+targets:
+  Epochfall:
+    type: application
+    platform: iOS
+    sources:
+      - App
+      # folder reference: lands in the bundle as Epochfall.app/web/ (WebView.swift loads web/index.html)
+      - path: ../web
+        type: folder
+        buildPhase: resources
+    info:
+      path: App/Info.plist
+      properties:
+        CFBundleDisplayName: "Epochfall"
+        CFBundleShortVersionString: "0.1.0"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, fil, de]
+        UILaunchScreen:
+          UIColorName: LaunchBg
+        UIRequiresFullScreen: true
+        UIStatusBarHidden: true
+        UIViewControllerBasedStatusBarAppearance: false
+        UISupportedInterfaceOrientations: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        UISupportedInterfaceOrientations~ipad: [UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
+        ITSAppUsesNonExemptEncryption: false
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.nyrathen.epochfall
+        CURRENT_PROJECT_VERSION: "1"
+        MARKETING_VERSION: "0.1.0"
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        SWIFT_VERSION: "5.0"
+        CODE_SIGNING_ALLOWED: "NO"
