@@ -12,7 +12,8 @@ const results = [];
 const ok = (name, cond, info = '') => { results.push({ name, pass: !!cond, info }); console.log((cond ? 'PASS ' : 'FAIL ') + name + (info ? '  ' + info : '')); };
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ viewport: { width: 844, height: 390 }, hasTouch: true, deviceScaleFactor: 1 });
+const VW = +(process.env.EF_VW || 844), VHP = +(process.env.EF_VH || 390), DSF = +(process.env.EF_DSF || 1);
+const ctx = await browser.newContext({ viewport: { width: VW, height: VHP }, hasTouch: true, deviceScaleFactor: DSF });
 // seeded Math.random: same fight rolls every run (boss attack picks are random, a short run could skip one)
 await ctx.addInitScript(() => { let sd = 0x5eed; Math.random = () => { sd = (sd + 0x6D2B79F5) | 0; let t = Math.imul(sd ^ (sd >>> 15), 1 | sd); t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t; return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; });
 const page = await ctx.newPage();
