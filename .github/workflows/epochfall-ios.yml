@@ -41,9 +41,23 @@ jobs:
           for f in index.html style.css i18n.js game.js shop.js; do test -f Epochfall.app/web/$f || { echo "missing Epochfall.app/web/$f"; ls -R Epochfall.app | head -50; exit 1; }; done
           plutil -p Epochfall.app/Info.plist | grep -E 'Orientation|Landscape|CFBundleShortVersionString|CFBundleIdentifier'
           ditto -c -k --keepParent Epochfall.app $RUNNER_TEMP/Epochfall-unsigned.zip
+      - name: Simulator smoke test (app really starts and shows the title screen)
+        run: |
+          cd epochfall/ios
+          xcodebuild -project Epochfall.xcodeproj -scheme Epochfall -configuration Release -sdk iphonesimulator \
+            -derivedDataPath $RUNNER_TEMP/sim CODE_SIGNING_ALLOWED=NO build | tail -5
+          APP=$(ls -d $RUNNER_TEMP/sim/Build/Products/Release-iphonesimulator/Epochfall.app)
+          DEV=$(xcrun simctl list devices available -j | python3 -c 'import json,sys;d=json.load(sys.stdin)["devices"];print([x["udid"] for k,v in d.items() if "iOS" in k for x in v if x["name"].startswith("iPhone")][-1])')
+          xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl install "$DEV" "$APP"
+          xcrun simctl launch "$DEV" com.nyrathen.epochfall
+          sleep 25
+          xcrun simctl io "$DEV" screenshot $RUNNER_TEMP/sim-title.png
+          # a blank or black WebView fails the build: the title screen has a bright logo and buttons
+          python3 -c "import zlib,struct,sys;d=open(sys.argv[1],'rb').read();print('png bytes',len(d));sys.exit(0 if len(d)>60000 else 1)" $RUNNER_TEMP/sim-title.png
       - name: Push unsigned app to branch epochfall-ios-out/<run> (for the signing host)
         run: |
-          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../Epochfall-unsigned.zip .
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../Epochfall-unsigned.zip . && cp ../sim-title.png .
           echo "xcode=$(xcodebuild -version | head -1) sha=${{ github.sha }}" > build-info.txt
           git init -q -b main && git config user.name ci && git config user.email ci@invalid
           git add . && git commit -qm "epochfall ios unsigned ${{ github.run_number }}"
