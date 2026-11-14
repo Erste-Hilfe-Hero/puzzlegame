@@ -38,10 +38,10 @@ button { font-family: inherit; cursor: pointer; border: 0; }
 #scene g.done .built { opacity: 1; }
 #scene g.pop .built { animation: pop .8s ease-out; transform-box: fill-box; transform-origin: 50% 100%; }
 @keyframes pop { 0% { transform: scale(.3); } 60% { transform: scale(1.12); } 100% { transform: scale(1); } }
-#tasks { display: flex; gap: 8px; overflow-x: auto; padding: 10px; scrollbar-width: none; }
+#tasks { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; padding: 10px; }
 #tasks::-webkit-scrollbar { display: none; }
-.task { flex: none; width: 112px; background: var(--cream); color: var(--ink); border-radius: 14px; padding: 8px; text-align: center; box-shadow: var(--shadow); }
-.task .tn { font-size: 13px; font-weight: 600; min-height: 32px; line-height: 16px; }
+.task { min-width: 0; background: var(--cream); color: var(--ink); border-radius: 14px; padding: 8px; text-align: center; box-shadow: var(--shadow); }
+.task .tn { font-size: 12px; overflow-wrap: anywhere; font-weight: 600; min-height: 32px; line-height: 16px; }
 .task button { margin-top: 6px; width: 100%; border-radius: 10px; padding: 6px 0; background: var(--gold); color: var(--ink); font-weight: 700; font-size: 15px; box-shadow: 0 2px 0 var(--gold2); display: flex; align-items: center; justify-content: center; gap: 4px; }
 .task button[disabled] { background: #ddd; box-shadow: 0 2px 0 #aaa; color: #777; }
 .task.done { opacity: .55; }

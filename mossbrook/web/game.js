@@ -63,7 +63,7 @@ const T = {
 const LANG = /^de/i.test(navigator.language || '') ? 'de' : 'en';
 function t(k, ...a) { let s = T[LANG][k] ?? T.en[k] ?? k; a.forEach((v, i) => { s = s.replace('{' + i + '}', v); }); return s; }
 
-const VERSION = '0.3.1';
+const VERSION = '0.3.2';
 const LIFE_MS = 20 * 60 * 1000, MAX_LIVES = 5;
 const TASK_KEYS = ['path', 'bridge', 'well', 'garden', 'mill', 'bakery', 'lanterns', 'cottage'];
 const TASK_COST = [1, 2, 2, 2, 3, 3, 3, 4];
@@ -144,15 +144,15 @@ function fox() {
     '<path d="M30 40 Q50 30 70 40 L66 46 Q50 38 34 46Z" fill="#4f8f3a"/></svg>';
 }
 function badger() {
-  return '<svg viewBox="0 0 100 100"><circle cx="50" cy="52" r="46" fill="#e8f1df"/>' +
-    '<circle cx="24" cy="34" r="9" fill="#555" stroke="#222" stroke-width="2"/><circle cx="76" cy="34" r="9" fill="#555" stroke="#222" stroke-width="2"/>' +
-    '<path d="M18 56 Q50 18 82 56 Q80 84 50 92 Q20 84 18 56Z" fill="#6d6d6d" stroke="#222" stroke-width="2"/>' +
-    '<path d="M44 26 Q50 22 56 26 L56 92 L44 92Z" fill="#f7f4ee"/>' +
-    '<path d="M24 48 Q36 46 40 74 Q30 70 24 48Z M76 48 Q64 46 60 74 Q70 70 76 48Z" fill="#2a2a2a"/>' +
-    '<circle cx="35" cy="58" r="4" fill="#fff"/><circle cx="65" cy="58" r="4" fill="#fff"/>' +
-    '<circle cx="35" cy="58" r="2.2" fill="#111"/><circle cx="65" cy="58" r="2.2" fill="#111"/>' +
-    '<ellipse cx="50" cy="78" rx="6" ry="4.5" fill="#222"/>' +
-    '<path d="M28 22 Q50 2 72 22 Q50 16 28 22Z" fill="#fff" stroke="#bbb" stroke-width="2"/></svg>';
+  return '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="48" fill="#e8f1df"/>' +
+    '<circle cx="25" cy="30" r="10" fill="#4a4a4a" stroke="#222" stroke-width="2"/><circle cx="25" cy="30" r="5" fill="#d9b8a0"/>' +
+    '<circle cx="75" cy="30" r="10" fill="#4a4a4a" stroke="#222" stroke-width="2"/><circle cx="75" cy="30" r="5" fill="#d9b8a0"/>' +
+    '<path d="M16 50 Q16 22 50 20 Q84 22 84 50 Q84 78 50 90 Q16 78 16 50Z" fill="#f4f1ea" stroke="#222" stroke-width="2"/>' +
+    '<path d="M24 34 Q34 26 42 30 L44 74 Q34 72 26 62 Q20 50 24 34Z M76 34 Q66 26 58 30 L56 74 Q66 72 74 62 Q80 50 76 34Z" fill="#2c2c2c"/>' +
+    '<circle cx="36" cy="52" r="4.5" fill="#fff"/><circle cx="64" cy="52" r="4.5" fill="#fff"/>' +
+    '<circle cx="37" cy="52" r="2.6" fill="#111"/><circle cx="65" cy="52" r="2.6" fill="#111"/>' +
+    '<ellipse cx="50" cy="76" rx="7" ry="5" fill="#222"/><ellipse cx="48" cy="74.5" rx="2" ry="1.2" fill="#777"/>' +
+    '<path d="M44 84 Q50 87 56 84" stroke="#222" stroke-width="2" fill="none" stroke-linecap="round"/></svg>';
 }
 function who(svg, text) { return '<div class="who">' + svg + '<p>' + text + '</p></div>'; }
 
@@ -180,10 +180,10 @@ setInterval(() => { hud(); if (G && !G.over) $('gTime').textContent = '\u23F1 ' 
 function sceneSVG() {
   const sky = [['#0d1240', '#3b3a8f'], ['#2a1450', '#d9675a'], ['#0b2140', '#3f6f9a']][S.district % 3];
   const grass = [['#3f7a4a', '#2c5a3a'], ['#6a7a3a', '#4a5a2a'], ['#b9c9d6', '#8fa3b5']][S.district % 3];
-  const g = (k, ruin, built) => '<g id="t-' + k + '"><g class="ruin">' + ruin + '</g><g class="built">' + built + '</g></g>';
+  const g = (k, ruin, built) => '<g id="t-' + k + '"><g class="ruin"><g opacity=".3" filter="url(#ghost)">' + built + '</g>' + ruin.replace(/#8d8d8d/g, '#9a8f84') + '</g><g class="built">' + built + '</g></g>';
   return '<svg viewBox="0 0 360 440" preserveAspectRatio="xMidYMid slice">' +
   '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="' + sky[0] + '"/><stop offset="1" stop-color="' + sky[1] + '"/></linearGradient>' +
-  '<radialGradient id="glow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient></defs>' +
+  '<filter id="ghost"><feColorMatrix type="matrix" values=".33 .33 .33 0 .35 .33 .33 .33 0 .35 .33 .33 .33 0 .45 0 0 0 1 0"/></filter><radialGradient id="glow"><stop offset="0" stop-color="#ffe9a0" stop-opacity=".9"/><stop offset="1" stop-color="#ffe9a0" stop-opacity="0"/></radialGradient></defs>' +
   '<rect width="360" height="440" fill="url(#sky)"/>' +
   Array.from({ length: 26 }, (_, i) => '<circle cx="' + ((i * 137) % 360) + '" cy="' + ((i * 71) % 110 + 6) + '" r="' + (i % 3 ? 1 : 1.8) + '" fill="#fff" opacity="' + (0.4 + (i % 4) * 0.15) + '"/>').join('') +
   (S.district % 3 === 1 ? '<circle cx="290" cy="80" r="34" fill="#ffb36b" opacity=".9"/>' : '<circle cx="290" cy="56" r="22" fill="#fff8d0"/><circle cx="298" cy="50" r="20" fill="' + sky[0] + '"/>') +
@@ -238,6 +238,7 @@ function renderVillage(popKey) {
   TASK_KEYS.forEach(k => { const g = document.getElementById('t-' + k); if (S.done.includes(k)) g.classList.add('done'); });
   if (popKey) { const g = document.getElementById('t-' + popKey); g.classList.add('pop'); }
   const box = $('tasks'); box.innerHTML = '';
+  $('vTitle').textContent += '  ' + S.done.length + '/' + TASK_KEYS.length;
   const names = T[LANG]['tasks' + (S.district % DISTRICTS)];
   TASK_KEYS.forEach((k, i) => {
     const done = S.done.includes(k);
@@ -249,6 +250,8 @@ function renderVillage(popKey) {
   });
   // undone tasks first
   [...box.children].filter(c => c.classList.contains('done')).forEach(c => box.appendChild(c));
+  // only the next 4 tasks: the row fits the screen without clipped cards
+  [...box.children].slice(4).forEach(c => c.remove());
   $('btnPlay').textContent = t('play', S.level);
 }
 function buildTask(k, i) {
