@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import WebKit
+import StoreKit
 
 final class GameBridge {
     static let shared = GameBridge()
@@ -28,6 +29,7 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
     private var web: WKWebView!
     private let soft = UIImpactFeedbackGenerator(style: .light)
     private let note = UINotificationFeedbackGenerator()
+    private let hard = UIImpactFeedbackGenerator(style: .heavy)
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,7 +57,15 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
         }
     }
 
-    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) { GameBridge.shared.pageLoaded() }
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        GameBridge.shared.pageLoaded()
+        // simulator launch check (CI): -ttdemo <game id> opens that game with a few moves played
+        let args = ProcessInfo.processInfo.arguments
+        if let i = args.firstIndex(of: "-ttdemo"), i + 1 < args.count {
+            let id = args[i + 1].filter { $0.isLetter }
+            webView.evaluateJavaScript("window.tt && window.tt.demo('\(id)', 9)", completionHandler: nil)
+        }
+    }
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) { load() }
 
@@ -63,6 +73,14 @@ final class GameViewController: UIViewController, WKScriptMessageHandler, WKNavi
         switch message.body as? String {
         case "tap": soft.impactOccurred()
         case "win": note.notificationOccurred(.success)
+        case "heavy":
+            hard.impactOccurred()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.12) { self.hard.impactOccurred() }
+        // the screen stays on during a match, the phone may lock again in the menu
+        case "awake1": UIApplication.shared.isIdleTimerDisabled = true
+        case "awake0": UIApplication.shared.isIdleTimerDisabled = false
+        case "review":
+            if let scene = view.window?.windowScene { SKStoreReviewController.requestReview(in: scene) }
         default: break
         }
     }

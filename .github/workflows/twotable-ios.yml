@@ -12,7 +12,7 @@ jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:twotable-ios')
     runs-on: xcode-27
-    timeout-minutes: 30
+    timeout-minutes: 50
     steps:
       - uses: actions/checkout@v4
       - name: Pick newest Xcode
@@ -32,6 +32,31 @@ jobs:
             CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO \
             SWIFT_ACTIVE_COMPILATION_CONDITIONS="$FLAGS" archive | tail -40
           cd $RUNNER_TEMP/tt.xcarchive/Products/Applications && test -f TwoTable.app/web/index.html && test -f TwoTable.app/web/game.js && ditto -c -k --keepParent TwoTable.app $RUNNER_TEMP/TwoTable-unsigned.zip
+      - name: Simulator launch check (real game content on screen, else the build fails)
+        run: |
+          cd twotable/ios
+          xcodebuild -project TwoTable.xcodeproj -scheme TwoTable -configuration Release -sdk iphonesimulator \
+            -derivedDataPath $RUNNER_TEMP/sim CODE_SIGNING_ALLOWED=NO SWIFT_ACTIVE_COMPILATION_CONDITIONS="$FLAGS" build | tail -5
+          APP=$(find $RUNNER_TEMP/sim -name TwoTable.app -path '*iphonesimulator*' | head -1)
+          echo "app: $APP"; test -f "$APP/web/index.html"
+          xcrun simctl list devicetypes | grep -iE "duo|fold|iphone 1[6-9]|iphone 2" || true
+          DT=$(xcrun simctl list devicetypes | grep -iE "duo|fold" | head -1 | sed -E 's/.*\((com\.apple[^)]*)\).*/\1/')
+          [ -z "$DT" ] && DT=$(xcrun simctl list devicetypes | grep -E "iPhone [0-9]+ Pro Max" | tail -1 | sed -E 's/.*\((com\.apple[^)]*)\).*/\1/')
+          RT=$(xcrun simctl list runtimes | grep -E '^iOS' | tail -1 | sed -E 's/.* - (com\.apple[^ ]*).*/\1/')
+          echo "device type: $DT  runtime: $RT"
+          UDID=$(xcrun simctl create tt "$DT" "$RT")
+          xcrun simctl boot $UDID; xcrun simctl bootstatus $UDID -b
+          xcrun simctl install $UDID "$APP"
+          mkdir -p $RUNNER_TEMP/out/sim
+          for G in menu reversi chess sea; do
+            xcrun simctl launch --terminate-running-process $UDID com.nyrathen.twotable -ttdemo $G
+            sleep 9
+            xcrun simctl io $UDID screenshot $RUNNER_TEMP/out/sim/$G.png
+          done
+          echo "device=$DT runtime=$RT" > $RUNNER_TEMP/out/sim/device.txt
+          ls -l $RUNNER_TEMP/out/sim
+          # a blank (single color) screen compresses to a tiny PNG; real boards do not
+          for G in reversi chess; do S=$(stat -f%z $RUNNER_TEMP/out/sim/$G.png); echo "$G.png $S bytes"; [ "$S" -gt 60000 ] || { echo "blank screen on the simulator"; exit 1; }; done
       - name: Push unsigned app to branch twotable-ios-out/<run> (for the signing host)
         run: |
           mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../TwoTable-unsigned.zip .
