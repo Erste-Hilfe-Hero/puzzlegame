@@ -1,4 +1,4 @@
-# Cheat guide app (working title "GTA 6 Cheats")
+# Cheat guide app (app name "Vice Cheats", chosen by Ali 2026-11-15)
 
 Fan-made, unofficial cheat list. iOS + Android from the same commit. Not submitted to any store.
 

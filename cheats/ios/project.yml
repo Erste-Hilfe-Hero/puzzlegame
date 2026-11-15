@@ -15,7 +15,7 @@ targets:
     info:
       path: App/Info.plist
       properties:
-        CFBundleDisplayName: "GTA 6 Cheats"
+        CFBundleDisplayName: "Vice Cheats"
         CFBundleShortVersionString: "1.0.0"
         CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
         CFBundleDevelopmentRegion: de

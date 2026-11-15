@@ -1,4 +1,4 @@
-# Cheat guide app (working title "GTA 6 Cheats"): web smoke test, then iOS (unsigned archive + simulator launch screenshot)
+# Cheat guide app (app name "Vice Cheats", chosen by Ali 2026-11-15): web smoke test, then iOS (unsigned archive + simulator launch screenshot)
 # and Android (unsigned release APK/AAB) from the same commit. Free runners only (public repo). No store upload here.
 # Trigger: commit message containing "run:cheats-build", or manual.
 name: Cheats app build
