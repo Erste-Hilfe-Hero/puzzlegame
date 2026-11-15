@@ -1,0 +1,92 @@
+# Cheat guide app (working title "GTA 6 Cheats"): web smoke test, then iOS (unsigned archive + simulator launch screenshot)
+# and Android (unsigned release APK/AAB) from the same commit. Free runners only (public repo). No store upload here.
+# Trigger: commit message containing "run:cheats-build", or manual.
+name: Cheats app build
+on:
+  push:
+    branches: [main, claude/project-thread-4g8dku]
+    paths: ['cheats/**', '.github/workflows/cheats-build.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm i --no-save playwright && npx playwright install --with-deps chromium
+      - run: mkdir -p shots && node cheats/tools/test.mjs cheats/web shots
+      - uses: actions/upload-artifact@v4
+        with: { name: cheats-web-shots, path: shots, retention-days: 14 }
+  ios:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:cheats-build')
+    runs-on: macos-15
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pick newest Xcode
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1); echo "xcode: $X"; sudo xcode-select -s "$X"; xcodebuild -version
+      - name: Generate project
+        run: brew install xcodegen && cd cheats/ios && xcodegen generate
+      - name: Archive (unsigned)
+        run: |
+          cd cheats/ios
+          xcodebuild -project CheatBook.xcodeproj -scheme CheatBook -configuration Release \
+            -destination 'generic/platform=iOS' -archivePath $RUNNER_TEMP/cb.xcarchive \
+            CURRENT_PROJECT_VERSION=${{ github.run_number }} CODE_SIGNING_ALLOWED=NO archive | tail -30
+          cd $RUNNER_TEMP/cb.xcarchive/Products/Applications
+          # Swift loads web/index.html; fail if the bundle path differs (blank screen otherwise)
+          test -f CheatBook.app/web/index.html && test -f CheatBook.app/web/app.js && test -f CheatBook.app/web/data.js
+          ditto -c -k --keepParent CheatBook.app $RUNNER_TEMP/CheatBook-unsigned.zip
+      - name: Simulator check (screenshot after launch, fails on a blank screen)
+        run: |
+          cd cheats/ios
+          xcodebuild -project CheatBook.xcodeproj -scheme CheatBook -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath $RUNNER_TEMP/dd CODE_SIGNING_ALLOWED=NO build | tail -5
+          APP=$(ls -d $RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/CheatBook.app)
+          DEV=$(xcrun simctl list devices available | grep -m1 -E 'iPhone 1[5-9] Pro \(' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          [ -z "$DEV" ] && DEV=$(xcrun simctl list devices available | grep -m1 'iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl install "$DEV" "$APP"
+          xcrun simctl launch "$DEV" com.nyrathen.cheatbook
+          sleep 12
+          mkdir -p $RUNNER_TEMP/sim
+          xcrun simctl io "$DEV" screenshot $RUNNER_TEMP/sim/launch.png
+          python3 - "$RUNNER_TEMP/sim/launch.png" <<'PY' | tee $RUNNER_TEMP/sim/check.txt
+          import sys, zlib, struct
+          d = open(sys.argv[1], 'rb').read()
+          w, h = struct.unpack('>II', d[16:24])
+          raw = b''.join(d[i + 8:i + 8 + struct.unpack('>I', d[i:i + 4])[0]] for i in range(8, len(d)) if d[i + 4:i + 8] == b'IDAT')
+          px = zlib.decompress(raw)
+          colors = len(set(px[i:i + 3] for i in range(0, min(len(px), 4000000), 997)))
+          print('size', w, h, 'sampled colors', colors, 'BLANK' if colors < 20 else 'OK')
+          PY
+          grep -q OK $RUNNER_TEMP/sim/check.txt
+      - name: Push unsigned app + simulator screenshot to branch cheats-ios-out/<run>
+        run: |
+          mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../CheatBook-unsigned.zip . && cp $RUNNER_TEMP/sim/* .
+          echo "xcode=$(xcodebuild -version | head -1) sha=${{ github.sha }}" > build-info.txt
+          git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "cheats ios unsigned ${{ github.run_number }}"
+          git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/cheats-ios-out/${{ github.run_number }}
+  android:
+    needs: test
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:cheats-build')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: 17 }
+      - uses: gradle/actions/setup-gradle@v4
+      - name: assembleRelease + bundleRelease (unsigned)
+        run: |
+          cd cheats/android && CB_VERSION_CODE=${{ github.run_number }} gradle -q assembleRelease bundleRelease
+          unzip -l app/build/outputs/apk/release/*.apk | grep -q 'assets/www/index.html'
+      - uses: actions/upload-artifact@v4
+        with: { name: cheats-android-unsigned, path: 'cheats/android/app/build/outputs/**/*.a*', retention-days: 30 }
