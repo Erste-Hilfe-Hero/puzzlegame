@@ -97,7 +97,11 @@ const I18N = {
       cafe: { name: 'Getränke', genName: 'Kaffeemaschine', names: ['Milch', 'Kaffee', 'Tee', 'Limo', 'Bubble Tea', 'Smoothie', 'Eisbecher', 'Wassereis'] },
       kitchen: { name: 'Küche', genName: 'Herd', names: ['Ei', 'Spiegelei', 'Pfannkuchen', 'Sandwich', 'Taco', 'Burger', 'Pizza', 'Bento-Box'] },
       veggie: { name: 'Gemüse', genName: 'Bauernhof', names: ['Karotte', 'Mais', 'Brokkoli', 'Tomate', 'Salat', 'Suppe', 'Paella', 'Curry'] },
-      sweets: { name: 'Süßes', genName: 'Süßigkeitenwagen', names: ['Bonbon', 'Lolli', 'Schokolade', 'Keks', 'Donut', 'Cupcake', 'Pudding', 'Naschbox'] }
+      sweets: { name: 'Süßes', genName: 'Süßigkeitenwagen', names: ['Bonbon', 'Lolli', 'Schokolade', 'Keks', 'Donut', 'Cupcake', 'Pudding', 'Naschbox'] },
+      boutique: { name: 'Mode', genName: 'Boutique', names: ['Socken', 'Kappe', 'T-Shirt', 'Jeans', 'Kleid', 'Handtasche', 'High Heels', 'Krone'] },
+      barn: { name: 'Stall', genName: 'Stall', names: ['Heu', 'Küken', 'Huhn', 'Schaf', 'Wolle', 'Ziege', 'Käselaib', 'Pferd'] },
+      garage: { name: 'Werkstatt', genName: 'Autowerkstatt', names: ['Schraube', 'Schraubenzieher', 'Reifen', 'Zahnrad', 'Roller', 'Auto', 'Jeep', 'Rennwagen'] },
+      flowers: { name: 'Blumen', genName: 'Blumenladen', names: ['Spross', 'Tulpe', 'Rose', 'Sonnenblume', 'Blüte', 'Blumenstrauß', 'Topfpflanze', 'Hibiskus'] }
     },
     tasks: [
       ['Terrasse fegen', 'Theke reparieren', 'Markise aufhängen', 'Espressobar polieren', 'Bistrotische decken', 'Laternen anzünden'],

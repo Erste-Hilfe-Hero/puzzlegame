@@ -33,7 +33,7 @@ const DATA = {
   dailyGems: 2,
   sellCoins: l => Math.pow(2, l),
 
-  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'joker', 'chest', 'place_0', 'place_1', 'place_2', 'place_3', 'place_4', 'place_5', 'res_0', 'res_1', 'res_2', 'res_3', 'res_4', 'res_5', 'cu_0', 'cu_1', 'cu_2', 'cu_3'],
+  art: ['gen_bakery', 'gen_fruit', 'gen_cafe', 'gen_kitchen', 'gen_veggie', 'gen_sweets', 'gen_boutique', 'gen_barn', 'gen_garage', 'gen_flowers', 'joker', 'chest', 'place_0', 'place_1', 'place_2', 'place_3', 'place_4', 'place_5', 'res_0', 'res_1', 'res_2', 'res_3', 'res_4', 'res_5', 'cu_0', 'cu_1', 'cu_2', 'cu_3'],
 
   chains: {
     bakery: { img: true, name: 'Bakery', gen: '🏠', genName: 'Bakery', unlock: 1,
@@ -53,7 +53,20 @@ const DATA = {
       names: ['Carrot', 'Corn', 'Broccoli', 'Tomato', 'Salad', 'Soup', 'Paella', 'Curry'] },
     sweets: { img: true, name: 'Sweets', gen: '🍭', genName: 'Candy Cart', unlock: 11,
       items: ['🍬', '🍭', '🍫', '🍪', '🍩', '🧁', '🍮', '🎁'],
-      names: ['Candy', 'Lollipop', 'Chocolate', 'Cookie', 'Donut', 'Cupcake', 'Pudding', 'Sweet Box'] }
+      names: ['Candy', 'Lollipop', 'Chocolate', 'Cookie', 'Donut', 'Cupcake', 'Pudding', 'Sweet Box'] },
+    // Update 1.1 (Ali 2026-11-15): new shops unlock with the level.
+    boutique: { img: true, name: 'Fashion', gen: '👗', genName: 'Boutique', unlock: 13,
+      items: ['🧦', '🧢', '👕', '👖', '👗', '👜', '👠', '👑'],
+      names: ['Socks', 'Cap', 'T-Shirt', 'Jeans', 'Dress', 'Handbag', 'High Heels', 'Crown'] },
+    barn: { img: true, name: 'Barn', gen: '🐄', genName: 'Barn', unlock: 16,
+      items: ['🌿', '🐣', '🐔', '🐑', '🧶', '🐐', '🧀', '🐎'],
+      names: ['Hay', 'Chick', 'Hen', 'Sheep', 'Wool', 'Goat', 'Cheese Wheel', 'Horse'] },
+    garage: { img: true, name: 'Workshop', gen: '🔧', genName: 'Car Workshop', unlock: 19,
+      items: ['🔩', '🪛', '🛞', '⚙️', '🛵', '🚗', '🚙', '🏎️'],
+      names: ['Bolt', 'Screwdriver', 'Tyre', 'Gear', 'Scooter', 'Car', 'Jeep', 'Race Car'] },
+    flowers: { img: true, name: 'Flowers', gen: '💐', genName: 'Flower Shop', unlock: 22,
+      items: ['🌱', '🌷', '🌹', '🌻', '🌸', '💐', '🪴', '🌺'],
+      names: ['Sprout', 'Tulip', 'Rose', 'Sunflower', 'Blossom', 'Bouquet', 'Potted Plant', 'Hibiscus'] }
   },
 
   customers: ['cu_0', 'cu_1', 'cu_2', 'cu_3'],

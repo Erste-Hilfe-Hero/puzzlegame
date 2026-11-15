@@ -11,7 +11,7 @@ jobs:
   build:
     if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, 'run:ios')
     runs-on: macos-15
-    timeout-minutes: 30
+    timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
       - name: Use Xcode 26 (App Store needs the iOS 26 SDK)
@@ -35,9 +35,35 @@ jobs:
           name: ios-unsigned-${{ github.run_number }}
           path: ${{ runner.temp }}/AmysTastyIsland-unsigned.zip
           retention-days: 30
+      - name: Simulator check (screenshot after launch, fails on a blank screen)
+        continue-on-error: true
+        run: |
+          cd ios
+          xcodebuild -project AmysTastyIsland.xcodeproj -scheme AmysTastyIsland -configuration Debug -sdk iphonesimulator \
+            -derivedDataPath $RUNNER_TEMP/dd CODE_SIGNING_ALLOWED=NO build | tail -5
+          APP=$(ls -d $RUNNER_TEMP/dd/Build/Products/Debug-iphonesimulator/AmysTastyIsland.app)
+          DEV=$(xcrun simctl list devices available | grep -m1 -E 'iPhone 1[5-9] Pro \(' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          [ -z "$DEV" ] && DEV=$(xcrun simctl list devices available | grep -m1 'iPhone' | sed -E 's/.*\(([0-9A-F-]{36})\).*/\1/')
+          xcrun simctl boot "$DEV"; xcrun simctl bootstatus "$DEV" -b
+          xcrun simctl install "$DEV" "$APP"
+          xcrun simctl launch "$DEV" com.nyrathen.tastyisland
+          sleep 12
+          mkdir -p $RUNNER_TEMP/sim
+          xcrun simctl io "$DEV" screenshot $RUNNER_TEMP/sim/launch.png
+          python3 - "$RUNNER_TEMP/sim/launch.png" <<'PY' | tee $RUNNER_TEMP/sim/check.txt
+          import sys, zlib, struct
+          d = open(sys.argv[1], 'rb').read()
+          w, h = struct.unpack('>II', d[16:24])
+          raw = b''.join(d[i + 8:i + 8 + struct.unpack('>I', d[i:i + 4])[0]] for i in range(8, len(d)) if d[i + 4:i + 8] == b'IDAT')
+          px = zlib.decompress(raw)
+          colors = len(set(px[i:i + 3] for i in range(0, min(len(px), 4000000), 997)))
+          print('size', w, h, 'sampled colors', colors, 'BLANK' if colors < 20 else 'OK')
+          PY
+          grep -q OK $RUNNER_TEMP/sim/check.txt
       - name: Push unsigned app to branch ios-out/<run> (for the signing host)
         run: |
           mkdir -p $RUNNER_TEMP/out && cd $RUNNER_TEMP/out && cp ../AmysTastyIsland-unsigned.zip .
+          cp $RUNNER_TEMP/sim/* . 2>/dev/null || echo "no simulator screenshot"
           git init -q -b main && git config user.name ci && git config user.email ci@invalid
           git add . && git commit -qm "ios unsigned ${{ github.run_number }}"
           git push -q "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/ios-out/${{ github.run_number }}
