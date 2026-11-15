@@ -52,8 +52,8 @@ const DAILY = [10, 15, 20, 25, 30, 40, 75];
 const TUT = { en: ['Tap ROLL. Your lantern walks around the bay.', 'Build landmarks with coins. Finish all 5 to sail to the next harbor.', 'More dice? Raise the multiplier for bigger wins.'],
   de: ['Tippe auf WÜRFELN. Deine Laterne läuft um die Bucht.', 'Baue Wahrzeichen mit Münzen. Alle 5 fertig = nächster Hafen.', 'Viele Würfel? Erhöhe den Multiplikator für mehr Gewinn.'] }[LANG];
 Object.assign(T, LANG === 'de'
-  ? { storeWait: 'Store lädt noch, bitte gleich nochmal.', pending: 'Zahlung wird bearbeitet.', buyError: 'Kauf nicht möglich. Bitte später nochmal.', shopNative: 'Käufe über deinen Apple-Account.', album: 'Album', card: 'Neue Karte!', setDone: 'Set komplett! +', daily: 'Tagesbelohnung', day: 'Tag', claim: 'Abholen', dup: 'doppelt' }
-  : { storeWait: 'Store is loading, please try again.', pending: 'Payment is being processed.', buyError: 'Purchase not possible. Please try later.', shopNative: 'Purchases via your Apple account.', album: 'Album', card: 'New card!', setDone: 'Set complete! +', daily: 'Daily reward', day: 'Day', claim: 'Claim', dup: 'duplicate' });
+  ? { storeWait: 'Store lädt noch, bitte gleich nochmal.', pending: 'Zahlung wird bearbeitet.', buyError: 'Kauf nicht möglich. Bitte später nochmal.', shopNative: 'Käufe über deinen Apple-Account.', restore: 'Käufe wiederherstellen', restored: 'Käufe geprüft. Offene Käufe wurden gutgeschrieben.', album: 'Album', card: 'Neue Karte!', setDone: 'Set komplett! +', daily: 'Tagesbelohnung', day: 'Tag', claim: 'Abholen', dup: 'doppelt' }
+  : { storeWait: 'Store is loading, please try again.', pending: 'Payment is being processed.', buyError: 'Purchase not possible. Please try later.', shopNative: 'Purchases via your Apple account.', restore: 'Restore purchases', restored: 'Purchases checked. Any open purchases were credited.', album: 'Album', card: 'New card!', setDone: 'Set complete! +', daily: 'Daily reward', day: 'Day', claim: 'Claim', dup: 'duplicate' });
 
 // Tiny synth sounds (no audio files).
 let AC = null;
@@ -339,13 +339,15 @@ window.onNativePrices = map => { nativePrices = map || {}; if (!$('modal').class
 window.onNativePurchasePending = () => toast(T.pending);
 window.onNativePurchaseError = () => toast(T.buyError);
 window.onNativePause = () => { save(); mirror(); };
+window.onNativeRestored = () => toast(T.restored);
 if (NATIVE) { addEventListener('load', () => NATIVE.pageReady()); setInterval(mirror, 10000); }
 
 function openShop() {
   const rows = [];
   if (!S.starter) rows.push(`<div class="row"><div class="big">🎁</div><div class="info"><b>${T.starter}</b><small>100 ${T.dice} + 3 🛡️ + 🪙 ${fmt(base() * 50)}</small></div><button class="buy btn" data-s="starter">${price('starter', '1,99 €')}</button></div>`);
   SHOP.forEach(p => rows.push(`<div class="row"><div class="big">${p[0]}</div><div class="info"><b>${p[1]} ${T.dice}</b></div><button class="buy btn" data-s="dice_${p[1]}">${price('dice_' + p[1], p[2])}</button></div>`));
-  open(`<h2>${T.shopTitle}<button class="x btn">✕</button></h2>${rows.join('')}<p class="note">${NATIVE ? T.shopNative : T.shopNote}</p>`);
+  open(`<h2>${T.shopTitle}<button class="x btn">✕</button></h2>${rows.join('')}<p class="note">${NATIVE ? T.shopNative : T.shopNote}</p>${NATIVE && NATIVE.restore ? `<button class="btn" id="restoreBtn" style="width:100%;margin-top:8px">${T.restore}</button>` : ''}`);
+  if ($('restoreBtn')) $('restoreBtn').onclick = () => NATIVE.restore();
   $('sheet').querySelectorAll('[data-s]').forEach(b => b.onclick = () => buy(b.dataset.s));
 }
 

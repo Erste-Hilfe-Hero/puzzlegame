@@ -11,7 +11,7 @@ import StoreKit
 class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigationDelegate, WKUIDelegate {
     private static let prefix = "com.nyrathen.rollhaven."
     private static let ids = ["dice_25", "dice_150", "dice_350", "dice_800", "dice_2200", "dice_5000", "starter"]
-    private static let messages = ["billing", "ack", "ready", "prices", "mirror", "haptic"]
+    private static let messages = ["billing", "ack", "ready", "prices", "mirror", "haptic", "restore"]
     private var web: WKWebView!
     private let content = WKUserContentController()
     private var products: [String: Product] = [:]
@@ -78,6 +78,7 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
             pageReady: function () { m.ready.postMessage(''); },
             requestPrices: function () { m.prices.postMessage(''); },
             saveMirror: function (json) { m.mirror.postMessage(json); },
+            restore: function () { m.restore.postMessage(''); },
             loadMirror: function () { return mirror; },
             exit: function () {}
           };
@@ -101,6 +102,12 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
     }
 
     // The web content process crashed or was killed under memory pressure: reload instead of a blank screen.
+    func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+        #if targetEnvironment(simulator)
+        if let demo = ProcessInfo.processInfo.environment["RH_DEMO_JS"] { webView.evaluateJavaScript("void " + demo, completionHandler: nil) }
+        #endif
+    }
+
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
         loadGame()
     }
@@ -192,6 +199,9 @@ class GameViewController: UIViewController, WKScriptMessageHandler, WKNavigation
                 try? FileManager.default.createDirectory(at: Self.mirrorURL.deletingLastPathComponent(), withIntermediateDirectories: true)
                 try? s.write(to: Self.mirrorURL, atomically: true, encoding: .utf8)
             }
+        case "restore":
+            // Consumables only: re-syncs with the App Store and re-delivers any paid but unfinished transaction.
+            Task { try? await AppStore.sync(); await queueUnfinished(); js("window.onNativeRestored && window.onNativeRestored()") }
         case "haptic":
             if (message.body as? String) == "deliver" { success.notificationOccurred(.success) } else { tap.impactOccurred() }
         default:
