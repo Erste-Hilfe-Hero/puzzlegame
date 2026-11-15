@@ -1,0 +1,9 @@
+app MossbrookSolitaire.app com.nyrathen.mossbrook 1.0.1 (9)
+web bundle: web/index.html present
+launch: com.nyrathen.mossbrook: 25914
+content 01-start.png colours=234 top=17.3%
+process alive after 20 s
+content 02-tap.png colours=234 top=17.3%
+content 03-tap.png colours=234 top=17.3%
+content 04-tap.png colours=234 top=17.3%
+RESULT OK
