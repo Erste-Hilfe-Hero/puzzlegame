@@ -42,9 +42,12 @@ jobs:
           xcrun simctl list devicetypes | grep -iE "duo|fold|iphone 1[6-9]|iphone 2" || true
           DT=$(xcrun simctl list devicetypes | grep -iE "duo|fold" | head -1 | sed -E 's/.*\((com\.apple[^)]*)\).*/\1/')
           [ -z "$DT" ] && DT=$(xcrun simctl list devicetypes | grep -E "iPhone [0-9]+ Pro Max" | tail -1 | sed -E 's/.*\((com\.apple[^)]*)\).*/\1/')
-          RT=$(xcrun simctl list runtimes | grep -E '^iOS' | tail -1 | sed -E 's/.* - (com\.apple[^ ]*).*/\1/')
           echo "device type: $DT  runtime: $RT"
-          UDID=$(xcrun simctl create tt "$DT" "$RT")
+          UDID=""
+          for RT in $(xcrun simctl list runtimes | grep -E '^iOS' | sed -E 's/.* - (com\.apple[^ ]*).*/\1/' | sort -r); do
+            UDID=$(xcrun simctl create tt "$DT" "$RT" 2>/dev/null) && { echo "runtime $RT"; break; }
+          done
+          [ -z "$UDID" ] && { xcrun simctl list runtimes; exit 1; }
           xcrun simctl boot $UDID; xcrun simctl bootstatus $UDID -b
           xcrun simctl install $UDID "$APP"
           mkdir -p $RUNNER_TEMP/out/sim
