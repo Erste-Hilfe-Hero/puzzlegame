@@ -51,7 +51,11 @@ jobs:
           for G in menu reversi chess sea; do
             xcrun simctl launch --terminate-running-process $UDID com.nyrathen.twotable -ttdemo $G
             sleep 9
-            xcrun simctl io $UDID screenshot $RUNNER_TEMP/out/sim/$G.png
+            # the iPhone Duo simulator has two displays (inner + cover): capture each, the largest is the inner one
+            DS=$(xcrun simctl io $UDID screenshot /tmp/probe.png 2>&1 | grep -oE -- '--display=[0-9]+' | cut -d= -f2)
+            if [ -z "$DS" ]; then cp /tmp/probe.png $RUNNER_TEMP/out/sim/$G.png; else
+              for D in $DS; do xcrun simctl io $UDID screenshot --display=$D $RUNNER_TEMP/out/sim/$G-d$D.png; done
+              BIG=$(ls -S $RUNNER_TEMP/out/sim/$G-d*.png | head -1); cp "$BIG" $RUNNER_TEMP/out/sim/$G.png; fi
           done
           echo "device=$DT runtime=$RT" > $RUNNER_TEMP/out/sim/device.txt
           ls -l $RUNNER_TEMP/out/sim
