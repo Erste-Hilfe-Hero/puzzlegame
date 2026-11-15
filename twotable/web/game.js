@@ -1438,7 +1438,7 @@
             text(L("Ships left") + ": " + left, TX + N * CS / 2, 620, 26, "rgba(255,255,255,0.85)");
             if (!result) text(turn === p ? L("Your shot: tap the enemy sea") : L("The other player is shooting"), OX + N * CS / 2, 620, 24, turn === p ? PC[p] : "rgba(255,255,255,0.6)");
           }
-          if (msgT[p] > 0 && !result) text(msg[p], 500, 360, 64, "#ffd84a");
+          if (msgT[p] > 0 && !result) text(msg[p], 500, 40, 44, "#ffd84a");
           ctx.restore();
         }
       },
@@ -1665,8 +1665,8 @@
   function extras() {
     var o = [];
     for (var p = 0; p < 2; p++) {
-      var a = slotRect(p, 7, 104), b2 = slotRect(p, 7, 104);
-      if (p === 0) b2.y += 118; else b2.y -= 118;
+      var a = slotRect(p, 7), b2 = slotRect(p, 7);
+      a.w = b2.w = 96; if (p === 0) b2.x += 109; else a.x += 109;
       a.kind = "settings"; b2.kind = "stats"; a.p = b2.p = p; o.push(a, b2);
     }
     return o;
@@ -1724,8 +1724,8 @@
     extras().forEach(function (e) {
       rr(e.x, e.y, e.w, e.h, 20); ctx.fillStyle = "rgba(0,0,0,0.3)"; ctx.fill();
       var lab = e.kind === "settings" ? L("Settings") : L("Statistics");
-      ptext(e.p, lab, e.x + e.w / 2 + (e.p === 0 ? -14 : 14), e.y + e.h / 2, 22, "#fff");
-      ctx.save(); ctx.translate(e.x + e.w / 2 + (e.p === 0 ? 30 : -30), e.y + e.h / 2); ctx.rotate(e.p === 0 ? Math.PI / 2 : -Math.PI / 2); ctx.strokeStyle = "#fff"; ctx.fillStyle = "#fff"; ctx.lineWidth = 4;
+      ptext(e.p, lab, e.x + e.w / 2 + (e.p === 0 ? -18 : 18), e.y + e.h / 2, 19, "#fff");
+      ctx.save(); ctx.translate(e.x + e.w / 2 + (e.p === 0 ? 24 : -24), e.y + e.h / 2); ctx.rotate(e.p === 0 ? Math.PI / 2 : -Math.PI / 2); ctx.strokeStyle = "#fff"; ctx.fillStyle = "#fff"; ctx.lineWidth = 4;
       if (e.kind === "settings") { ctx.beginPath(); ctx.arc(0, 0, 11, 0, 7); ctx.stroke(); for (var a = 0; a < 8; a++) { ctx.save(); ctx.rotate(a * Math.PI / 4); ctx.fillRect(-3, -19, 6, 8); ctx.restore(); } }
       else { ctx.fillRect(-14, 2, 7, 12); ctx.fillRect(-3, -8, 7, 22); ctx.fillRect(8, -14, 7, 28); }
       ctx.restore();
@@ -2045,7 +2045,7 @@
     intro: function (v) { cfg.intro = v ? 0 : 1; },
     undo: function () { undoPress(0); undoPress(1); }, log: function () { return match && match.log.slice(); },
     restore: function () { var m = loadKey("twotable-match", null); if (m) open(m.id, { seed: m.seed, starter: m.starter, log: m.log, el: m.el, clock: m.clock }); return !!m; },
-    hinge: function (d, s) { window.onHinge(d, s); }, set: function (k, v) { cfg[k] = v; applyColors(); texCache = {}; },
+    hinge: function (d, s) { window.onHinge(d, s); }, quiet: function () { toasts = []; parts = []; }, set: function (k, v) { cfg[k] = v; applyColors(); texCache = {}; },
     // launch check on the simulator: skip the guide, open a game and play a few moves
     demo: function (id, n) {
       cfg.intro = 1; if (!id || id === "menu" || !byId(id)) { toMenu(); return; }
