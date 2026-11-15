@@ -1,0 +1,49 @@
+# Launch check of the EXACT uploaded iOS apps: takes the unsigned .app the signing host signed, re-tags it for the
+# simulator, launches it, taps past the start screen and keeps screenshots. Free macOS minutes (public repo).
+# Trigger: push of tools/ios-check/apps.txt (or manual). Results: branch ios-check-out/<run>.
+name: iOS launch check
+on:
+  push:
+    paths: ['tools/ios-check/apps.txt', '.github/workflows/ios-launch-check.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  list:
+    runs-on: ubuntu-latest
+    outputs:
+      apps: ${{ steps.l.outputs.apps }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: l
+        run: echo "apps=$(grep -v '^#' tools/ios-check/apps.txt | grep . | python3 -c 'import json,sys;print(json.dumps([dict(zip(["name","src","taps"],l.strip().split("|"))) for l in sys.stdin]))')" >> $GITHUB_OUTPUT
+  check:
+    needs: list
+    runs-on: macos-15
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        app: ${{ fromJson(needs.list.outputs.apps) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tools
+        run: |
+          pip3 install --break-system-packages -q pillow fb-idb || pip3 install -q pillow fb-idb
+          brew tap facebook/fb >/dev/null && brew install -q idb-companion || echo "idb-companion not installed (no taps)"
+          xcodebuild -version; xcrun simctl list runtimes | tail -3
+      - name: Fetch app
+        run: |
+          git fetch -q origin "${{ matrix.app.src }}"
+          mkdir -p $RUNNER_TEMP/src && git archive FETCH_HEAD | tar x -C $RUNNER_TEMP/src
+          ls -la $RUNNER_TEMP/src
+      - name: Launch in simulator
+        run: |
+          F=$(ls $RUNNER_TEMP/src/*.zip $RUNNER_TEMP/src/*.tar.gz 2>/dev/null | head -1)
+          bash tools/ios-check/launch-check.sh "$F" "$RUNNER_TEMP/out/${{ matrix.app.name }}" "${{ matrix.app.taps }}"
+      - name: Push result
+        if: always()
+        run: |
+          cd $RUNNER_TEMP/out && git init -q -b main && git config user.name ci && git config user.email ci@invalid
+          git add . && git commit -qm "launch check ${{ matrix.app.name }} run ${{ github.run_number }}"
+          for i in 1 2 3; do git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}" HEAD:refs/heads/ios-check-out/${{ github.run_number }}-${{ matrix.app.name }} && break; sleep 5; done

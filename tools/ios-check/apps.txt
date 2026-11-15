@@ -1,0 +1,7 @@
+# name | source (branch in this repo holding the unsigned app that was signed + uploaded) | taps "x,y x,y" (points)
+tastyisland|ios-out/14|201,437 201,650 201,760
+rollhaven|rollhaven-ios-out/3|201,437 201,650 201,760
+epochfall|epochfall-ios-out/10|437,201 437,300 600,300
+mossbrook|mossbrook-ios-out/9|201,437 201,650 201,760
+twotable|twotable-ios-out/7|201,437 201,650 201,760
+kaese|kaese-ios-out/3|201,437 201,650 201,760
