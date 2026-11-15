@@ -1,0 +1,9 @@
+app Epochfall.app com.nyrathen.epochfall 1.0 (10)
+web bundle: web/index.html present
+launch: com.nyrathen.epochfall: 6686
+content 01-start.png colours=134 top=34.2%
+process alive after 20 s
+content 02-tap.png colours=138 top=31.4%
+content 03-tap.png colours=139 top=31.8%
+content 04-tap.png colours=134 top=34.4%
+RESULT OK
