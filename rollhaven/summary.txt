@@ -1,0 +1,9 @@
+app Rollhaven.app com.nyrathen.rollhaven 1.0.0 (3)
+web bundle: web/index.html present
+launch: com.nyrathen.rollhaven: 11064
+content 01-start.png colours=488 top=16.3%
+process alive after 20 s
+content 02-tap.png colours=488 top=16.3%
+content 03-tap.png colours=488 top=16.3%
+content 04-tap.png colours=488 top=16.3%
+RESULT OK
