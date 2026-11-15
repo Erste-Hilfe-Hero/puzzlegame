@@ -1,0 +1,9 @@
+app TwoTable.app com.nyrathen.twotable 1.1.0 (7)
+web bundle: web/index.html present
+launch: com.nyrathen.twotable: 6131
+content 01-start.png colours=225 top=29.0%
+process alive after 20 s
+content 02-tap.png colours=225 top=29.0%
+content 03-tap.png colours=225 top=29.0%
+content 04-tap.png colours=225 top=29.0%
+RESULT OK
