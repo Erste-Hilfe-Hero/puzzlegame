@@ -14,7 +14,7 @@
       howT: 'So gibst du Cheats ein', howP: 'Die genaue Eingabe in GTA 6 steht fest, sobald das Spiel erschienen ist. Wir ergänzen sie hier zusammen mit den ersten bestätigten Codes.',
       safeT: 'Sicher bleiben', safe: ['Lade keine "Cheat-Tools" oder Mod-Menüs herunter, die Codes vor dem Release versprechen.', 'Gib nie deine Konto-Daten auf Cheat-Seiten ein.', 'Cheats im Online-Modus gibt es in der Regel nicht. Wer das anbietet, will meist dein Konto.'],
       aboutT: 'Über diese App', aboutP: 'Inoffizielle Fan-Übersicht. Nicht verbunden mit Rockstar Games oder Take-Two Interactive. Alle Marken gehören ihren Inhabern.',
-      lang: 'Sprache', contact: 'Fehler melden / Cheat vorschlagen'
+      lang: 'Sprache', privacy: 'Datenschutz', contact: 'Fehler melden / Cheat vorschlagen'
     },
     en: {
       tabs: ['Cheats', 'Favorites', 'Info'], cats: { all: 'All', health: 'Health', weapons: 'Weapons', vehicles: 'Vehicles', wanted: 'Wanted level', world: 'World', fun: 'Fun' },
@@ -29,7 +29,7 @@
       howT: 'How to enter cheats', howP: 'The exact input method in GTA 6 is known once the game is out. We add it here together with the first confirmed codes.',
       safeT: 'Stay safe', safe: ['Do not download "cheat tools" or mod menus that promise codes before release.', 'Never enter your account details on cheat sites.', 'Online mode usually has no cheats. Anyone offering them is usually after your account.'],
       aboutT: 'About this app', aboutP: 'Unofficial fan guide. Not affiliated with Rockstar Games or Take-Two Interactive. All trademarks belong to their owners.',
-      lang: 'Language', contact: 'Report an error / suggest a cheat'
+      lang: 'Language', privacy: 'Privacy Policy', contact: 'Report an error / suggest a cheat'
     }
   };
   const store = {
@@ -118,7 +118,7 @@
       <div class="card"><h3>${t().safeT}</h3><ul>${t().safe.map(s => `<li>${s}</li>`).join('')}</ul></div>
       <div class="card"><div class="row"><h3>${t().lang}</h3><div class="seg" style="width:140px"><button data-lang="de" class="${S.lang === 'de' ? 'on' : ''}">DE</button><button data-lang="en" class="${S.lang === 'en' ? 'on' : ''}">EN</button></div></div>
         <button class="btn" data-refresh="1">${t().refresh}</button><button class="btn ghost" data-contact="1">${t().contact}</button></div>
-      <div class="card"><h3>${t().aboutT}</h3><p>${t().aboutP}</p></div>
+      <div class="card"><h3>${t().aboutT}</h3><p>${t().aboutP}</p><button class="btn ghost" data-privacy="1">${t().privacy}</button></div>
       <p class="fine">${t().updated(esc(S.data.updated))}</p>`;
   }
 
@@ -158,6 +158,7 @@
       toast(t().copied); return;
     }
     else if (d.refresh) { refresh(true); return; }
+    else if (d.privacy) { const u = C.privacy; native('open', u); if (!window.webkit && !window.AndroidCB) window.open(u, '_blank'); return; }
     else if (d.contact) { native('open', C.support); if (!window.webkit && !window.AndroidCB) location.href = C.support; return; }
     else return;
     render();

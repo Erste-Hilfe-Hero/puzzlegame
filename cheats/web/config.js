@@ -2,5 +2,6 @@
 window.CB_CONFIG = {
   appName: 'Vice Cheats',
   contentUrl: 'https://play.nyrathen.com/cheats/cheats.json',
+  privacy: 'https://play.nyrathen.com/cheats/privacy.html',
   support: 'mailto:lords.azz6@gmail.com'
 };
