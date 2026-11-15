@@ -1982,7 +1982,7 @@
   }
 
   // iPhone Duo hinge (from the iOS shell): hint when the phone is closed or not flat; tap hides it until the state changes
-  var hinge = null, hingeHidden = false;
+  var hinge = null, hingeHidden = false, demoMode = false;
   window.onHinge = function (deg, status) {
     var k = status === "closed" ? "closed" : status === "partial" && deg < 150 ? "bent" : "flat";
     if (!hinge || hinge.k !== k) hingeHidden = false;
@@ -1991,7 +1991,7 @@
     hinge = { deg: deg, k: k };
   };
   function hingeHint() {
-    if (!hinge || hinge.k === "flat" || hingeHidden) return false;
+    if (!hinge || hinge.k === "flat" || hingeHidden || demoMode) return false;
     var closed = hinge.k === "closed", msg = closed ? L("Unfold your iPhone Duo for the big table") : L("Lay the phone flat between you");
     ctx.fillStyle = "rgba(10,20,15,0.8)"; ctx.fillRect(-ox / scale, -oy / scale, cw / scale, ch / scale);
     // an opening phone, drawn
@@ -2048,7 +2048,7 @@
     hinge: function (d, s) { window.onHinge(d, s); }, quiet: function () { toasts = []; parts = []; }, set: function (k, v) { cfg[k] = v; applyColors(); texCache = {}; },
     // launch check on the simulator: skip the guide, open a game and play a few moves
     demo: function (id, n) {
-      cfg.intro = 1; if (!id || id === "menu" || !byId(id)) { toMenu(); return; }
+      cfg.intro = 1; demoMode = true; if (!id || id === "menu" || !byId(id)) { toMenu(); return; }
       starter = 0; open(id); var g = game;
       for (var i = 0; i < (n || 8); i++) { var l = g.legal ? g.legal() : []; if (!l.length || result) break; g.playMove(l[(i * 7) % l.length]); }
     }
