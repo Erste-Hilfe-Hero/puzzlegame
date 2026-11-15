@@ -30,7 +30,8 @@ jobs:
       - name: Tools
         run: |
           pip3 install --break-system-packages -q pillow fb-idb || pip3 install -q pillow fb-idb
-          brew tap facebook/fb >/dev/null && brew install -q idb-companion || echo "idb-companion not installed (no taps)"
+          brew tap facebook/fb >/dev/null; brew trust facebook/fb 2>/dev/null; brew install -q idb-companion || echo "idb-companion not installed (no taps)"
+          X=$(ls -d /Applications/Xcode_26*.app | sort -V | tail -1); [ -n "$X" ] && sudo xcode-select -s "$X"
           xcodebuild -version; xcrun simctl list runtimes | tail -3
       - name: Fetch app
         run: |

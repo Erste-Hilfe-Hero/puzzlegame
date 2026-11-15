@@ -16,7 +16,7 @@ esac
 APP=$(find "$W" -maxdepth 3 -name '*.app' -type d | head -1)
 [ -n "$APP" ] || { echo "FAIL no .app in $SRC" | tee "$OUT/summary.txt"; exit 1; }
 BID=$(plutil -extract CFBundleIdentifier raw "$APP/Info.plist")
-VER=$(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist")($(plutil -extract CFBundleVersion raw "$APP/Info.plist"))
+VER="$(plutil -extract CFBundleShortVersionString raw "$APP/Info.plist") ($(plutil -extract CFBundleVersion raw "$APP/Info.plist"))"
 EXE=$(plutil -extract CFBundleExecutable raw "$APP/Info.plist")
 echo "app $(basename "$APP") $BID $VER" | tee "$OUT/summary.txt"
 # web wrappers: the bundle must carry web/index.html (www/ was the blank-screen bug)
