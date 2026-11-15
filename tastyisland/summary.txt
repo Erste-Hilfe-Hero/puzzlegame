@@ -1,0 +1,9 @@
+app AmysTastyIsland.app com.nyrathen.tastyisland 1.0.0 (14)
+web bundle: web/index.html present
+launch: com.nyrathen.tastyisland: 7302
+content 01-start.png colours=478 top=31.0%
+process alive after 20 s
+content 02-tap.png colours=477 top=31.0%
+content 03-tap.png colours=477 top=31.0%
+content 04-tap.png colours=477 top=31.0%
+RESULT OK
