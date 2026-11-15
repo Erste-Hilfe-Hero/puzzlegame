@@ -1,0 +1,10 @@
+app KaeseLegen.app com.nyrathen.kaeselegen 1.0.0 (3)
+web bundle: web/index.html present
+launch: com.nyrathen.kaeselegen: 28297
+content 01-start.png colours=136 top=37.8%
+FAIL app process gone (crash)
+content 02-tap.png colours=136 top=37.8%
+content 03-tap.png colours=136 top=37.8%
+content 04-tap.png colours=136 top=37.8%
+FAIL app process gone at the end
+RESULT FAIL

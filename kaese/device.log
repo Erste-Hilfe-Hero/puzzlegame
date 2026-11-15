@@ -1,0 +1,606 @@
+getpwuid_r did not find a match for uid 501
+Filtering the log data using "process == "KaeseLegen" OR subsystem == "com.apple.WebKit""
+Timestamp               Ty Process[PID:TID]
+2026-11-15 00:49:42.000 Df KaeseLegen[28297:12e62] (libMobileGestalt.dylib) No persisted cache on this platform.
+2026-11-15 00:49:42.003 Df KaeseLegen[28297:12e6d] [com.apple.xpc:connection] [0x100c05cc0] activating connection: mach=true listener=false peer=false name=com.apple.cfprefsd.daemon
+2026-11-15 00:49:42.016 Df KaeseLegen[28297:12e6d] [com.apple.UIKit:BackgroundTask] Creating new assertion because there is no existing background assertion.
+2026-11-15 00:49:42.016 Df KaeseLegen[28297:12e6d] [com.apple.UIKit:BackgroundTask] Creating new background assertion
+2026-11-15 00:49:42.016 Df KaeseLegen[28297:12e6d] [com.apple.UIKit:BackgroundTask] Created new background assertion <BKSProcessAssertion: 0x600002108eb0>
+2026-11-15 00:49:42.017 Df KaeseLegen[28297:12e6d] [com.apple.runningboard:connection] Initializing connection
+2026-11-15 00:49:42.017 Df KaeseLegen[28297:12e6d] [com.apple.runningboard:process] Removing all cached process handles
+2026-11-15 00:49:42.023 Df KaeseLegen[28297:12e6d] [com.apple.runningboard:connection] Creating connection to com.apple.runningboard
+2026-11-15 00:49:42.023 Df KaeseLegen[28297:12e6d] [com.apple.xpc:connection] [0x100d06fc0] activating connection: mach=true listener=false peer=false name=com.apple.runningboard
+2026-11-15 00:49:42.026 Df KaeseLegen[28297:12e75] [com.apple.runningboard:connection] Sending handshake request attempt #1 to server
+2026-11-15 00:49:42.027 Df KaeseLegen[28297:12e62] [com.apple.BoardServices:XPCErrors] [C:1] Alloc com.apple.frontboard.systemappservices
+2026-11-15 00:49:42.027 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100d07a70] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:42.027 Df KaeseLegen[28297:12e75] [com.apple.runningboard:connection] Handshake succeeded
+2026-11-15 00:49:42.029 Df KaeseLegen[28297:12e75] [com.apple.runningboard:connection] Identity resolved as app<com.nyrathen.kaeselegen((null))>
+2026-11-15 00:49:42.042 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason added: 10; deactivation reasons: 0 -> 1024; animating application lifecycle event: 0
+2026-11-15 00:49:42.042 Df KaeseLegen[28297:12e62] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.open
+2026-11-15 00:49:42.043 Df KaeseLegen[28297:12e62] [com.apple.BoardServices:Injection] activating monitor for service com.apple.frontboard.workspace-service
+2026-11-15 00:49:42.044 Df KaeseLegen[28297:12e6d] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x600002108eb0>
+2026-11-15 00:49:42.044 Df KaeseLegen[28297:12e6d] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x600001709d80>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 835 (elapsed = 0).
+2026-11-15 00:49:42.045 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UIApplicationSceneKeyboardSettings on FBSSceneSettings
+2026-11-15 00:49:42.046 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:Common] FBSWorkspace registering source: com.apple.frontboard.systemappservices
+2026-11-15 00:49:42.048 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneOcclusionSettings> on FBSSceneSettings
+2026-11-15 00:49:42.049 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneInterfaceProtectionSettings> on FBSSceneSettings
+2026-11-15 00:49:42.050 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferencesHostSettingsExtension on FBSSceneSettings
+2026-11-15 00:49:42.050 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneSafeAreaSettingsExtension on FBSSceneSettings
+2026-11-15 00:49:42.051 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneLayoutPreferenceClientSettingsExtension on FBSSceneClientSettings
+2026-11-15 00:49:42.051 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:Common] FBSWorkspace connected to endpoint : <BSServiceConnectionEndpoint: 0x600000211180; target: com.apple.frontboard.systemappservices; service: com.apple.frontboard.workspace-service>
+2026-11-15 00:49:42.051 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UIHomeAffordanceHostSceneSettings> on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISystemShellSceneHostingEnvironmentSettings on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneRenderingEnvironmentSettings on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneRenderingEnvironmentClientSettings> on FBSSceneClientSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneTransitioningHostSettings> on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneFocusSystemSettings> on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationSettingsExtension on FBSSceneSettings
+2026-11-15 00:49:42.052 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneOrientationClientSettingsExtension on FBSSceneClientSettings
+2026-11-15 00:49:42.053 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneWindowingControlClientSettings on FBSSceneClientSettings
+2026-11-15 00:49:42.053 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingContentSizePreferenceClientSettings> on FBSSceneClientSettings
+2026-11-15 00:49:42.053 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension _UISceneHostingTraitCollectionPropagationSettings on FBSSceneSettings
+2026-11-15 00:49:42.053 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x6000030082d0 com.apple.frontboard.systemappservices> attempting immediate handshake from activate
+2026-11-15 00:49:42.054 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:Common] <FBSWorkspaceScenesClient:0x6000030082d0 com.apple.frontboard.systemappservices> sent handshake
+2026-11-15 00:49:42.054 Df KaeseLegen[28297:12e62] [com.apple.runningboard:general] Added observer for process assertions expiration warning: <_RBSExpirationWarningClient: 0x600000218440>
+2026-11-15 00:49:42.054 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationSettings> on FBSSceneSettings
+2026-11-15 00:49:42.055 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingSheetPresentationClientSettings> on FBSSceneClientSettings
+2026-11-15 00:49:42.055 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingEventDeferringSettings> on FBSSceneSettings
+2026-11-15 00:49:42.056 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneSettings
+2026-11-15 00:49:42.056 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <UIKit__UITypedKeyValueSceneSettings> on FBSSceneClientSettings
+2026-11-15 00:49:42.056 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneHostingViewControllerPreferencePropagationClientSettings> on FBSSceneClientSettings
+2026-11-15 00:49:42.057 Df KaeseLegen[28297:12e6d] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneZoomTransitionSettings> on FBSSceneSettings
+2026-11-15 00:49:42.058 Df KaeseLegen[28297:12e74] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneSettingsCore on FBSSceneSettings
+2026-11-15 00:49:42.059 Df KaeseLegen[28297:12e74] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneClientSettingsCore on FBSSceneClientSettings
+2026-11-15 00:49:42.062 Df KaeseLegen[28297:12e62] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x100b07ee0> for initial
+2026-11-15 00:49:42.063 Df KaeseLegen[28297:12e62] [com.apple.UIKit:UIScreen] Evaluated capturing state as 0 on <UIScreen: 0x100b07ee0> for CADisplay KVO
+2026-11-15 00:49:42.065 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXSupportCommon] Read CategoryName: per-app = 1, category name = (null)
+2026-11-15 00:49:42.065 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXSupportCommon] Read CategoryName: per-app = 0, category name = (null)
+2026-11-15 00:49:42.066 Df KaeseLegen[28297:12e74] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneSettings setting counterpart class: UIApplicationSceneSettings
+2026-11-15 00:49:42.067 Df KaeseLegen[28297:12e74] [com.apple.FrontBoard:SceneExtension] UIMutableApplicationSceneClientSettings setting counterpart class: UIApplicationSceneClientSettings
+2026-11-15 00:49:42.069 Df KaeseLegen[28297:12e74] [com.apple.FrontBoard:SceneExtension] Realizing settings extension FBSSceneTransitionContextCore on FBSSceneTransitionContext
+2026-11-15 00:49:42.072 Df KaeseLegen[28297:12e62] [com.apple.dt.xctest:Default] Registering for test daemon availability notify post.
+2026-11-15 00:49:42.037 A  KaeseLegen[28297:12e78] (RunningBoardServices) didChangeInheritances
+2026-11-15 00:49:42.075 Df KaeseLegen[28297:12e62] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-15 00:49:42.075 Df KaeseLegen[28297:12e62] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-15 00:49:42.075 Df KaeseLegen[28297:12e62] [com.apple.dt.xctest:Default] notify_get_state check indicated test daemon not ready.
+2026-11-15 00:49:42.076 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason added: 11; deactivation reasons: 1024 -> 3072; animating application lifecycle event: 0
+2026-11-15 00:49:42.086 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason removed: 10; deactivation reasons: 3072 -> 2048; animating application lifecycle event: 0
+2026-11-15 00:49:42.087 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventBus] Event Timing Profile for Touch: not found, path="/System/Library/EventTimingProfiles/Sim.Touch.plist"
+2026-11-15 00:49:42.088 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventBus] Event Timing Profile for Pencil: not found, path="/System/Library/EventTimingProfiles/Sim.Pencil.plist"
+2026-11-15 00:49:42.088 Df KaeseLegen[28297:12e62] [com.apple.UIKit:UpdateScheduler] Selected display: name=LCD (PurpleMain), id=1
+2026-11-15 00:49:42.090 A  KaeseLegen[28297:12e70] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-11-15 00:49:42.091 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c08b50] activating connection: mach=true listener=false peer=false name=com.apple.lsd.mapdb
+2026-11-15 00:49:42.285 Df KaeseLegen[28297:12e62] [com.apple.BoardServices:XPCErrors] [C:2] Alloc com.apple.backboard.hid-services.xpc
+2026-11-15 00:49:42.285 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100d06b50] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:42.309 Df KaeseLegen[28297:12e62] [com.apple.UIKit:BackgroundTask] Will add backgroundTask with taskName: Persistent SceneSession Map Update, expirationHandler: <__NSGlobalBlock__: 0x1e61729e0>
+2026-11-15 00:49:42.309 Df KaeseLegen[28297:12e62] [com.apple.UIKit:BackgroundTask] Reusing background assertion <BKSProcessAssertion: 0x600002108eb0>
+2026-11-15 00:49:42.309 Df KaeseLegen[28297:12e62] [com.apple.UIKit:BackgroundTask] Incrementing reference count for background assertion <BKSProcessAssertion: 0x600002108eb0>
+2026-11-15 00:49:42.310 Df KaeseLegen[28297:12e62] [com.apple.UIKit:BackgroundTask] Created background task <_UIBackgroundTaskInfo: 0x6000017068c0>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 835 (elapsed = 0).
+2026-11-15 00:49:42.312 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason added: 5; deactivation reasons: 2048 -> 2080; animating application lifecycle event: 1
+2026-11-15 00:49:42.316 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Should send trait collection or coordinate space update, interface style 1 -> 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.320 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.320 Df KaeseLegen[28297:12e62] [com.apple.UIKit:HomeAffordanceObservation] Initializing: <_UIHomeAffordanceSceneNotifier: 0x60000290f170>; with scene: <UIWindowScene: 0x100d0db40>
+2026-11-15 00:49:42.321 Df KaeseLegen[28297:12e62] [com.apple.BacklightServices:scenes] 0x600000c1c420 setDelegate:<0x600000c1c510 _UIBacklightEnvironment> hasDelegate:YES for environment:sceneID:com.nyrathen.kaeselegen-default
+2026-11-15 00:49:42.322 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.323 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventDeferring] [0x60000290ef40] Initialized with scene: <UIWindowScene: 0x100d0db40>; behavior: <_UIEventDeferringBehavior_iOS: 0x600000227180>; availableForProcess: 1, systemShellManagesKeyboardFocus: 1
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x600002604480; process scope; status: target> was:none
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to LastOneWins
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Scene target of keyboard event deferring environment did change: 1; scene: UIWindowScene: 0x100d0db40; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.nyrathen.kaeselegen-default
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventDeferring] [0x60000290ef40] Scene target of event deferring environments did update: scene: 0x100d0db40; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x100d0db40; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.nyrathen.kaeselegen-default
+2026-11-15 00:49:42.327 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Stack[KeyWindow] 0x600000c1ccf0: Taking no further action for migration from LastOneWins -> SystemShellManaged as there are no scenes
+2026-11-15 00:49:42.334 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Setting default evaluation strategy for UIUserInterfaceIdiomPhone to SystemShellManaged
+2026-11-15 00:49:42.335 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Key window needs update: 0; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x100d0db40; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x0; reason: UIWindowScene: 0x100d0db40: Window scene became target of keyboard environment
+2026-11-15 00:49:42.338 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.339 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.342 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.353 Df KaeseLegen[28297:12e70] [com.apple.BackBoard:EventDelivery] BKSHIDEventObserver - connection activation
+2026-11-15 00:49:42.353 Df KaeseLegen[28297:12e72] [com.apple.BackBoard:EventDelivery] BKSHIDEventDeliveryManager - connection activation
+2026-11-15 00:49:42.556 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Orientation] <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C) Scene updated orientation preferences: none -> ( Pu )
+2026-11-15 00:49:42.562 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Key window API is scene-level: YES
+2026-11-15 00:49:42.562 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] UIWindowScene: 0x100d0db40: Window became key in scene: UIWindow: 0x100b0beb0; contextId: 0x81E56B1C: reason: UIWindowScene: 0x100d0db40: Window requested to become key in scene: 0x100b0beb0
+2026-11-15 00:49:42.562 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Key window needs update: 1; currentKeyWindowScene: 0x0; evaluatedKeyWindowScene: 0x100d0db40; currentApplicationKeyWindow: 0x0; evaluatedApplicationKeyWindow: 0x100b0beb0; reason: UIWindowScene: 0x100d0db40: Window requested to become key in scene: 0x100b0beb0
+2026-11-15 00:49:42.562 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Window did become application key: UIWindow: 0x100b0beb0; contextId: 0x81E56B1C; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.nyrathen.kaeselegen-default
+2026-11-15 00:49:42.563 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventDeferring] [0x60000290ef40] Begin local event deferring requested for token: 0x600002609260; environments: 1; reason: UIWindowScene: 0x100d0db40: Begin event deferring in keyboardFocus for window: 0x100b0beb0
+2026-11-15 00:49:42.569 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.573 Df KaeseLegen[28297:12e75] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x600002604480; token: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.nyrathen.kaeselegen-default; status: ancestor> was:target
+2026-11-15 00:49:42.599 Df KaeseLegen[28297:12e62] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.nyrathen.kaeselegen-default  persistentID: F6AE7EB0-BD17-4C00-8299-23A23D27773C
+2026-11-15 00:49:42.599 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Ignoring already applied deactivation reason: 5; deactivation reasons: 2080
+2026-11-15 00:49:42.600 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason added: 12; deactivation reasons: 2080 -> 6176; animating application lifecycle event: 1
+2026-11-15 00:49:42.600 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason removed: 11; deactivation reasons: 6176 -> 4128; animating application lifecycle event: 1
+2026-11-15 00:49:42.602 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:SceneExtension] Realizing settings extension <_UISceneIntelligenceSupportSettings> on FBSSceneSettings
+2026-11-15 00:49:42.611 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:42.615 Df KaeseLegen[28297:12e72] [com.apple.UIIntelligenceSupport:xpc] establishing connection to agent
+2026-11-15 00:49:42.622 Df KaeseLegen[28297:12e72] [com.apple.xpc:session] [0x60000210ea30] Session created.
+2026-11-15 00:49:42.622 Df KaeseLegen[28297:12e72] [com.apple.xpc:session] [0x60000210ea30] Session created from connection [0x100b08790]
+2026-11-15 00:49:42.622 Df KaeseLegen[28297:12e72] [com.apple.xpc:connection] [0x100b08790] activating connection: mach=true listener=false peer=false name=com.apple.uiintelligencesupport.agent
+2026-11-15 00:49:42.623 Df KaeseLegen[28297:12e72] [com.apple.xpc:session] [0x60000210ea30] Session activated
+2026-11-15 00:49:42.642 A  KaeseLegen[28297:12e62] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:42.805 A  KaeseLegen[28297:12e62] (TCC) TCCAccessRequest() IPC
+2026-11-15 00:49:42.805 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b09050] activating connection: mach=true listener=false peer=false name=com.apple.tccd
+2026-11-15 00:49:42.821 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b09050] invalidated after the last release of the connection object
+2026-11-15 00:49:42.826 A  KaeseLegen[28297:12e62] (TCC) TCCAccessRequest() IPC
+2026-11-15 00:49:42.827 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b097a0] activating connection: mach=true listener=false peer=false name=com.apple.tccd
+2026-11-15 00:49:42.832 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b097a0] invalidated after the last release of the connection object
+2026-11-15 00:49:42.834 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 2
+2026-11-15 00:49:42.841 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Ending task with identifier 2 and description: <_UIBackgroundTaskInfo: 0x6000017068c0>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 835 (elapsed = 1), _expireHandler: <__NSGlobalBlock__: 0x1e61729e0>
+2026-11-15 00:49:42.841 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x600002108eb0> (used by background task with identifier 2: <_UIBackgroundTaskInfo: 0x6000017068c0>: taskID = 2, taskName = Persistent SceneSession Map Update, creationTime = 835 (elapsed = 1))
+2026-11-15 00:49:42.859 Df KaeseLegen[28297:12e62] (WebKit) 0x10f0680e0 - [PID=0] WebProcessCache::updateCapacity: Cache is disabled because process swap on navigation is disabled
+2026-11-15 00:49:42.880 Df KaeseLegen[28297:12e62] (libMobileGestalt.dylib) No persisted cache on this platform.
+2026-11-15 00:49:42.926 Df KaeseLegen[28297:12e75] [com.apple.xpc:connection] [0x100d0ebb0] activating connection: mach=true listener=false peer=false name=com.apple.webprivacyd
+2026-11-15 00:49:42.939 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Storage] 0x100d045c8 - WebsiteDataStore::WebsiteDataStore sessionID=1 identifier=null
+2026-11-15 00:49:42.950 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x100d0e3b8 - PageConfiguration::delaysWebProcessLaunchUntilFirstLoad() -> false because of associated processPool value
+2026-11-15 00:49:42.950 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x102040a08 - WebProcessPool::createWebPage: Not delaying WebProcess launch
+2026-11-15 00:49:42.954 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0ac0c0 - [PID=0] WebProcessProxy::constructor:
+2026-11-15 00:49:42.960 A  KaeseLegen[28297:12e75] (libsystem_containermanager.dylib) container_system_group_path_for_identifier
+2026-11-15 00:49:42.965 Df KaeseLegen[28297:12e77] [com.apple.extensionkit:launch] Launching process with config: bundleID: com.apple.WebKit.WebContent instance ID: Optional([_EXExtensionInstanceIdentifier: F71BC0A3-3B22-4CD1-B179-3317CA4E1B78])
+2026-11-15 00:49:42.968 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app'
+2026-11-15 00:49:42.991 Df KaeseLegen[28297:12e62] [com.apple.avkit:AVKit] +[AVPictureInPicturePlatformAdapter isPictureInPictureSupported]_block_invoke isPictureInPictureSupported NO
+2026-11-15 00:49:42.960 Df KaeseLegen[28297:12e75] [com.apple.containermanager:xpc] Requesting container lookup; class = 13, identifier = (null), group_identifier = systemgroup.com.apple.configurationprofiles, create = 1, temp = 0, euid = 501, uid = 501
+2026-11-15 00:49:42.995 A  KaeseLegen[28297:12e75] (libsystem_containermanager.dylib) container_query_t
+2026-11-15 00:49:42.995 Df KaeseLegen[28297:12e75] [com.apple.containermanager:xpc] Query; euid = 501, uid = 501, class = 13, identifier = [(null)](0), flags = 900000003
+2026-11-15 00:49:42.998 Df KaeseLegen[28297:12e62] (libMobileGestalt.dylib) No persisted cache on this platform.
+2026-11-15 00:49:42.999 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c19280] activating connection: mach=true listener=false peer=false name=com.apple.IOSurface.Remote
+2026-11-15 00:49:43.001 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/MediaKeys/v1'
+2026-11-15 00:49:43.003 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc0c0 - [PID=0, throttler=0x10f0ac150] ProcessThrottler::Activity::Activity: Starting foreground activity / 'Process initialization'
+2026-11-15 00:49:43.013 Df KaeseLegen[28297:12e70] [com.apple.xpc:connection] [0x100b04290] activating connection: mach=true listener=false peer=false name=com.apple.accessibility.mediaaccessibilityd
+2026-11-15 00:49:43.017 Df KaeseLegen[28297:12e75] [com.apple.containermanager:unspecified] _container_query_get_result_at_index: success
+2026-11-15 00:49:43.017 A  KaeseLegen[28297:12e75] (libsystem_containermanager.dylib) container_copy_object
+2026-11-15 00:49:43.017 Df KaeseLegen[28297:12e75] [com.apple.containermanager:unspecified] container_system_group_path_for_identifier: success
+2026-11-15 00:49:43.017 Df KaeseLegen[28297:12e75] [com.apple.ManagedConfiguration:MC] Got system group container path from MCM for systemgroup.com.apple.configurationprofiles: /Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Shared/SystemGroup/systemgroup.com.apple.configurationprofiles
+2026-11-15 00:49:43.020 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::constructor, site isolation enabled 0
+2026-11-15 00:49:43.022 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Media] PlaybackSessionManagerProxy::PlaybackSessionManagerProxy(3112014096)
+2026-11-15 00:49:43.023 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Fullscreen] PlaybackSessionManagerProxy::VideoPresentationManagerProxy(3112014096)
+2026-11-15 00:49:43.027 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0ac0c0 - [PID=0] WebProcessProxy::addExistingWebPage: webPage=0x10185b218, pageProxyID=6, webPageID=7
+2026-11-15 00:49:43.029 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSwapping] 0x10f0680e0 - [PID=0] WebProcessCache::updateCapacity: Cache is disabled by client
+2026-11-15 00:49:43.030 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.apple.WebKit.GPU'
+2026-11-15 00:49:43.030 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/tmp/com.apple.WebKit.GPU'
+2026-11-15 00:49:43.030 Df KaeseLegen[28297:12e62] (libMobileGestalt.dylib) No persisted cache on this platform.
+2026-11-15 00:49:43.030 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc120 - [PID=0, throttler=0x10f0f4270] ProcessThrottler::Activity::Activity: Starting foreground activity / 'Process initialization'
+2026-11-15 00:49:43.032 Df KaeseLegen[28297:12e79] [com.apple.extensionkit:launch] Launching process with config: bundleID: com.apple.WebKit.GPU instance ID: Optional([_EXExtensionInstanceIdentifier: C63C944D-3387-4C6B-B188-BB7061519B26])
+2026-11-15 00:49:43.042 Df KaeseLegen[28297:12e62] [com.apple.WebKit:TextInteraction] Conforming to BrowserEngineKit text input protocol
+2026-11-15 00:49:43.047 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Ending background task with UIBackgroundTaskIdentifier: 1
+2026-11-15 00:49:43.049 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Ending task with identifier 1 and description: <_UIBackgroundTaskInfo: 0x600001709d80>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 835 (elapsed = 1), _expireHandler: (null)
+2026-11-15 00:49:43.049 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Decrementing reference count for assertion <BKSProcessAssertion: 0x600002108eb0> (used by background task with identifier 1: <_UIBackgroundTaskInfo: 0x600001709d80>: taskID = 1, taskName = Launch Background Task for Coalescing, creationTime = 835 (elapsed = 1))
+2026-11-15 00:49:43.049 Df KaeseLegen[28297:12e75] [com.apple.UIKit:BackgroundTask] Will invalidate assertion: <BKSProcessAssertion: 0x600002108eb0> for task identifier: 1
+2026-11-15 00:49:43.057 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::loadFile:
+2026-11-15 00:49:43.059 Df KaeseLegen[28297:12e62] [com.apple.runningboard:connection] Creating side-channel connection to com.apple.runningboard
+2026-11-15 00:49:43.059 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c16a40] activating connection: mach=true listener=false peer=false name=com.apple.runningboard
+2026-11-15 00:49:43.060 Df KaeseLegen[28297:12e62] [com.apple.runningboard:process] Hit the server for a process handle 19a8adf600006e89 that resolved to: [app<com.nyrathen.kaeselegen((null))>:28297]
+2026-11-15 00:49:43.060 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::WebPageProxy::shouldForceForegroundPriorityForClientNavigation() returns 1 based on PageClient::canTakeForegroundAssertions()
+2026-11-15 00:49:43.061 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc1b0 - [PID=0, throttler=0x10f0ac150] ProcessThrottler::Activity::Activity: Starting foreground activity / 'Client navigation'
+2026-11-15 00:49:43.061 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::maybeInitializeSandboxExtensionHandle: url(2123141) = file:///Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/index.html, resourceDirectoryURL(15810489) = file:///Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/, checkAssumedReadAccessToResourceURL = 1
+2026-11-15 00:49:43.061 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::maybeInitializeSandboxExtensionHandle: process is launching
+2026-11-15 00:49:43.063 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f10c100 - NavigationState is taking a process network assertion because a page load started
+2026-11-15 00:49:43.063 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc1e0 - [PID=0, throttler=0x10f0ac150] ProcessThrottler::Activity::Activity: Starting background activity / 'Page Load'
+2026-11-15 00:49:43.099 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10f0a4100 - ApplicationStateTracker::setIsInBackground: 0
+2026-11-15 00:49:43.099 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10f0a4100 - ApplicationStateTracker: add observers for scene
+2026-11-15 00:49:43.100 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x101858e00 - WKApplicationStateTrackingView: View with page [0x10185b218, pageProxyID=6] was added to a window, _lastObservedStateWasBackground=0, isNowBackground=0
+2026-11-15 00:49:43.133 Df KaeseLegen[28297:12e6d] [com.apple.xpc:connection] [0x100d252b0] activating connection: mach=true listener=false peer=false name=com.apple.fontservicesd
+2026-11-15 00:49:43.137 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::updateActivityState: view visibility state changed 0 -> 1
+2026-11-15 00:49:43.145 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] Activating connection to server: (null)
+2026-11-15 00:49:43.145 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] server remote target <BSXPCServiceConnectionProxy<BKSKeyboardServiceClientToServerIPC>: 0x6000029201c0>
+2026-11-15 00:49:43.145 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: YES
+2026-11-15 00:49:43.146 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] connected: (
+    "<BKSHIDKeyboardDevice: 0x600000268340> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.147 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: NO
+2026-11-15 00:49:43.147 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] disconnected: (
+    "<BKSHIDKeyboardDevice: 0x600000268340> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.147 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: YES
+2026-11-15 00:49:43.148 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] connected: (
+    "<BKSHIDKeyboardDevice: 0x600000264800> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.148 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: NO
+2026-11-15 00:49:43.149 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] disconnected: (
+    "<BKSHIDKeyboardDevice: 0x600000264800> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.150 Df KaeseLegen[28297:12e62] [com.apple.UIKit:HardwareKeyboard] -[UIApplication GSKeyboardForHWLayout:senderID:forceRebuild:createIfNeeded:], New hardware layout is created with US layout and 0 standardType.
+2026-11-15 00:49:43.151 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: YES
+2026-11-15 00:49:43.151 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] connected: (
+    "<BKSHIDKeyboardDevice: 0x6000002306a0> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.151 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] currently observing: NO
+2026-11-15 00:49:43.151 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:Keyboard] disconnected: (
+    "<BKSHIDKeyboardDevice: 0x6000002306a0> {\134n    senderID: 0xACEFADE00000003;\134n    transport: <nil>;\134n    language: <nil>;\134n    layout: US;\134n    countryCode: 0;\134n    standardType: 4294967295;\134n    subinterfaceID: 0;\134n    capsLockKeyHasLanguageSwitchLabel: NO;\134n    globeKeyLabelHasGlobeSymbol: NO;\134n}"
+)
+2026-11-15 00:49:43.152 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::viewIsBecomingVisible:
+2026-11-15 00:49:43.185 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ScreenTime] Screen Time has updated to use the system shield for any blocked URL.
+2026-11-15 00:49:43.188 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=0] WebPageProxy::updateThrottleState: UIProcess is taking a foreground assertion because the view is visible
+2026-11-15 00:49:43.191 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc270 - [PID=0, throttler=0x10f0ac150] ProcessThrottler::Activity::Activity: Starting foreground activity / 'View is visible'
+2026-11-15 00:49:43.192 Df KaeseLegen[28297:12e62] [com.apple.WebKit:RemoteLayerTree] RemoteLayerTreeDrawingAreaProxy(9)::hideContentUntilAnyUpdate
+2026-11-15 00:49:43.193 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10204b800 (pageProxyID=6) -[WKWebView _endLiveResize]
+2026-11-15 00:49:43.226 Df KaeseLegen[28297:12e62] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:1 [E848DFD2-8E67-4EF7-907A-2D7B82F683B4] (reporting strategy default)>
+2026-11-15 00:49:43.226 Df KaeseLegen[28297:12e62] [com.apple.network:activity] Create activity from XPC object <nw_activity 50:2 [57F007FB-AC95-4A86-BF62-1FF453180307] (reporting strategy default)>
+2026-11-15 00:49:43.226 Df KaeseLegen[28297:12e62] [com.apple.network:activity] Set activity <nw_activity 50:1 [E848DFD2-8E67-4EF7-907A-2D7B82F683B4] (reporting strategy default)> as the global parent
+2026-11-15 00:49:43.226 Df KaeseLegen[28297:12e62] [com.apple.UIKit:UpdateScheduler] Target list changed: <CADisplay:LCD PurpleMain>
+2026-11-15 00:49:43.227 Df KaeseLegen[28297:12e62] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.nyrathen.kaeselegen-default  persistentID: F6AE7EB0-BD17-4C00-8299-23A23D27773C
+2026-11-15 00:49:43.227 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:43.234 A  KaeseLegen[28297:12e6d] (RunningBoardServices) didChangeInheritances
+2026-11-15 00:49:43.238 Df KaeseLegen[28297:12e62] [com.apple.UIKit:EventDeferring] [0x60000290ef40] Scene target of event deferring environments did update: scene: 0x100d0db40; current systemShellManagesKeyboardFocus: 1; systemShellManagesKeyboardFocusForScene: 1; eligibleForRecordRemoval: 1;
+2026-11-15 00:49:43.238 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyWindow] Scene became target of keyboard event deferring environment: UIWindowScene: 0x100d0db40; scene identity: com.apple.frontboard.systemappservices/FBSceneManager:sceneID%3Acom.nyrathen.kaeselegen-default
+2026-11-15 00:49:43.240 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXCommon] Read Per-App on Init: Smart invert = (null)
+2026-11-15 00:49:43.248 A  KaeseLegen[28297:12e74] (RunningBoardServices) didChangeInheritances
+2026-11-15 00:49:43.248 A  KaeseLegen[28297:12e6d] (RunningBoardServices) didChangeInheritances
+2026-11-15 00:49:43.252 Df KaeseLegen[28297:12e62] [com.apple.gamecontroller:Session] Creating the shared game controller session...
+2026-11-15 00:49:43.263 Df KaeseLegen[28297:12e62] [com.apple.BackBoard:EventDelivery] policyStatus:<BKSHIDEventDeliveryPolicyObserver: 0x6000026107e0; process scope; status: target> was:none
+2026-11-15 00:49:43.263 A  KaeseLegen[28297:12e62] (GameController) [GCDeviceSession] Activate
+2026-11-15 00:49:43.277 Df KaeseLegen[28297:12e62] [com.apple.FrontBoard:SceneExtension] Realizing settings extension SBUISecureRenderingSettingsExtension on FBSSceneSettings
+2026-11-15 00:49:43.279 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:43.281 Df KaeseLegen[28297:12e62] [com.apple.UIKit:InterfaceStyle] Not push traits update to screen for new style 1, <UIWindowScene: 0x100d0db40> (F6AE7EB0-BD17-4C00-8299-23A23D27773C)
+2026-11-15 00:49:43.283 Df KaeseLegen[28297:12e62] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.nyrathen.kaeselegen-default  persistentID: F6AE7EB0-BD17-4C00-8299-23A23D27773C
+2026-11-15 00:49:43.283 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason removed: 12; deactivation reasons: 4128 -> 32; animating application lifecycle event: 1
+2026-11-15 00:49:43.284 Df KaeseLegen[28297:12e62] [com.apple.KeyboardArbiter:Client] Send setDeactivating: N (-DeactivationReason:SuspendedEventsOnly)
+2026-11-15 00:49:43.285 Df KaeseLegen[28297:12e62] [com.apple.UIKit:Application] Deactivation reason removed: 5; deactivation reasons: 32 -> 0; animating application lifecycle event: 0
+2026-11-15 00:49:43.285 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Fullscreen] PlaybackSessionManagerProxy::applicationDidBecomeActive(3112014096)
+2026-11-15 00:49:43.286 A  KaeseLegen[28297:12e62] (GameController) Notify ApplicationDidBecomeActive
+2026-11-15 00:49:43.283 A  KaeseLegen[28297:12e74] (StoreKit) StoreKit/TransactionQuery
+2026-11-15 00:49:43.326 Df KaeseLegen[28297:12e74] [com.apple.xpc:connection] [0x100d17e90] activating connection: mach=true listener=false peer=false name=com.apple.storekitd
+2026-11-15 00:49:43.332 Df KaeseLegen[28297:12e62] [com.apple.gamecontroller:Session] Connected devices changed (2 added, 0 removed) -> [2] {(
+    <GCKeyboard 0x60000022fae0 'Generic Keyboard'>,
+    <GCController 0x600003d2a0d0 'MFi'/'Gamepad'>
+)}
+2026-11-15 00:49:43.335 Df KaeseLegen[28297:12e62] [com.apple.CoreAnalytics:client] No XPC connection in Simulator
+2026-11-15 00:49:43.338 Df KaeseLegen[28297:12e62] [com.apple.gamecontroller:Session] Connected devices changed (0 added, 0 removed) -> [2] {(
+    <GCKeyboard 0x60000022fae0 'Generic Keyboard'>,
+    <GCController 0x600003d2a0d0 'MFi'/'Gamepad'>
+)}
+2026-11-15 00:49:43.339 Df KaeseLegen[28297:12e62] [com.apple.gamecontroller:Session] Connected devices changed (0 added, 0 removed) -> [2] {(
+    <GCKeyboard 0x60000022fae0 'Generic Keyboard'>,
+    <GCController 0x600003d2a0d0 'MFi'/'Gamepad'>
+)}
+2026-11-15 00:49:43.340 A  KaeseLegen[28297:12e62] (GameControllerFoundation) [HID Event System Client] Activate
+2026-11-15 00:49:43.341 Df KaeseLegen[28297:12e62] [com.apple.KeyboardArbiter:Client] startConnection
+2026-11-15 00:49:43.344 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c06ac0] activating connection: mach=true listener=false peer=false name=com.apple.UIKit.KeyboardManagement.hosted
+2026-11-15 00:49:43.354 Df KaeseLegen[28297:12e62] [com.apple.KeyboardArbiter:Client] handleKeyboardChange: set currentKeyboard:N (wasKeyboard:N)
+2026-11-15 00:49:43.355 Df KaeseLegen[28297:12e62] [com.apple.UIKit:KeyboardArbiterClientLog] isWritingToolsHandlingKeyboardTracking:Y (WT ready:Y, Arbiter ready:Y)
+2026-11-15 00:49:43.360 Df KaeseLegen[28297:12e74] [com.apple.xpc:connection] [0x100d214d0] activating connection: mach=true listener=false peer=false name=com.apple.storekitd
+2026-11-15 00:49:43.365 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.389 Df KaeseLegen[28297:12e62] [com.apple.network:activity] <nw_activity 50:1 [E848DFD2-8E67-4EF7-907A-2D7B82F683B4] (global parent) (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 4786ms
+2026-11-15 00:49:43.390 Df KaeseLegen[28297:12e62] [com.apple.network:activity] <nw_activity 50:2 [57F007FB-AC95-4A86-BF62-1FF453180307] (reporting strategy default) complete (reason success)> complete with reason 2 (success), duration 4786ms
+2026-11-15 00:49:43.390 Df KaeseLegen[28297:12e62] [com.apple.network:activity] Unsetting the global parent activity <nw_activity 50:1 [E848DFD2-8E67-4EF7-907A-2D7B82F683B4] (global parent) (reporting strategy default) complete (reason success)>
+2026-11-15 00:49:43.390 Df KaeseLegen[28297:12e62] [com.apple.network:activity] Unset the global parent activity
+2026-11-15 00:49:43.392 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.412 A  KaeseLegen[28297:12e6d] (RunningBoardServices) didChangeInheritances
+2026-11-15 00:49:43.420 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.422 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.426 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.442 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.468 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.488 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.489 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.491 A  KaeseLegen[28297:12e74] (CoreFoundation) Updating Key-Value Observers Of Preferences
+2026-11-15 00:49:43.522 Df KaeseLegen[28297:12e74] [com.apple.storekit:Default] [Default] Finished iterating transaction batches
+2026-11-15 00:49:43.522 Df KaeseLegen[28297:12e74] [com.apple.xpc:connection] [0x100d17e90] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-11-15 00:49:43.523 A  KaeseLegen[28297:12e74] (StoreKit) StoreKit/Products_SK2
+2026-11-15 00:49:43.527 Df KaeseLegen[28297:12e74] [com.apple.xpc:connection] [0x100d08b20] activating connection: mach=true listener=false peer=false name=com.apple.storekitd
+2026-11-15 00:49:43.715 Df KaeseLegen[28297:12e74] [com.apple.storekit:Default] AAFService connection invalidated
+2026-11-15 00:49:45.458 Df KaeseLegen[28297:12e75] [com.apple.xpc:connection] [0x100d08b20] invalidated because the current process cancelled the connection by calling xpc_connection_cancel()
+2026-11-15 00:49:45.458 Df KaeseLegen[28297:12e75] [com.apple.storekit:Default] AAFService connection invalidated
+2026-11-15 00:49:45.562 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request storage access quirks from WebPrivacy.
+2026-11-15 00:49:45.562 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request storage access user agent string quirks from WebPrivacy.
+2026-11-15 00:49:45.562 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request known fingerprinting scripts from WebPrivacy: Error Domain=WebPrivacyErrorDomain Code=1001 "List data not found" UserInfo={NSLocalizedDescription=List data not found}
+2026-11-15 00:49:46.543 Df KaeseLegen[28297:12e77] [com.apple.runningboard:process] Starting death monitoring for handle [xpcservice<com.apple.WebKit.WebContent([app<com.nyrathen.kaeselegen((null))>:28297])>{vt hash: 71395982}[uuid:F71BC0A3-3B22-4CD1-B179-3317CA4E1B78]{definition:com.apple.WebKit.WebContent[extension][client]}:28357]
+2026-11-15 00:49:46.554 Df KaeseLegen[28297:12e77] [com.apple.extensionkit:launch] Created new process ExtensionProcess: bundleID: com.apple.WebKit.WebContent instance ID: Optional([_EXExtensionInstanceIdentifier: F71BC0A3-3B22-4CD1-B179-3317CA4E1B78]) pid: 28357.
+2026-11-15 00:49:46.555 Df KaeseLegen[28297:12e77] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:46.559 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c151f0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:46.852 Df KaeseLegen[28297:12e62] (WebKit) WebContent[28357] Installed launch log hook
+2026-11-15 00:49:46.860 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::didFinishLaunching:
+2026-11-15 00:49:46.860 A  KaeseLegen[28297:12e62] (libsystem_trace.dylib) Activity for state dumps
+2026-11-15 00:49:46.860 F  KaeseLegen[28297:12e62] [com.apple.WebKit:Process] WebContent process (0x10f0ac0c0) took 3.901183 seconds to launch
+2026-11-15 00:49:46.864 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::maybeInitializeSandboxExtensionHandle: url(2123141) = file:///Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/index.html, resourceDirectoryURL(15810489) = file:///Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/, checkAssumedReadAccessToResourceURL = 0
+2026-11-15 00:49:46.864 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::sandboxExtensionForFile: /Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web, has cached extension: 0
+2026-11-15 00:49:46.864 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web'
+2026-11-15 00:49:46.864 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::addSandboxExtensionForFile: /Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web
+2026-11-15 00:49:46.864 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::maybeInitializeSandboxExtensionHandle: created sandbox extension to resource directory
+2026-11-15 00:49:46.865 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::assumeReadAccessToBaseURL(15810489): path = /Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web
+2026-11-15 00:49:46.865 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::NetworkProcessProxy
+2026-11-15 00:49:46.865 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/ResourceLoadStatistics'
+2026-11-15 00:49:46.866 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.nyrathen.kaeselegen/WebKit/NetworkCache'
+2026-11-15 00:49:46.866 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.nyrathen.kaeselegen/WebKit/HSTS'
+2026-11-15 00:49:46.866 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/ResourceMonitorThrottler'
+2026-11-15 00:49:46.866 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/LocalStorage'
+2026-11-15 00:49:46.867 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/IndexedDB'
+2026-11-15 00:49:46.867 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/Default'
+2026-11-15 00:49:46.867 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.nyrathen.kaeselegen/WebKit/CacheStorage'
+2026-11-15 00:49:46.867 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.nyrathen.kaeselegen/WebKit/ServiceWorkers'
+2026-11-15 00:49:46.868 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.nyrathen.kaeselegen/WebKit/AlternativeServices'
+2026-11-15 00:49:46.869 Df KaeseLegen[28297:12e62] [com.apple.CFNetwork:Default] Initializing CFHTTPCookieStorage singleton
+2026-11-15 00:49:46.869 Df KaeseLegen[28297:12e62] [com.apple.CFNetwork:Default] Creating default cookie storage with process/bundle identifier
+2026-11-15 00:49:46.870 Df KaeseLegen[28297:12e62] [com.apple.network:] networkd_settings_read_from_file initialized networkd settings by reading plist directly
+2026-11-15 00:49:46.870 Df KaeseLegen[28297:12e62] [com.apple.network:] networkd_settings_read_from_file initialized networkd settings by reading plist directly
+2026-11-15 00:49:46.871 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Cookies'
+2026-11-15 00:49:46.871 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/Caches/com.apple.WebKit.Networking'
+2026-11-15 00:49:46.872 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app'
+2026-11-15 00:49:46.874 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc2a0 - [PID=0, throttler=0x10f134190] ProcessThrottler::Activity::Activity: Starting foreground activity / 'Process initialization'
+2026-11-15 00:49:46.875 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0ac150 - [PID=28357] ProcessThrottler::didConnectToProcess
+2026-11-15 00:49:46.875 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0ac150 - [PID=28357] ProcessThrottler::setThrottleState: Updating process assertion type to 3 (foregroundActivities=3, backgroundActivities=4)
+2026-11-15 00:49:46.875 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x60000172e880 - WKProcessAssertionBackgroundTaskManager: beginBackgroundTaskWithName
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] WKProcessAssertionBackgroundTaskManager: Took a FinishTaskInterruptable assertion for own process
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::didChangeThrottleState: type=2
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::didChangeThrottleState(Foreground) Taking foreground assertion for network process
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc330 - [PID=0, throttler=0x10f134190] ProcessThrottler::Activity::Activity: Starting foreground activity / 'Networking for foreground view(s)'
+2026-11-15 00:49:46.877 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc360 - [PID=0, throttler=0x10f0f4270] ProcessThrottler::Activity::Activity: Starting foreground activity / 'GPU for foreground view(s)'
+2026-11-15 00:49:46.878 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::sendXPCEndpointToProcess(0x10f0ac0c0) state = 1 has connection = 1 XPC endpoint message = 0x0
+2026-11-15 00:49:46.878 Df KaeseLegen[28297:12e74] [com.apple.extensionkit:launch] Launching process with config: bundleID: com.apple.WebKit.Networking instance ID: Optional([_EXExtensionInstanceIdentifier: 062E817D-845F-476F-BC60-4CA342EAFAB9])
+2026-11-15 00:49:46.880 Df KaeseLegen[28297:12e78] [com.apple.WebKit:ProcessSuspension] 0x10f1440c0 - ProcessAssertion::acquireSync Trying to take RBS assertion 'WebProcess Foreground Assertion' for process with PID=28357
+2026-11-15 00:49:46.880 E  KaeseLegen[28297:12e74] [com.apple.extensionkit:default] Failed to resolve host network app id to config: bundleID: com.apple.WebKit.Networking instance ID: Optional([_EXExtensionInstanceIdentifier: 062E817D-845F-476F-BC60-4CA342EAFAB9])
+2026-11-15 00:49:46.887 Df KaeseLegen[28297:12e78] [com.apple.WebKit:ProcessSuspension] 0x10f1440c0 - ProcessAssertion() Successfully granted capability
+2026-11-15 00:49:46.917 Df KaeseLegen[28297:12e79] [com.apple.runningboard:process] Starting death monitoring for handle [xpcservice<com.apple.WebKit.GPU([app<com.nyrathen.kaeselegen((null))>:28297])>{vt hash: 223737757}[uuid:C63C944D-3387-4C6B-B188-BB7061519B26]{definition:com.apple.WebKit.GPU[extension][client]}:28360]
+2026-11-15 00:49:46.940 Df KaeseLegen[28297:12e79] [com.apple.extensionkit:launch] Created new process ExtensionProcess: bundleID: com.apple.WebKit.GPU instance ID: Optional([_EXExtensionInstanceIdentifier: C63C944D-3387-4C6B-B188-BB7061519B26]) pid: 28360.
+2026-11-15 00:49:46.941 Df KaeseLegen[28297:12e77] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:46.943 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b169e0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:46.966 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc0c0 - [PID=28357, throttler=0x10f0ac150] ProcessThrottler::Activity::invalidate: Ending foreground activity / 'Process initialization'
+2026-11-15 00:49:46.967 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f134100 - NetworkProcessProxy::getNetworkProcessConnection: Taking a background assertion because web process pid 28357 (core identifier 2) is requesting a connection
+2026-11-15 00:49:46.967 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] WebContent[28357] getNetworkProcessConnection: Request connection for core identifier 2
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0f41e0 - GPUProcessProxy::didFinishLaunching:
+2026-11-15 00:49:47.053 A  KaeseLegen[28297:12e62] (libsystem_trace.dylib) Activity for state dumps
+2026-11-15 00:49:47.053 F  KaeseLegen[28297:12e62] [com.apple.WebKit:Process] GPU process (0x10f0f41e0) took 4.023636 seconds to launch
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0f41e0 - GPUProcessProxy::connectionWillOpen:
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0f4270 - [PID=28360] ProcessThrottler::didConnectToProcess
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0f4270 - [PID=28360] ProcessThrottler::setThrottleState: Updating process assertion type to 3 (foregroundActivities=2, backgroundActivities=1)
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:47.077 Df com.apple.WebKit.GPU[28360:12fc7] [com.apple.WebKit:Process] 0x1f2c79158 - GPUProcess::initializeGPUProcess:
+2026-11-15 00:49:47.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::sendXPCEndpointToProcess(0x10f0f41e0) state = 1 has connection = 1 XPC endpoint message = 0x0
+2026-11-15 00:49:47.055 Df KaeseLegen[28297:12e77] [com.apple.WebKit:ProcessSuspension] 0x10f144180 - ProcessAssertion::acquireSync Trying to take RBS assertion 'GPUProcess Foreground Assertion' for process with PID=28360
+2026-11-15 00:49:47.055 A  KaeseLegen[28297:12e79] (CoreServicesInternal) CFURLCreateBookmarkData
+2026-11-15 00:49:47.062 Df KaeseLegen[28297:12e77] [com.apple.WebKit:ProcessSuspension] 0x10f144180 - ProcessAssertion() Successfully granted capability
+2026-11-15 00:49:47.109 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc120 - [PID=28360, throttler=0x10f0f4270] ProcessThrottler::Activity::invalidate: Ending foreground activity / 'Process initialization'
+2026-11-15 00:49:47.552 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] StorageAccessPromptQuirkController::didUpdateCachedListData: Loaded 1 storage access prompt(s) quirks from WebPrivacy.
+2026-11-15 00:49:48.540 Df KaeseLegen[28297:12e74] [com.apple.runningboard:process] Starting death monitoring for handle [xpcservice<com.apple.WebKit.Networking([app<com.nyrathen.kaeselegen((null))>:28297])>{vt hash: 114736818}[uuid:062E817D-845F-476F-BC60-4CA342EAFAB9]{definition:com.apple.WebKit.Networking[extension][client]}:28463]
+2026-11-15 00:49:48.549 Df KaeseLegen[28297:12e74] [com.apple.extensionkit:launch] Created new process ExtensionProcess: bundleID: com.apple.WebKit.Networking instance ID: Optional([_EXExtensionInstanceIdentifier: 062E817D-845F-476F-BC60-4CA342EAFAB9]) pid: 28463.
+2026-11-15 00:49:48.549 Df KaeseLegen[28297:12e74] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:48.550 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100c199e0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:48.861 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::didFinishLaunching
+2026-11-15 00:49:48.862 A  KaeseLegen[28297:12e62] (libsystem_trace.dylib) Activity for state dumps
+2026-11-15 00:49:48.862 F  KaeseLegen[28297:12e62] [com.apple.WebKit:Process] Networking process (0x10f134100) took 1.996269 seconds to launch
+2026-11-15 00:49:48.862 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f134190 - [PID=28463] ProcessThrottler::didConnectToProcess
+2026-11-15 00:49:48.862 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f134190 - [PID=28463] ProcessThrottler::setThrottleState: Updating process assertion type to 3 (foregroundActivities=2, backgroundActivities=3)
+2026-11-15 00:49:48.862 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] AssertionCapability::AssertionCapability: taking assertion Foreground
+2026-11-15 00:49:48.862 Df KaeseLegen[28297:12e74] [com.apple.WebKit:ProcessSuspension] 0x10f144240 - ProcessAssertion::acquireSync Trying to take RBS assertion 'NetworkProcess Foreground Assertion' for process with PID=28463
+2026-11-15 00:49:48.866 Df KaeseLegen[28297:12e74] [com.apple.WebKit:ProcessSuspension] 0x10f144240 - ProcessAssertion() Successfully granted capability
+2026-11-15 00:49:48.875 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::sendXPCEndpointToProcess(0x10f0ac0c0) state = 1 has connection = 1 XPC endpoint message = 0x600003e03700
+2026-11-15 00:49:48.875 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f134100 - NetworkProcessProxy::sendXPCEndpointToProcess(0x10f0f41e0) state = 1 has connection = 1 XPC endpoint message = 0x600003e03700
+2026-11-15 00:49:48.875 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] WebContent[28357] [0x102f04a10] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:48.947 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] WebContent[28357] Received Launch Services database
+2026-11-15 00:49:48.946 Df com.apple.WebKit.GPU[28360:12fda] [com.apple.WebKit:Loading] Received Launch Services database
+2026-11-15 00:49:48.962 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Storage] 0x10c0c4100 - NetworkSession::setTrackingPreventionEnabled: sessionID=1, enabled=1
+2026-11-15 00:49:48.964 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Storage] NetworkSession::setOptInCookiePartitioningEnabled as enabled for session 1
+2026-11-15 00:49:48.966 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:NetworkSession] Setting logging level for Regular session 1 to sensitive
+2026-11-15 00:49:48.983 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Process] 0x1f2c77058 - NetworkProcess::initializeNetworkProcess: Presenting processPID=28463
+2026-11-15 00:49:48.985 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Process] 0x1f2c77058 - NetworkProcess::createNetworkConnectionToWebProcess: Create connection for web process core identifier 2
+2026-11-15 00:49:48.990 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:SharedWorker] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::establishSharedWorkerServerConnection:
+2026-11-15 00:49:48.991 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:SharedWorker] 0x10c118100 - [webProcessIdentifier=2] WebSharedWorkerServerConnection::WebSharedWorkerServerConnection:
+2026-11-15 00:49:48.991 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:SharedWorker] WebSharedWorkerServer::addConnection(0x10c118100): processIdentifier=2
+2026-11-15 00:49:48.995 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc2a0 - [PID=28463, throttler=0x10f134190] ProcessThrottler::Activity::invalidate: Ending foreground activity / 'Process initialization'
+2026-11-15 00:49:49.005 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] WebContent[28357] 0x10e060150 - [sessionID=1] WebProcess::initializeLogForwarding: Debug logging enabled: 0
+2026-11-15 00:49:49.008 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] WebContent[28357] WebProcess::platformInitializeWebProcess
+2026-11-15 00:49:49.016 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] WebContent[28357] [0x102f05760] activating connection: mach=false listener=true peer=false name=(anonymous)
+2026-11-15 00:49:49.016 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] WebContent[28357] [0x102f05760] Connection returned listener port: 0x3a03
+2026-11-15 00:49:49.016 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] WebContent[28357] [0x102f058a0] activating connection: mach=false listener=false peer=false name=(anonymous)
+2026-11-15 00:49:49.016 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] WebContent[28357] [0x102f059e0] activating connection: mach=false listener=false peer=true name=com.apple.xpc.anonymous.0x102f05760.peer[28357].0x102f059e0
+2026-11-15 00:49:49.081 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXSupportCommon] WebContent[28357] Application accessibility enabled: 0, (
+	0   libAccessibility.dylib              0x000000019215585c _AXSApplicationAccessibilitySetEnabled + 76
+	1   WebKit                              0x000000018e01aa24 _ZN6WebKit10WebProcess28platformInitializeWebProcessERNS_28WebProcessCreationParametersE + 2096
+	2   WebKit                              0x000000018e1fcc94 _ZN6WebKit10WebProcess20initializeWebProcessEONS_28WebProcessCreationParametersEON3WTF17CompletionHandlerIFvN7WebCore15ProcessIdentityEEEE + 188
+	3   WebKit                              0x000000018db9b684 _ZN3IPC18handleMessageAsyncIN8Messages10WebProcess20InitializeWebProcessENS_10ConnectionEN6WebKit10WebProcessES6_FvONS5_28WebProcessCreationParametersEON3WTF17CompletionHandlerIFvN7WebCore15ProcessIdentityEEEEEEEvRT0_RNS_7DecoderEPT1_MT2_T3_ + 224
+	4   WebKit                              0x000000018e5c03cc _ZN3IPC10Connection15dispatchMessageEN3WTF9UniqueRefINS_7DecoderEEE + 556
+	5   WebKit                              0x000000018e5db49c _Z<…>
+2026-11-15 00:49:49.081 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXSupportCommon] WebContent[28357] Stored App AX setting: 0
+2026-11-15 00:49:49.083 Df KaeseLegen[28297:12e62] [com.apple.Accessibility:AXSupportCommon] WebContent[28357] AXS AccessibilityEnabled: (app ax: 0), ax settings: 0, cached: 0
+2026-11-15 00:49:49.084 Df KaeseLegen[28297:12e75] [com.apple.xpc:connection] [0x100c151f0] Re-initialization successful; calling out to event handler with XPC_ERROR_CONNECTION_INTERRUPTED
+2026-11-15 00:49:49.174 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ProcessAssertion::acquireSync Trying to take RBS assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:49.177 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ProcessAssertion::acquireSync Successfully took RBS assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:49.196 E  com.apple.WebKit.Networking[28463:130c8] [com.apple.WebKit:PrivateClickMeasurement] 0x10c150100 - DatabaseUtilities::setBusyTimeout failed, error message: not an error
+2026-11-15 00:49:49.232 E  com.apple.WebKit.Networking[28463:130c8] [com.apple.WebKit:PrivateClickMeasurement] 0x10c150100 - DatabaseUtilities::migrateDataToNewTablesIfNecessary failed to rename table, error message: not an error
+2026-11-15 00:49:49.234 E  com.apple.WebKit.Networking[28463:130c8] [com.apple.WebKit:PrivateClickMeasurement] 0x10c150100 - DatabaseUtilities::enableForeignKeys failed, error message: not an error
+2026-11-15 00:49:49.277 Df com.apple.WebKit.Networking[28463:130c8] [com.apple.WebKit:ResourceLoadStatistics] ResourceLoadStatisticsStore::includeTodayAsOperatingDateIfNecessary: sessionID=1
+2026-11-15 00:49:49.537 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::decidePolicyForNavigationAction: frameID=4294967297, isMainFrame=1, navigationID=12
+2026-11-15 00:49:49.541 A  KaeseLegen[28297:12e75] (CoreFoundation) Loading Preferences From User Session CFPrefsD
+2026-11-15 00:49:49.544 Df KaeseLegen[28297:130cf] [com.apple.WebKit:RemoteLayerBuffers] WebContent[28357]: [renderingBackend=11] Created rendering backend for pageProxyID=6, webPageID=7
+2026-11-15 00:49:49.576 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Process] WebContent[28357] GPUProcessConnection::create - 0x10e0e5ce0
+2026-11-15 00:49:49.584 Df KaeseLegen[28297:12e62] [com.apple.WebKit:AppSSO] 0x10f05c0f0 - SOAuthorizationCoordinator::tryAuthorize
+2026-11-15 00:49:49.602 A  KaeseLegen[28297:12e62] (AppSSO) canPerformAuthorizationWithURL
+2026-11-15 00:49:49.604 A  KaeseLegen[28297:12e62] (AppSSOCore) canPerformAuthorizationWithURL
+2026-11-15 00:49:49.605 Df KaeseLegen[28297:12e62] [com.apple.authkit:nto] Fetching native takeover URLs
+2026-11-15 00:49:49.606 Df KaeseLegen[28297:12e62] [com.apple.xpc:connection] [0x100b0c5b0] activating connection: mach=true listener=false peer=false name=com.apple.ak.authorizationservices.xpc
+2026-11-15 00:49:49.607 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request query parameters from WebPrivacy.
+2026-11-15 00:49:49.608 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/tmp/com.nyrathen.kaeselegen/WebKit/MediaCache'
+2026-11-15 00:49:49.608 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Sandbox] Successfully created a sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Data/Application/18DC8F4F-43FE-4D40-BD74-41EAFCBE7F3F/Library/WebKit/com.nyrathen.kaeselegen/WebsiteData/MediaKeys/v1'
+2026-11-15 00:49:49.608 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0f41e0 - GPUProcessProxy is taking a background assertion because a web process is requesting a connection
+2026-11-15 00:49:49.609 Df com.apple.WebKit.GPU[28360:12fc7] [com.apple.WebKit:Process] 0x1f2c79158 - GPUProcess::createGPUConnectionToWebProcess: processIdentifier=2
+2026-11-15 00:49:49.621 Df KaeseLegen[28297:12e75] [com.apple.authkit:nto] URL shouldn't be processed
+2026-11-15 00:49:49.621 Df KaeseLegen[28297:12e75] [com.apple.AppSSO:SOConfigurationClient] -[SOConfigurationClient init]  on <SOConfigurationClient: 0x60000026f860>
+2026-11-15 00:49:49.622 Df KaeseLegen[28297:12e75] [com.apple.xpc:connection] [0x100c1cd10] activating connection: mach=true listener=false peer=false name=com.apple.AppSSO.service-xpc
+2026-11-15 00:49:49.622 Df KaeseLegen[28297:12e75] [com.apple.AppSSO:SOServiceConnection] <SOServiceConnection: 0x60000026f760>: new XPC connection
+2026-11-15 00:49:49.622 Df KaeseLegen[28297:12e74] [com.apple.AppSSO:SOConfigurationClient] -[SOConfigurationClient _reloadConfig]  on <SOConfigurationClient: 0x60000026f860>
+2026-11-15 00:49:49.623 Df KaeseLegen[28297:12e74] [com.apple.AppSSO:SOClient] -[SOClient configurationWithCompletion:]  on <SOClient: 0x600000009d50>
+2026-11-15 00:49:49.692 Df com.apple.WebKit.GPU[28360:12fc7] [com.apple.WebKit:Process] GPUConnectionToWebProcess::createVisibilityPropagationContextForPage: pageProxyID=6, webPageID=7, contextID=2
+2026-11-15 00:49:49.692 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0f41e0 - GPUProcessProxy::didCreateContextForVisibilityPropagation: webPageProxyID: 6, pagePID: 7, contextID: 3
+2026-11-15 00:49:49.693 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] Created visibility propagation interaction <_UIVisibilityPropagationInteraction: 0x60000260f060> for process with PID=28360
+2026-11-15 00:49:49.699 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Process] WebContent[28357] 0x10e0e5ce0 - GPUProcessConnection::didInitialize
+2026-11-15 00:49:49.701 Df KaeseLegen[28297:130cf] [com.apple.Accessibility:AXCommon] WebContent[28357] Read Per-App on Init: Smart invert = (null)
+2026-11-15 00:49:50.316 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ~ProcessAssertion: Releasing process assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:50.601 A  KaeseLegen[28297:12e62] (libsystem_containermanager.dylib) container_system_group_path_for_identifier
+2026-11-15 00:49:50.602 Df KaeseLegen[28297:12e62] [com.apple.containermanager:xpc] Requesting container lookup; class = 13, identifier = com.apple.nsurlsessiond, group_identifier = systemgroup.com.apple.nsurlstoragedresources, create = 1, temp = 0, euid = 501, uid = 501
+2026-11-15 00:49:50.602 A  KaeseLegen[28297:12e62] (libsystem_containermanager.dylib) container_query_t
+2026-11-15 00:49:50.602 Df KaeseLegen[28297:12e62] [com.apple.containermanager:xpc] Query; euid = 501, uid = 501, class = 13, identifier = [com.apple.nsurlsessiond](1), flags = 900000003
+2026-11-15 00:49:50.603 Df KaeseLegen[28297:12e62] [com.apple.containermanager:unspecified] _container_query_get_result_at_index: success
+2026-11-15 00:49:50.603 A  KaeseLegen[28297:12e62] (libsystem_containermanager.dylib) container_copy_object
+2026-11-15 00:49:50.603 Df KaeseLegen[28297:12e62] [com.apple.containermanager:unspecified] container_system_group_path_for_identifier: success
+2026-11-15 00:49:52.161 Df KaeseLegen[28297:12e62] [com.apple.WebKit:RemoteLayerTree] RemoteLayerTreeDrawingAreaProxy(9) Unhiding layer tree
+2026-11-15 00:49:52.168 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ViewState] 0x10204b800 (pageProxyID=6) -[WKWebView _didCommitLayerTree:] - finally received commit 9.11s after visible content rect update request; transactionID 1
+2026-11-15 00:49:52.978 Df KaeseLegen[28297:12e74] [com.apple.AppSSO:SOClient] configurationWithCompletion: success = YES, error = (null)
+2026-11-15 00:49:52.980 Df KaeseLegen[28297:12e62] [com.apple.WebKit:AppSSO] SOAuthorizationCoordinator::tryAuthorize: The requested URL is not registered for AppSSO handling. No further action needed.
+2026-11-15 00:49:52.980 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::decidePolicyForNavigationAction: listener called: frameID=4294967297, isMainFrame=1, navigationID=12, policyAction=Use, isAppBoundDomain=0, wasNavigationIntercepted=0
+2026-11-15 00:49:52.981 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::receivedNavigationActionPolicyDecision: frameID=4294967297, isMainFrame=1, navigationID=12, policyAction=Use
+2026-11-15 00:49:52.986 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSwapping] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::decidePolicyForNavigationAction: keep using process 28357 for navigation, reason=Process has not yet committed any provisional loads
+2026-11-15 00:49:52.986 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Process] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::canTerminateAuxiliaryProcess: returns false (pageCount=1, provisionalPageCount=0, suspendedPageCount=0, m_isInProcessCache=0, m_shutdownPreventingScopeCounter=0)
+2026-11-15 00:49:52.987 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebFrameLoaderClient::dispatchDecidePolicyForNavigationAction: Got policyAction Use from async IPC
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Loading] WebContent[28357] 0x10e07c7e0 - [pageID=7, frameID=4294967297] PolicyChecker::checkNavigationPolicy: continuing because this policyAction from dispatchDecidePolicyForNavigationAction is Use
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::stopAllLoaders: m_provisionalDocumentLoader=0, m_documentLoader=4547448832
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, isMainFrame=1] DocumentLoader::stopLoading
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::setProvisionalDocumentLoader: Setting provisional document loader to 4547440640 (was 0)
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::continueLoadAfterNavigationPolicy: Setting provisional document loader (m_provisionalDocumentLoader=4547440640)
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::freezeLayerTree: Adding a reason to freeze layer tree (reason=1, new=1, old=0)
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::setPolicyDocumentLoader: Setting policy document loader to 0 (was 4547440640)
+2026-11-15 00:49:52.988 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::prepareForLoadStart: Starting frame load
+2026-11-15 00:49:52.989 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: ProgressTracker::progressStarted: frameID 4294967297, value 0.100000, tracked frames 1, originating frameID 4294967297, isMainLoad 1
+2026-11-15 00:49:52.989 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, isMainFrame=1] DocumentLoader::startLoadingMainResource: Starting load
+2026-11-15 00:49:52.990 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::didStartProvisionalLoadForFrame: frameID=4294967297, isMainFrame=1
+2026-11-15 00:49:52.990 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10f0ac0c0 - [PID=28357] WebProcessProxy::didStartProvisionalLoadForMainFrame:
+2026-11-15 00:49:52.994 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=18] ResourceLoader::willSendRequestInternal: calling completion handler
+2026-11-15 00:49:52.994 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=18 SubResourceLoader::willSendRequestInternal: resource load finished; calling completion handler
+2026-11-15 00:49:52.994 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: URL will be scheduled with the NetworkProcess
+2026-11-15 00:49:52.994 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Sandbox] WebContent[28357] Successfully created sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/index.html'
+2026-11-15 00:49:52.998 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: Resource is being scheduled with the NetworkProcess (priority=4, existingNetworkResourceLoadIdentifierToResume=0)
+2026-11-15 00:49:52.999 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=18] WebResourceLoader::WebResourceLoader
+2026-11-15 00:49:53.016 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::scheduleResourceLoad: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, existingLoaderToResume=0)
+2026-11-15 00:49:53.016 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::resolveBlobReferences: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18)
+2026-11-15 00:49:53.016 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::startWithServiceWorker:
+2026-11-15 00:49:53.018 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::startRequest: hasNetworkLoadChecker=1
+2026-11-15 00:49:53.018 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::start: NetworkLoadChecker::check is done
+2026-11-15 00:49:53.018 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: (isFirstLoad=1, timeout=2147483647.000000)
+2026-11-15 00:49:53.021 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: Going to the network (description=LocalDataTask <F6469BB9-DCB8-46AB-A252-5CE17013381B>.<1>)
+2026-11-15 00:49:53.026 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: (httpStatusCode=0, MIMEType=text/html, expectedContentLength=645, hasCachedEntryForValidation=0, hasNetworkLoadChecker=1)
+2026-11-15 00:49:53.026 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::didReceiveMainResourceResponse:
+2026-11-15 00:49:53.026 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Sending WebResourceLoader::DidReceiveResponse IPC (willWaitForContinueDidReceiveResponse=1)
+2026-11-15 00:49:53.028 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=18] WebResourceLoader::didReceiveResponse: (httpStatusCode=0)
+2026-11-15 00:49:53.029 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::continueDidReceiveResponse: (hasCacheEntryWaitingForContinueDidReceiveResponse=0, hasResponseCompletionHandler=1)
+2026-11-15 00:49:53.030 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.030 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::didFinishLoading: (numBytesReceived=645, hasCacheEntryForValidation=0)
+2026-11-15 00:49:53.030 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::tryStoreAsCacheEntry: Not storing cache entry because request is not eligible
+2026-11-15 00:49:53.030 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e0000 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=18, isMainResource=1, destination=3, isSynchronous=0] NetworkResourceLoader::cleanup: (result=1)
+2026-11-15 00:49:53.033 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=18] WebResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.034 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::setDocumentLoader: Setting document loader to 4547440640 (was 4547448832)
+2026-11-15 00:49:53.034 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, isMainFrame=1] DocumentLoader::detachFromFrame
+2026-11-15 00:49:53.034 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, isMainFrame=1] DocumentLoader::stopLoading
+2026-11-15 00:49:53.035 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::transitionToCommitted: Clearing provisional document loader (m_provisionalDocumentLoader=4547440640)
+2026-11-15 00:49:53.035 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::setProvisionalDocumentLoader: Setting provisional document loader to 0 (was 4547440640)
+2026-11-15 00:49:53.037 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::didNavigateWithNavigationDataShared:
+2026-11-15 00:49:53.038 E  KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoadStatistics] WebContent[28357] Unable to hide query parameters from script (missing data)
+2026-11-15 00:49:53.039 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::unfreezeLayerTree: Removing a reason to freeze layer tree (reason=128, new=1, old=1)
+2026-11-15 00:49:53.039 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::unfreezeLayerTree: Removing a reason to freeze layer tree (reason=128, new=1, old=1)
+2026-11-15 00:49:53.044 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::unfreezeLayerTree: Removing a reason to freeze layer tree (reason=32, new=1, old=1)
+2026-11-15 00:49:53.053 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::didCommitLoadForFrame: frameID=4294967297, isMainFrame=1
+2026-11-15 00:49:53.056 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request allowed query parameters from WebPrivacy.
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::freezeLayerTree: Adding a reason to freeze layer tree (reason=128, new=129, old=1)
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=23] ResourceLoader::willSendRequestInternal: calling completion handler
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=23 SubResourceLoader::willSendRequestInternal: resource load finished; calling completion handler
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: URL will be scheduled with the NetworkProcess
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Sandbox] WebContent[28357] Successfully created sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/style.css'
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: Resource is being scheduled with the NetworkProcess (priority=3, existingNetworkResourceLoadIdentifierToResume=0)
+2026-11-15 00:49:53.061 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=23] WebResourceLoader::WebResourceLoader
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=24] ResourceLoader::willSendRequestInternal: calling completion handler
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=24 SubResourceLoader::willSendRequestInternal: resource load finished; calling completion handler
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: URL will be scheduled with the NetworkProcess
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Sandbox] WebContent[28357] Successfully created sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/lines.js'
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: Resource is being scheduled with the NetworkProcess (priority=3, existingNetworkResourceLoadIdentifierToResume=0)
+2026-11-15 00:49:53.069 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=24] WebResourceLoader::WebResourceLoader
+2026-11-15 00:49:53.070 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=25] ResourceLoader::willSendRequestInternal: calling completion handler
+2026-11-15 00:49:53.070 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=25 SubResourceLoader::willSendRequestInternal: resource load finished; calling completion handler
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::scheduleResourceLoad: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, existingLoaderToResume=0)
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::resolveBlobReferences: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23)
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::startWithServiceWorker:
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::startRequest: hasNetworkLoadChecker=1
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::start: NetworkLoadChecker::check is done
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: (isFirstLoad=1, timeout=2147483647.000000)
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: Going to the network (description=LocalDataTask <8B800798-7BF6-481A-B3AB-6AEE02433051>.<2>)
+2026-11-15 00:49:53.071 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::scheduleResourceLoad: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, existingLoaderToResume=0)
+2026-11-15 00:49:53.072 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::resolveBlobReferences: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24)
+2026-11-15 00:49:53.072 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startWithServiceWorker:
+2026-11-15 00:49:53.072 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startRequest: hasNetworkLoadChecker=1
+2026-11-15 00:49:53.072 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::start: NetworkLoadChecker::check is done
+2026-11-15 00:49:53.072 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: (isFirstLoad=1, timeout=2147483647.000000)
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: Going to the network (description=LocalDataTask <58255AE7-1CEB-4C95-B53B-5EEBEAA4F171>.<3>)
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::scheduleResourceLoad: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, existingLoaderToResume=0)
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Loading] 0x10c0289c0 - [webProcessIdentifier=2] NetworkConnectionToWebProcess::resolveBlobReferences: (parentPID=28297, pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25)
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startWithServiceWorker:
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startRequest: hasNetworkLoadChecker=1
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::start: NetworkLoadChecker::check is done
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: (isFirstLoad=1, timeout=2147483647.000000)
+2026-11-15 00:49:53.073 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::startNetworkLoad: Going to the network (description=LocalDataTask <4DFCB1CE-0CB6-4965-8D9D-5840542C555C>.<4>)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: (httpStatusCode=0, MIMEType=text/css, expectedContentLength=7860, hasCachedEntryForValidation=0, hasNetworkLoadChecker=1)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Sending WebResourceLoader::DidReceiveResponse IPC (willWaitForContinueDidReceiveResponse=0)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Using response
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: (httpStatusCode=0, MIMEType=text/javascript, expectedContentLength=28418, hasCachedEntryForValidation=0, hasNetworkLoadChecker=1)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Sending WebResourceLoader::DidReceiveResponse IPC (willWaitForContinueDidReceiveResponse=0)
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: URL will be scheduled with the NetworkProcess
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Using response
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: (httpStatusCode=0, MIMEType=text/javascript, expectedContentLength=32369, hasCachedEntryForValidation=0, hasNetworkLoadChecker=1)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Sending WebResourceLoader::DidReceiveResponse IPC (willWaitForContinueDidReceiveResponse=0)
+2026-11-15 00:49:53.074 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveResponse: Using response
+2026-11-15 00:49:53.075 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::didFinishLoading: (numBytesReceived=7860, hasCacheEntryForValidation=0)
+2026-11-15 00:49:53.075 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::tryStoreAsCacheEntry: Not storing cache entry because request is not eligible
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e1600 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=23, isMainResource=0, destination=19, isSynchronous=0] NetworkResourceLoader::cleanup: (result=1)
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didFinishLoading: (numBytesReceived=28418, hasCacheEntryForValidation=0)
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::tryStoreAsCacheEntry: Not storing cache entry because request is not eligible
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e2c00 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=24, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::cleanup: (result=1)
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Sandbox] WebContent[28357] Successfully created sandbox extension for '/Users/runner/Library/Developer/CoreSimulator/Devices/FA1105A3-CFB2-45AC-B4DB-EBAC55DD946D/data/Containers/Bundle/Application/E774417F-8CAD-46B6-8E44-D0EA8F2ECCE8/KaeseLegen.app/web/app.js'
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=7, resourceID=7] WebLoaderStrategy::scheduleLoad: Resource is being scheduled with the NetworkProcess (priority=3, existingNetworkResourceLoadIdentifierToResume=0)
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=25] WebResourceLoader::WebResourceLoader
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::didFinishLoading: (numBytesReceived=32369, hasCacheEntryForValidation=0)
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::tryStoreAsCacheEntry: Not storing cache entry because request is not eligible
+2026-11-15 00:49:53.076 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:Network] 0x10d0e4200 - [pageProxyID=6, webPageID=7, frameID=4294967297, resourceID=25, isMainResource=0, destination=15, isSynchronous=0] NetworkResourceLoader::cleanup: (result=1)
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=18] WebResourceLoader::didFinishResourceLoad: (length=645)
+2026-11-15 00:49:53.071 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=18 SubResourceLoader::didFinishLoading
+2026-11-15 00:49:53.109 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=23] WebResourceLoader::didReceiveResponse: (httpStatusCode=0)
+2026-11-15 00:49:53.121 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=24] WebResourceLoader::didReceiveResponse: (httpStatusCode=0)
+2026-11-15 00:49:53.124 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=25] WebResourceLoader::didReceiveResponse: (httpStatusCode=0)
+2026-11-15 00:49:53.135 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=23] WebResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.140 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=23] WebResourceLoader::didFinishResourceLoad: (length=7860)
+2026-11-15 00:49:53.140 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=23 SubResourceLoader::didFinishLoading
+2026-11-15 00:49:53.140 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::unfreezeLayerTree: Removing a reason to freeze layer tree (reason=128, new=1, old=129)
+2026-11-15 00:49:53.154 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=24] WebResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.154 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=24] WebResourceLoader::didFinishResourceLoad: (length=28418)
+2026-11-15 00:49:53.154 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=24 SubResourceLoader::didFinishLoading
+2026-11-15 00:49:53.173 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=25] WebResourceLoader::didReceiveData: Started receiving data
+2026-11-15 00:49:53.173 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: [webPageID=7, frameID=4294967297, resourceID=25] WebResourceLoader::didFinishResourceLoad: (length=32369)
+2026-11-15 00:49:53.173 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7, frameID=4294967297, resourceID=25 SubResourceLoader::didFinishLoading
+2026-11-15 00:49:53.251 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc0c0 - [PID=28357, throttler=0x10f0ac150] ProcessThrottler::Activity::Activity: Starting foreground activity / 'WebPageProxy::runJavaScriptInFrameInScriptWorld'
+2026-11-15 00:49:53.273 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ProcessSuspension] WebContent[28357]: [webPageID=7] WebPage::unfreezeLayerTree: Removing a reason to freeze layer tree (reason=1, new=0, old=1)
+2026-11-15 00:49:53.274 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [pageID=7, frameID=4294967297, isMainFrame=1] LocalFrameView::fireLayoutRelatedMilestonesIfNeeded: Firing first visually non-empty layout milestone on the main frame
+2026-11-15 00:49:53.274 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::dispatchDidReachLayoutMilestone: dispatching DidReachLayoutMilestone (milestones=DidFirstVisuallyNonEmptyLayout)
+2026-11-15 00:49:53.274 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::dispatchDidReachLayoutMilestone: dispatching DidFirstVisuallyNonEmptyLayoutForFrame
+2026-11-15 00:49:53.274 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::completePageTransitionIfNeeded: dispatching didCompletePageTransition
+2026-11-15 00:49:53.275 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::didFinishDocumentLoadForFrame: frameID=4294967297, isMainFrame=1
+2026-11-15 00:49:53.290 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::dispatchDidReachLayoutMilestone: dispatching DidFirstLayoutForFrame
+2026-11-15 00:49:53.290 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::dispatchDidReachLayoutMilestone: dispatching DidReachLayoutMilestone (milestones=DidFirstLayout)
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::setState: main frame load completed
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]: Memory usage info dump at MainFrameLoadCompleted:
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   page_count: 1
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   backforward_cache_page_count: 0
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   document_count: 1
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   javascript_gc_heap_capacity_mb: 1
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   javascript_gc_heap_extra_memory_size_mb: 0
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   internal_mb: 15
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   compressed_mb: 0
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   phys_footprint_mb: 17
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   resident_size_mb: 138
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]:   virtual_size_mb: 419226
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: ProgressTracker::progressCompleted: frameID 4294967297, value 0.500000, tracked frames 1, originating frameID 4294967297, isMainLoad 1
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Network] WebContent[28357]: ProgressTracker::finalProgressComplete: value 0.500000, tracked frames 0, originating frameID 4294967297, isMainLoad 1, isMainLoadProgressing 0
+2026-11-15 00:49:53.291 Df KaeseLegen[28297:130cf] [com.apple.WebKit:ResourceLoading] WebContent[28357]: [pageID=7 frameID=4294967297 isMainFrame=1] FrameLoader::checkLoadCompleteForThisFrame: Finished frame load
+2026-11-15 00:49:53.292 Df KaeseLegen[28297:12e62] [com.apple.WebKit:Loading] 0x10185b218 - [pageProxyID=6, webPageID=7, PID=28357] WebPageProxy::didFinishLoadForFrame: frameID=4294967297, isMainFrame=1
+2026-11-15 00:49:53.292 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f10c100 - NavigationState will release its process network assertion soon because the page load completed
+2026-11-15 00:49:53.293 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc1b0 - [PID=28357, throttler=0x10f0ac150] ProcessThrottler::Activity::invalidate: Ending foreground activity / 'Client navigation'
+2026-11-15 00:49:53.293 E  KaeseLegen[28297:12e62] [com.apple.WebKit:ResourceLoadStatistics] Failed to request restricted opener domains from WebPrivacy
+2026-11-15 00:49:53.297 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Layout] WebContent[28357]: [webFrameID=4294967297, webPageID=7] WebLocalFrameLoaderClient::dispatchDidReachLayoutMilestone: dispatching DidReachLayoutMilestone (milestones=DidFirstMeaningfulPaint)
+2026-11-15 00:49:53.299 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Process] WebContent[28357] 0x103809808 - [webPageID=7] WebPage::runJavaScriptInFrameInScriptWorld: frameID=0
+2026-11-15 00:49:53.302 Df KaeseLegen[28297:130cf] [com.apple.WebKit:Process] WebContent[28357] 0x103809808 - [webPageID=7] WebPage::runJavaScriptInFrameInScriptWorld: Request to run JavaScript succeeded
+2026-11-15 00:49:53.321 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc0c0 - [PID=28357, throttler=0x10f0ac150] ProcessThrottler::Activity::invalidate: Ending foreground activity / 'WebPageProxy::runJavaScriptInFrameInScriptWorld'
+2026-11-15 00:49:53.339 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ProcessAssertion::acquireSync Trying to take RBS assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:53.340 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ProcessAssertion::acquireSync Successfully took RBS assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:54.968 Df com.apple.WebKit.Networking[28463:130bc] [com.apple.WebKit:ProcessSuspension] 0x10c17c0b0 - ~ProcessAssertion: Releasing process assertion 'Network Process is holding locked files' for process with PID=28463
+2026-11-15 00:49:56.295 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f10c100 NavigationState is releasing background process assertion because a page load completed
+2026-11-15 00:49:56.295 Df KaeseLegen[28297:12e62] [com.apple.WebKit:ProcessSuspension] 0x10f0bc1e0 - [PID=28357, throttler=0x10f0ac150] ProcessThrottler::Activity::invalidate: Ending background activity / 'Page Load'
+2026-11-15 00:50:01.707 Df KaeseLegen[28297:12e62] [com.apple.UIKit:AppLifecycle] sceneOfRecord: sceneID: sceneID:com.nyrathen.kaeselegen-default  persistentID: F6AE7EB0-BD17-4C00-8299-23A23D27773C
+2026-11-15 00:50:03.293 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]: PerformanceMonitor::measurePostLoadMemoryUsage: Process was using 18816704 bytes of memory after the page load.
+2026-11-15 00:50:04.841 Df KaeseLegen[28297:12e62] [com.apple.KeyboardArbiter:Client] RX sceneBecameFocused:(null)
+2026-11-15 00:50:08.296 Df KaeseLegen[28297:130cf] [com.apple.WebKit:PerformanceLogging] WebContent[28357]: PerformanceMonitor::measurePostLoadCPUUsage: Process was using 0.1% CPU after the page load.
+Child process terminated with signal 15: Terminated
