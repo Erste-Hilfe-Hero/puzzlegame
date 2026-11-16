@@ -1,3 +1,5 @@
+> STILLGELEGT 2026-11-16: Ali hat Vice Cheats löschen lassen (App Store Connect Eintrag entfernt, TestFlight-Builds abgelaufen, Server /cheats gestoppt, keine Play-App). Code bleibt nur als Referenz. Nicht wieder bauen oder einreichen ohne Alis ausdrückliche Anweisung.
+
 # Cheat guide app (app name "Vice Cheats", chosen by Ali 2026-11-15)
 
 Fan-made, unofficial cheat list. iOS + Android from the same commit. Not submitted to any store.

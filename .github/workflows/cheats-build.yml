@@ -3,9 +3,7 @@
 # Trigger: commit message containing "run:cheats-build", or manual.
 name: Cheats app build
 on:
-  push:
-    branches: [main, claude/project-thread-4g8dku]
-    paths: ['cheats/**', '.github/workflows/cheats-build.yml']
+  # Stillgelegt (Ali 2026-11-16 "Vice Cheats löschen"): nur noch manuell.
   workflow_dispatch:
 permissions:
   contents: write
