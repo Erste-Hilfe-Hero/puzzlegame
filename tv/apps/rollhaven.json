@@ -1,0 +1,35 @@
+{
+  "src": "rollhaven/web",
+  "icon": "rollhaven/ios/App/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+  "bg": "#0d2a3f",
+  "name": "Rollhaven",
+  "package": "NyrRollhvn",
+  "version": "1.0.0",
+  "zoom": 1.3,
+  "default": "#rollBtn",
+  "hide": [
+    "#shopBtn"
+  ],
+  "replace": [
+    [
+      "'Tap ROLL to start'",
+      "'Press OK on ROLL'"
+    ],
+    [
+      "'Tippe auf WÜRFELN'",
+      "'Drücke OK auf WÜRFELN'"
+    ],
+    [
+      "Tap ROLL.",
+      "Press OK on ROLL."
+    ],
+    [
+      "Tippe auf WÜRFELN.",
+      "Drücke OK auf WÜRFELN."
+    ]
+  ],
+  "hint": {
+    "en": "Remote:\n◀ ▶ ▲ ▼  move\nOK  roll / choose\nBack  close / exit",
+    "de": "Fernbedienung:\n◀ ▶ ▲ ▼  bewegen\nOK  würfeln / wählen\nZurück  schließen / beenden"
+  }
+}
